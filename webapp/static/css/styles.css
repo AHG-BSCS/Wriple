@@ -1,0 +1,187 @@
+body {
+    background-color: #f9f9f9;
+    font-family: 'Segoe UI', Tahoma, Verdana, sans-serif;
+}
+
+.card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    max-width: 900px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    margin-inline: auto;
+    text-align: center;
+}
+
+.card-header {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #6a3acb;
+}
+
+.card-subtitle {
+    font-size: 1.25rem;
+    color: #6c757d;
+    margin-bottom: 25px;
+}
+
+button {
+    background-color: #6a3acb;
+    border-radius: 8px;
+    border: 2px solid #ddd;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    width: 60px;
+    height: 60px;
+    background-size: 50px 50px;
+    margin-inline: 8px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+button:hover {
+    background-color: #552da5;
+    transform: translateY(5px);
+}
+
+button[disabled] {
+    background-color: gray;
+    opacity: 0.6;
+    cursor: not-allowed; 
+}
+
+.button-container {
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip {
+    visibility: hidden;
+    width: max-content;
+    background-color: #6c757d;
+    color: white;
+    text-align: center;
+    border-radius: 6px;
+    border: 2px solid #ddd;
+    padding: 8px;
+    position: absolute;
+    z-index: 1;
+    bottom: 115%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.button-container:hover .tooltip {
+    visibility: visible;
+}
+
+#start {
+    background-image: url('../image/record-start.png');
+}
+
+.camera-container {
+    position: absolute;
+    margin-left: 131px;
+    margin-bottom: 5px;
+}
+
+.video-container {
+    position: relative;
+    display: inline-block;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+#video {
+    background-image: url('../image/mapping_placeholder.jpg');
+    background-size: cover;
+    display: block;
+    border-radius: 10px;
+    border: 2px solid #ddd;
+}
+
+#flash {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: black;
+    border-radius: 8px;
+    opacity: 0;
+    transition: opacity 0.1s;
+}
+
+#imageCount {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(0, 0, 0, 0.40);
+    color: white;
+    padding: 5px;
+    border-radius: 6px;
+    border: 2px solid #ddd;
+}
+
+#attendance-table {
+    visibility: collapse;
+    position: relative;
+    display: inline-block;
+}
+
+.attendance-dates {
+    display: flex;
+}
+
+label, select, optgroup, option {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #444444;
+    margin-right: 6px;
+    margin-bottom: 10px;
+}
+
+select {
+    border-style: none;
+    cursor: pointer;
+    margin-bottom: 7px;
+}
+
+option {
+    font-weight: normal;
+}
+
+tr:nth-child(even) {
+    background-color: #dddddd;
+}
+
+tr:hover {
+    background-color: #bebebe;
+}
+
+th {
+    padding: 8px;
+    text-align: left;
+    background-color: #6a3acb;
+    color: white;
+}
+
+td {
+    text-align: left;
+    padding: 8px;
+}
+
+.no {
+    padding-right: 20px;
+}
+
+.name {
+    padding-right: 300px;
+}
+
+.time {
+    padding-right: 100px;
+}

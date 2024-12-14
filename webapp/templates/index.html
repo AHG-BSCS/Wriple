@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wiremap</title>
+    <link rel="stylesheet" href="../static/css/styles.css">
+    <script src="../static/js/script.js"></script>
+</head>
+<body>
+<div class="card">
+    <div class="card-header">Wiremap</div>
+    <div class="card-subtitle">Wi-Fi Signal Multipath Propagation Mapping System</div>
+    <div>
+        <div class="button-container">
+            <button id="start"></button>
+            <div class="tooltip">Start/Stop Sending Packets</div>
+        </div>
+    </div>
+        <div class="camera-container">
+            <select id="cameraList">
+                <optgroup id="cameraGroup"></optgroup>
+            </select>
+        </div>
+        <div class="video-container">
+            <img id="video" width="640" height="480"></img>
+            <div id="flash"></div>
+            <div id="imageCount"></div>
+        </div>
+        <div id="attendance-table">
+            <div class="attendance-dates">
+                <label for="fileSelect">Select Attendance:</label>
+                <select id="fileSelect" class="form-select">
+                    <optgroup label="Excel Files"></option>
+                </select>
+            </div>
+            <table id="logTable">
+                <thead>
+                  <tr>
+                    <th class="no" scope="col">#</th>
+                    <th class="name" scope="col">Name</th>
+                    <th class="time" scope="col">Time</th>
+                    <th class="probability" scope="col">Probability</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,42 @@
+{
+    "C_Cpp.intelliSenseEngine": "default",
+    "idf.espIdfPathWin": "C:/Espressif/frameworks/esp-idf-v5.3.1/",
+    "idf.openOcdConfigs": [
+        "interface/ftdi/esp32_devkitj_v1.cfg",
+        "target/esp32.cfg"
+    ],
+    "idf.portWin": "COM3",
+    "idf.toolsPathWin": "C:\\Espressif",
+    "files.associations": {
+        "*.bpstat": "bat",
+        "esp_event_internal.h": "c",
+        "freertos.h": "c",
+        "*.tcc": "cpp",
+        "format": "cpp",
+        "sys.h": "c",
+        "sstream": "cpp",
+        "task.h": "c",
+        "csi_component.h": "c",
+        "nvs_component.h": "c",
+        "sd_component.h": "c",
+        "math.h": "c",
+        "complex": "c",
+        "err.h": "c",
+        "esp_http_server.h": "c",
+        "nvs_flash.h": "c",
+        "esp_system.h": "c",
+        "iosfwd": "c",
+        "time_component.h": "c",
+        "string.h": "c",
+        "stdio.h": "c",
+        "esp_spi_flash.h": "c",
+        "semphr.h": "c",
+        "stdlib.h": "c",
+        "event_groups.h": "c",
+        "esp_mac.h": "c",
+        "esp_log.h": "c",
+        "optional": "cpp",
+        "sockets.h": "c",
+        "timers.h": "c"
+    }
+}
