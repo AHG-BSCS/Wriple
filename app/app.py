@@ -1,3 +1,5 @@
+import os
+import re
 import csv
 import math
 import numpy as np
@@ -6,8 +8,8 @@ import socket
 import subprocess
 import time
 import threading
-from flask import Flask, jsonify, send_from_directory
 from scapy.all import datetime
+from flask import Flask, jsonify, send_from_directory
 
 app = Flask(__name__)
 lock = threading.Lock()
@@ -15,14 +17,14 @@ lock = threading.Lock()
 SSID = 'Wiremap'
 PASSWORD = 'WiReMap@ESP32'
 ESP32_IP = '192.168.4.1' # Default IP address of the ESP32 AP
-# PAYLOAD = 'Wiremap' # For future purposes
-# ESP32_PORT = 5001 # For future purposes
+# PAYLOAD = 'Wiremap' # For sending packet purposes
+# ESP32_PORT = 5001 # For sending packet purposes
 
 listening = False
 total_packet_count = 0
 packet_count = 0
 
-CSV_FILE = 'app/dataset/csi_data.csv'
+csv_file_path = None
 COLUMN_NAMES = [
     'Recording_Timestamp', 'Type', 'Mode', 'Source_IP', 'RSSI', 'Rate', 'Sig_Mode', 'MCS', 'CWB', 'Smoothing', 
     'Not_Sounding', 'Aggregation', 'STBC', 'FEC_Coding', 'SGI', 'Noise_Floor', 'AMPDU_Cnt', 
@@ -111,18 +113,6 @@ def parse_csi_data(data_str):
 
     return parts[:25] + [csi_data, amplitudes, phases]
 
-def listen_for_packets():
-    global listening, packet_count
-    client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    client.bind(('0.0.0.0', 5000))
-
-    print('Recording CSI data...')
-    while listening:
-        data, addr = client.recvfrom(2048) # Adjusted buffer size for CSI Data
-        packet_count += 1
-        received_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
-        threading.Thread(target=process_data, args=(data, received_time)).start()
-
 def process_data(data, received_time):
     try:
         data_str = data.decode('utf-8').strip()
@@ -131,11 +121,29 @@ def process_data(data, received_time):
 
         # Write to the CSV file with a lock to ensure thread safety
         with lock:
-            with open(CSV_FILE, mode='a', newline='') as file:
+            with open(csv_file_path, mode='a', newline='') as file:
                 writer = csv.writer(file)
                 writer.writerow(row)
     except Exception as e:
         print(f'Error processing data: {e}')
+
+def listen_to_packets():
+    global listening, packet_count, total_packet_count
+    client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    client.bind(('0.0.0.0', 5000))
+
+    print('Recording CSI data...')
+    while listening:
+        data, addr = client.recvfrom(2048) # Adjusted buffer size for CSI Data
+        packet_count += 1
+        received_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+
+        if total_packet_count + packet_count <= 100:
+            threading.Thread(target=process_data, args=(data, received_time)).start()
+        else:
+            listening = False
+            print('Stopped recording CSI data.')
+            break
 
 def packet_counter():
     global total_packet_count, packet_count
@@ -143,16 +151,33 @@ def packet_counter():
 
     if (listening):
         print('Packets received in 1s:', packet_count)
-        packet_count = 0 # Reset the packet counter
         print('Total packets received:', total_packet_count)
+        packet_count = 0 # Reset the packet counter
         threading.Timer(1.0, packet_counter).start()
     else:
         total_packet_count = 0
         packet_count = 0
 
-def initialize_csv():
+def prepare_csv_file():
+    global csv_file_path
+    csv_dir = 'app/dataset'
+    files = os.listdir(csv_dir)
+    
+    # Filter files that match the pattern CSI_DATA_XXX
+    pattern = re.compile(r'^CSI_DATA_.*$')
+    matching_files = [f for f in files if pattern.match(f)]
+    
+    # Extract the numeric part and find the highest number
+    if matching_files:
+        numbers = [int(f[9:12]) for f in matching_files if f[9:12].isdigit()]
+        next_number = max(numbers) + 1
+    else:
+        next_number = 1
+    
+    csv_file_path = os.path.join(csv_dir, f'CSI_DATA_{next_number:03d}.csv')
+
     try:
-        with open(CSV_FILE, mode='x', newline='') as file:  # 'x' ensures the file is created and not overwritten
+        with open(csv_file_path, mode='x', newline='') as file:  # 'x' ensures the file is created and not overwritten
             writer = csv.writer(file)
             writer.writerow(COLUMN_NAMES)
     except FileExistsError:
@@ -171,8 +196,9 @@ def serve_index():
 def start_csi():
     global listening
     listening = True
-    threading.Thread(target=listen_for_packets, daemon=True).start()
+    prepare_csv_file()
     packet_counter()
+    threading.Thread(target=listen_to_packets, daemon=True).start()
     return 'Start recording CSI Data.'
 
 @app.route('/stop_recording', methods=['POST'])
@@ -183,8 +209,10 @@ def stop_csi():
 
 @app.route('/visualize', methods=['POST'])
 def get_csi_data():
+    global listening
+    listening = True
     try:
-        file_path = 'app/utils/open_near.csv'
+        file_path = 'app/utils/612.csv'
 
         csi_df = pd.read_csv(file_path)
         csi_amplitude = csi_df['CSI_Amplitude'].apply(eval)
@@ -216,6 +244,5 @@ if __name__ == '__main__':
     # else:
     #     print(f'Connected to {SSID}. Starting the server...')
     
-    initialize_csv()
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=3000, debug=True)
     

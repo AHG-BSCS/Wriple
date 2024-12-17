@@ -19,7 +19,7 @@ import {
   } from "https://cdn.skypack.dev/d3-3d@1.0.0";
 
 document.addEventListener('DOMContentLoaded', () => {
-    const startButton = document.getElementById('record');
+    const recordButton = document.getElementById('record');
     const visualizeButton = document.getElementById('visualize');
 
     const origin = { x: 480, y: 250 };
@@ -173,18 +173,18 @@ document.addEventListener('DOMContentLoaded', () => {
       mouseY = event.y - my + mouseY;
     }
 
-    startButton.addEventListener('click', () => {
-        startButton.disabled = true;
-        if (startButton.style.backgroundColor === 'maroon') {
-            startButton.style.backgroundColor = '#6a3acb';
-            startButton.style.backgroundImage = "url('../images/record-start.png')";
+    recordButton.addEventListener('click', () => {
+      recordButton.disabled = true;
+        if (recordButton.style.backgroundColor === 'maroon') {
+          recordButton.style.backgroundColor = '#6a3acb';
+          recordButton.style.backgroundImage = "url('static/images/record-start.png')";
             fetch('/stop_recording', { method: "POST" });
         } else {
-            startButton.style.backgroundColor = 'maroon';
-            startButton.style.backgroundImage = "url('../images/record-stop.png')";
+          recordButton.style.backgroundColor = 'maroon';
+          recordButton.style.backgroundImage = "url('static/images/record-stop.png')";
             fetch('/start_recording', { method: "POST" });
         }
-        timeout(startButton);
+        timeout(recordButton);
     });
 
     function timeout(button) {
