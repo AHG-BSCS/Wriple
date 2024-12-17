@@ -79,12 +79,12 @@ button[disabled] {
     visibility: visible;
 }
 
-#start {
-    background-image: url('../image/record-start.png');
+#record {
+    background-image: url('../images/record-start.png');
 }
 
 #visualize {
-    background-image: url('../image/visualize.png');
+    background-image: url('../images/visualize.png');
 }
 
 .camera-container {
@@ -101,7 +101,7 @@ button[disabled] {
 }
 
 #video {
-    background-image: url('../image/mapping_placeholder.jpg');
+    background-image: url('../images/mapping_placeholder.jpg');
     background-size: cover;
     display: block;
     border-radius: 10px;

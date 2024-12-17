@@ -1,6 +1,6 @@
 /.devcontainer
 /build
-/webapp/dataset
-/webapp/utils
-/webapp/model
+/app/dataset
+/app/utils
+/app/model
 /sdkconfig.old

@@ -4,8 +4,9 @@ import numpy as np
 import pandas as pd
 import socket
 import subprocess
+import time
 import threading
-from flask import Flask, render_template, jsonify
+from flask import Flask, jsonify, send_from_directory
 from scapy.all import datetime
 
 app = Flask(__name__)
@@ -21,7 +22,7 @@ listening = False
 total_packet_count = 0
 packet_count = 0
 
-CSV_FILE = 'webapp/dataset/csi_data.csv'
+CSV_FILE = 'app/dataset/csi_data.csv'
 COLUMN_NAMES = [
     'Recording_Timestamp', 'Type', 'Mode', 'Source_IP', 'RSSI', 'Rate', 'Sig_Mode', 'MCS', 'CWB', 'Smoothing', 
     'Not_Sounding', 'Aggregation', 'STBC', 'FEC_Coding', 'SGI', 'Noise_Floor', 'AMPDU_Cnt', 
@@ -163,8 +164,8 @@ def check_connection(ssid):
 
 
 @app.route('/')
-def index():
-    return render_template('index.html')
+def serve_index():
+    return send_from_directory('.', 'index.html')
 
 @app.route('/start_recording', methods=['POST'])
 def start_csi():
@@ -183,7 +184,7 @@ def stop_csi():
 @app.route('/visualize', methods=['POST'])
 def get_csi_data():
     try:
-        file_path = 'webapp/utils/open_near.csv'
+        file_path = 'app/utils/open_near.csv'
 
         csi_df = pd.read_csv(file_path)
         csi_amplitude = csi_df['CSI_Amplitude'].apply(eval)
@@ -212,8 +213,9 @@ if __name__ == '__main__':
     #     print('SSID:', SSID)
     #     print('Passord:', PASSWORD, '\n')
     #     time.sleep(5)
-
-    print(f'Connected to {SSID}. Starting the server...')
+    # else:
+    #     print(f'Connected to {SSID}. Starting the server...')
+    
     initialize_csv()
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
     
