@@ -93,7 +93,7 @@ button[disabled] {
     margin-bottom: 5px;
 }
 
-.video-container {
+.visualizer-container {
     position: relative;
     display: inline-block;
     margin-top: 20px;
@@ -141,7 +141,7 @@ button[disabled] {
     display: flex;
 }
 
-svg {
+#d3-plot {
     width: 800px;
     height: 500px;
     border-radius: 12px;

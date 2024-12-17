@@ -20,7 +20,7 @@ ESP32_IP = '192.168.4.1' # Default IP address of the ESP32 AP
 # PAYLOAD = 'Wiremap' # For sending packet purposes
 # ESP32_PORT = 5001 # For sending packet purposes
 
-listening = False
+recording = False
 total_packet_count = 0
 packet_count = 0
 
@@ -128,12 +128,13 @@ def process_data(data, received_time):
         print(f'Error processing data: {e}')
 
 def listen_to_packets():
-    global listening, packet_count, total_packet_count
+    global recording, packet_count, total_packet_count
     client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     client.bind(('0.0.0.0', 5000))
 
     print('Recording CSI data...')
-    while listening:
+    while recording:
+        # BUG: if this function is called while the previous client.recvfrom() is still waiting for packet, it might return an error
         data, addr = client.recvfrom(2048) # Adjusted buffer size for CSI Data
         packet_count += 1
         received_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
@@ -141,7 +142,7 @@ def listen_to_packets():
         if total_packet_count + packet_count <= 100:
             threading.Thread(target=process_data, args=(data, received_time)).start()
         else:
-            listening = False
+            recording = False
             print('Stopped recording CSI data.')
             break
 
@@ -149,7 +150,7 @@ def packet_counter():
     global total_packet_count, packet_count
     total_packet_count += packet_count
 
-    if (listening):
+    if (recording):
         print('Packets received in 1s:', packet_count)
         print('Total packets received:', total_packet_count)
         packet_count = 0 # Reset the packet counter
@@ -193,28 +194,37 @@ def serve_index():
     return send_from_directory('.', 'index.html')
 
 @app.route('/start_recording', methods=['POST'])
-def start_csi():
-    global listening
-    listening = True
+def start_recording():
+    global recording
+    recording = True
     prepare_csv_file()
     packet_counter()
     threading.Thread(target=listen_to_packets, daemon=True).start()
     return 'Start recording CSI Data.'
 
+@app.route('/recording_status', methods=['POST'])
+def recording_status():
+    global recording, total_packet_count
+    return jsonify({
+        'status': recording,
+        'total_packet_count': total_packet_count,
+    })
+
 @app.route('/stop_recording', methods=['POST'])
-def stop_csi():
-    global listening
-    listening = False
+def stop_recording():
+    global recording
+    recording = False
     return 'Stop recording CSI Data.'
 
 @app.route('/visualize', methods=['POST'])
-def get_csi_data():
-    global listening
-    listening = True
-    try:
-        file_path = 'app/utils/612.csv'
+def visualize():
+    global csv_file_path
 
-        csi_df = pd.read_csv(file_path)
+    # For manual visualization
+    # csv_file_path = 'app/dataset/CSI_DATA_001.csv'
+
+    try:
+        csi_df = pd.read_csv(csv_file_path)
         csi_amplitude = csi_df['CSI_Amplitude'].apply(eval)
         csi_phase = csi_df['CSI_Phase'].apply(eval)
 

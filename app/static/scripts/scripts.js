@@ -21,6 +21,8 @@ import {
 document.addEventListener('DOMContentLoaded', () => {
     const recordButton = document.getElementById('record');
     const visualizeButton = document.getElementById('visualize');
+    const d3plot = document.getElementById('d3-plot');
+    const packetcount = document.getElementById('imageCount');
 
     const origin = { x: 480, y: 250 };
     const j = 10;
@@ -183,9 +185,49 @@ document.addEventListener('DOMContentLoaded', () => {
           recordButton.style.backgroundColor = 'maroon';
           recordButton.style.backgroundImage = "url('static/images/record-stop.png')";
             fetch('/start_recording', { method: "POST" });
+            isRecording();
         }
         timeout(recordButton);
     });
+
+    visualizeButton.addEventListener('click', () => {
+      if (visualizeButton.style.backgroundColor === 'maroon') {
+        visualizeButton.style.backgroundColor = '#6a3acb';
+        // Assuming d3plot is the variable holding the SVG element
+        svg.select('#' + d3plot.attr('id')).selectAll('*').remove();
+      } else {
+        visualizeButton.style.backgroundColor = 'maroon';
+          visualize();
+      }
+      timeout(visualizeButton);
+    });
+
+    function isRecording() {
+      fetch('/recording_status', { method: "POST" })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === true) {
+              packetcount.textContent = `${data.total_packet_count}/100`
+              setTimeout(() => {
+                isRecording();
+              }, 500);
+            }
+            else if (data.status === false) {
+              packetcount.textContent = `${data.total_packet_count}/100`;
+              recordButton.style.backgroundColor = '#6a3acb';
+              recordButton.style.backgroundImage = "url('static/images/record-start.png')";
+              fetch('/stop_recording', { method: "POST" });
+
+              if (data.total_packet_count > 5) {
+                visualize();
+              }
+              else {
+                packetcount.textContent = null;
+              }
+            }
+        })
+        .catch(err => alert("Fetch Error: " + err));
+      }
 
     function timeout(button) {
         // Set timer to prevent spamming
@@ -194,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     }
 
-    visualizeButton.addEventListener('click', () => {
+    function visualize() {
         fetch('/visualize', { method: "POST" })
         .then(response => response.json())
         .then(data => {
@@ -226,5 +268,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
         })
         .catch(err => alert("Fetch Error: " + err));
-    });
+    };
 });
