@@ -54,6 +54,7 @@ button[disabled] {
 }
 
 .button-container {
+    margin-bottom: 20px;
     position: relative;
     display: inline-block;
 }
@@ -80,6 +81,10 @@ button[disabled] {
 
 #start {
     background-image: url('../image/record-start.png');
+}
+
+#visualize {
+    background-image: url('../image/visualize.png');
 }
 
 .camera-container {
@@ -134,6 +139,13 @@ button[disabled] {
 
 .attendance-dates {
     display: flex;
+}
+
+svg {
+    width: 800px;
+    height: 500px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 label, select, optgroup, option {

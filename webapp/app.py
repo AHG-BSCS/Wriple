@@ -1,10 +1,11 @@
 import csv
 import math
+import numpy as np
+import pandas as pd
 import socket
 import subprocess
 import threading
-import time
-from flask import Flask, render_template
+from flask import Flask, render_template, jsonify
 from scapy.all import datetime
 
 app = Flask(__name__)
@@ -28,22 +29,51 @@ COLUMN_NAMES = [
     'Real_Time_Set', 'Steady_Clock_Timestamp', 'Data_Length', 'CSI_Data', 'CSI_Amplitude', 'CSI_Phase'
 ]
 
-def check_connection(ssid):
-    result = subprocess.run(['netsh', 'wlan', 'show', 'interfaces'], capture_output=True, text=True, shell=True)
-    return ssid in result.stdout
+def filter_reflections(amplitudes, phases, amplitude_threshold=10):
+    """
+    Filters out the direct path data based on amplitude threshold.
+    """
+    filtered_amplitudes = []
+    filtered_phases = []
+    
+    for amp, phase in zip(amplitudes, phases):
+        amp = np.array(amp)
+        phase = np.array(phase)
+        
+        # Filter values below the amplitude threshold
+        mask = amp < amplitude_threshold
+        filtered_amplitudes.append(amp[mask])
+        filtered_phases.append(phase[mask])
+    
+    return filtered_amplitudes, filtered_phases
 
-def initialize_csv():
-    try:
-        with open(CSV_FILE, mode='x', newline='') as file:  # 'x' ensures the file is created and not overwritten
-            writer = csv.writer(file)
-            writer.writerow(COLUMN_NAMES)
-    except FileExistsError:
-        pass
+def map_reflections_to_3d(filtered_amplitudes, filtered_phases):
+    """
+    Maps reflected CSI data to approximate 3D coordinates.
+    """
+    reflected_positions = []
+    for amp, phase in zip(filtered_amplitudes, filtered_phases):
+        # Use amplitude to approximate distance (scaled)
+        distances = amp / np.max(amp) * 10  # Normalize and scale distances
+        angles = np.linspace(0, 2 * np.pi, len(amp))  # Spread reflections in a circular pattern
+        
+        # Map to 3D coordinates
+        x = distances * np.cos(angles)
+        y = distances * np.sin(angles)
+        z = phase  # Use phase as an approximation for height variation
+        
+        for i in range(len(x)):
+            reflected_positions.append((x[i], y[i], z[i]))
+            # reflected_positions.append((float(x[i]), float(y[i]), float(z[i])))
+    
+    return reflected_positions
 
 def compute_csi_amplitude_phase(csi_data):
-    # Compute amplitude and phase from raw CSI data.
-    # param csi_data: List of raw CSI values (alternating I and Q components).
-    # return: Two lists - amplitudes and phases for each subcarrier.
+    '''
+    Compute amplitude and phase from raw CSI data.
+    param csi_data: List of raw CSI values (alternating I and Q components).
+    return: Two lists - amplitudes and phases for each subcarrier.
+    '''
     amplitudes = []
     phases = []
     
@@ -119,6 +149,19 @@ def packet_counter():
         total_packet_count = 0
         packet_count = 0
 
+def initialize_csv():
+    try:
+        with open(CSV_FILE, mode='x', newline='') as file:  # 'x' ensures the file is created and not overwritten
+            writer = csv.writer(file)
+            writer.writerow(COLUMN_NAMES)
+    except FileExistsError:
+        pass
+
+def check_connection(ssid):
+    result = subprocess.run(['netsh', 'wlan', 'show', 'interfaces'], capture_output=True, text=True, shell=True)
+    return ssid in result.stdout
+
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -137,13 +180,38 @@ def stop_csi():
     listening = False
     return 'Stop recording CSI Data.'
 
+@app.route('/visualize', methods=['POST'])
+def get_csi_data():
+    try:
+        file_path = 'webapp/utils/open_near.csv'
+
+        csi_df = pd.read_csv(file_path)
+        csi_amplitude = csi_df['CSI_Amplitude'].apply(eval)
+        csi_phase = csi_df['CSI_Phase'].apply(eval)
+
+        amplitude_threshold = 10
+        filtered_amplitudes, filtered_phases = filter_reflections(csi_amplitude, csi_phase, amplitude_threshold)
+        reflected_positions = map_reflections_to_3d(filtered_amplitudes, filtered_phases)
+        
+        # AP and Device positions (fixed)
+        ap_position = {"x": 0, "y": 0, "z": 0}
+        device_position = {"x": 5, "y": 0, "z": 0}
+        
+        return jsonify({
+            "ap_position": ap_position,
+            "device_position": device_position,
+            "reflected_positions": reflected_positions
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
 if __name__ == '__main__':
     # Check if the device is connected to the ESP32 AP
-    while not check_connection(SSID):
-        print('Waiting to connect to ESP32 AP')
-        print('SSID:', SSID)
-        print('Passord:', PASSWORD, '\n')
-        time.sleep(5)
+    # while not check_connection(SSID):
+    #     print('Waiting to connect to ESP32 AP')
+    #     print('SSID:', SSID)
+    #     print('Passord:', PASSWORD, '\n')
+    #     time.sleep(5)
 
     print(f'Connected to {SSID}. Starting the server...')
     initialize_csv()
