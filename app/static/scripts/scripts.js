@@ -1,6 +1,3 @@
-/**
- * Created with d3-3d, https://github.com/niekes/d3-3d
- */
 import {
     drag,
     color,
@@ -12,11 +9,11 @@ import {
     schemeCategory10,
   } from "https://cdn.skypack.dev/d3@7.8.5";
   
-  import {
-      gridPlanes3D,
-      points3D,
-      lineStrips3D,
-  } from "https://cdn.skypack.dev/d3-3d@1.0.0";
+import {
+    gridPlanes3D,
+    lineStrips3D,
+    points3D,
+} from "./d3-3d-1.0.0/index.js";
 
 document.addEventListener('DOMContentLoaded', () => {
     const recordButton = document.getElementById('record');
@@ -193,8 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
     visualizeButton.addEventListener('click', () => {
       if (visualizeButton.style.backgroundColor === 'maroon') {
         visualizeButton.style.backgroundColor = '#6a3acb';
-        // Assuming d3plot is the variable holding the SVG element
-        svg.select('#' + d3plot.attr('id')).selectAll('*').remove();
+        svg.remove();
       } else {
         visualizeButton.style.backgroundColor = 'maroon';
           visualize();
@@ -267,6 +263,10 @@ document.addEventListener('DOMContentLoaded', () => {
             processData(datas, 1000);
 
         })
-        .catch(err => alert("Fetch Error: " + err));
+        .catch(err => {
+          visualizeButton.style.backgroundColor = '#6a3acb';
+          svg.remove();
+          alert("Fetch Error: " + err)
+      });
     };
 });
