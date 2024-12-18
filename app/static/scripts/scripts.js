@@ -3,20 +3,10 @@ import {
   drag,
   range,
   scaleOrdinal,
-  // select,
-  // selectAll,
-  schemeCategory10
-} from "./d3-7.8.5/index.js";
-
-import {
-  // color,
-  // drag,
-  // range,
-  // scaleOrdinal,
   select,
   selectAll,
-  // schemeCategory10
-} from "https://cdn.skypack.dev/d3@7.8.5";
+  schemeCategory10
+} from "./d3-7.8.5/index.js";
 
 import {
   gridPlanes3D,
@@ -103,8 +93,8 @@ document.addEventListener('DOMContentLoaded', () => {
       .attr("cx", posPointX)
       .attr("cy", posPointY)
       .merge(points)
-      .transition()
-      .duration(tt)
+      // .transition() returns a transition with the d3.transition.prototype
+      // .duration(tt)
       .attr("r", 3)
       .attr("stroke", (d) => color(colorScale(d.id)).darker(3))
       .attr("fill", (d) => colorScale(d.id))
@@ -246,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .catch(err => {
         visualizeButton.style.backgroundColor = '#6a3acb';
         svg.remove();
-        alert("No data to visualize. Please record first.");
+        alert("No data to visualize. Please record first." + err);
       });
       timeout(visualizeButton);
   };
