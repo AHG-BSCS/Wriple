@@ -246,7 +246,7 @@ def visualize():
     global csv_file_path
     # For manual visualization
     # csv_file_path = 'app/dataset/CSI_DATA_001.csv'
-    print(csv_file_path)
+    print(csv_file_path) # BUG: Not functioning as expected
 
     try:
         csi_df = pd.read_csv(csv_file_path)

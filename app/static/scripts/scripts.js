@@ -237,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
       })
       .catch(err => {
         visualizeButton.style.backgroundColor = '#6a3acb';
-        svg.remove();
+        svg.selectAll('*').remove();
         alert("No data to visualize. Please record first." + err);
       });
       timeout(visualizeButton);
@@ -285,7 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
   visualizeButton.addEventListener('click', () => {
     if (visualizeButton.style.backgroundColor === 'maroon') {
       visualizeButton.style.backgroundColor = '#6a3acb';
-      svg.remove();
+      svg.selectAll('*').remove();
       packetcount.textContent = null;
     } else {
       visualizeButton.style.backgroundColor = 'maroon';
