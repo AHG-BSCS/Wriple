@@ -1,12 +1,21 @@
 import {
-  drag,
   color,
-  select,
+  drag,
   range,
-  randomUniform,
   scaleOrdinal,
+  // select,
+  // selectAll,
+  schemeCategory10
+} from "./d3-7.8.5/index.js";
+
+import {
+  // color,
+  // drag,
+  // range,
+  // scaleOrdinal,
+  select,
   selectAll,
-  schemeCategory10,
+  // schemeCategory10
 } from "https://cdn.skypack.dev/d3@7.8.5";
 
 import {

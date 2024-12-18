@@ -246,7 +246,7 @@ def stop_recording():
 def visualize():
     global csv_file_path
     # For manual visualization
-    # csv_file_path = 'app/dataset/CSI_DATA_013.csv'
+    csv_file_path = 'app/dataset/CSI_DATA_001.csv'
 
     try:
         csi_df = pd.read_csv(csv_file_path)
