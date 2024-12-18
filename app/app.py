@@ -8,7 +8,7 @@ import socket
 import subprocess
 import time
 import threading
-from scapy.all import datetime
+from scapy.all import Raw, IP, UDP, datetime, send
 from flask import Flask, jsonify, send_from_directory
 
 app = Flask(__name__)
@@ -17,8 +17,8 @@ lock = threading.Lock()
 SSID = 'Wiremap'
 PASSWORD = 'WiReMap@ESP32'
 ESP32_IP = '192.168.4.1' # Default IP address of the ESP32 AP
-# PAYLOAD = 'Wiremap' # For sending packet purposes
-# ESP32_PORT = 5001 # For sending packet purposes
+PAYLOAD = 'Wiremap'
+ESP32_PORT = 5001
 
 recording = False
 total_packet_count = 0
@@ -132,19 +132,41 @@ def listen_to_packets():
     client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     client.bind(('0.0.0.0', 5000))
+    client.settimeout(1.0)
 
     print('Recording CSI data...')
     while recording:
-        data, addr = client.recvfrom(2048) # Adjusted buffer size for CSI Data
-        packet_count += 1
-        received_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+        try:
+            data, addr = client.recvfrom(2048) # Adjusted buffer size for CSI Data
+            print('CSI recieved')
+            packet_count += 1
+            received_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
 
-        if total_packet_count + packet_count <= 100:
-            threading.Thread(target=process_data, args=(data, received_time)).start()
-        else:
-            recording = False
-            print('Stopped recording CSI data.')
+            if total_packet_count + packet_count <= 100:
+                threading.Thread(target=process_data, args=(data, received_time)).start()
+            else:
+                break
+        except socket.timeout:
+            if not recording:
+                break
+            continue
+        except KeyboardInterrupt:
             break
+
+    recording = False   
+    print('Stopped recording CSI data.')
+
+def send_packets():
+    global recording
+    udp_packet = IP(dst=ESP32_IP)/UDP(sport=5000, dport=ESP32_PORT)/Raw(load=PAYLOAD)
+
+    try:
+        while recording:
+            send(udp_packet)
+            time.sleep(0.01)
+    except KeyboardInterrupt:
+        recording = False
+        print('Stopped sending packets.')
 
 def packet_counter():
     global total_packet_count, packet_count
@@ -198,9 +220,12 @@ def serve_index():
 def start_recording():
     global recording
     recording = True
+
     prepare_csv_file()
     packet_counter()
     threading.Thread(target=listen_to_packets, daemon=True).start()
+    # time.sleep(1)  # Wait listerning thread to start
+    # threading.Thread(target=send_packets, daemon=True).start()
     return 'Start recording CSI Data.'
 
 @app.route('/recording_status', methods=['POST'])
@@ -220,9 +245,8 @@ def stop_recording():
 @app.route('/visualize', methods=['POST'])
 def visualize():
     global csv_file_path
-
     # For manual visualization
-    # csv_file_path = 'app/dataset/CSI_DATA_001.csv'
+    # csv_file_path = 'app/dataset/CSI_DATA_013.csv'
 
     try:
         csi_df = pd.read_csv(csv_file_path)

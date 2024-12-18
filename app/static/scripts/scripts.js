@@ -185,22 +185,20 @@ document.addEventListener('DOMContentLoaded', () => {
             isRecording();
           }, 1000);
         }
-        else if (data.status === false) {
-          packetcount.textContent = `${data.total_packet_count}/100`;
+        else {
           recordButton.style.backgroundColor = '#6a3acb';
-          recordButton.style.backgroundImage = "url('static/images/record-start.png')";
           visualizeButton.style.backgroundColor = 'maroon';
+          recordButton.style.backgroundImage = "url('static/images/record-start.png')";
 
-          if (data.total_packet_count > 5) {
-            if (data.total_packet_count > 95) {
-              packetcount.textContent = '100/100';
-            }
-            visualize();
+          if (data.total_packet_count > 95) {
+            packetcount.textContent = '100/100';
           }
           else {
-            packetcount.textContent = null;
+            packetcount.textContent = `${data.total_packet_count}/100`;
           }
+
           fetch('/stop_recording', { method: "POST" });
+          visualize();
         }
       })
       .catch(err => alert("Fetch Error: " + err));
@@ -239,8 +237,9 @@ document.addEventListener('DOMContentLoaded', () => {
       .catch(err => {
         visualizeButton.style.backgroundColor = '#6a3acb';
         svg.remove();
-        alert("Fetch Error: " + err)
+        alert("No data to visualize. Please record first.");
       });
+      timeout(visualizeButton);
   };
   
   // Set timer to prevent spamming
