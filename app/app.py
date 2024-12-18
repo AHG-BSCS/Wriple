@@ -130,11 +130,11 @@ def process_data(data, received_time):
 def listen_to_packets():
     global recording, packet_count, total_packet_count
     client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     client.bind(('0.0.0.0', 5000))
 
     print('Recording CSI data...')
     while recording:
-        # BUG: if this function is called while the previous client.recvfrom() is still waiting for packet, it might return an error
         data, addr = client.recvfrom(2048) # Adjusted buffer size for CSI Data
         packet_count += 1
         received_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
@@ -156,6 +156,7 @@ def packet_counter():
         packet_count = 0 # Reset the packet counter
         threading.Timer(1.0, packet_counter).start()
     else:
+        time.sleep(1.0)
         total_packet_count = 0
         packet_count = 0
 

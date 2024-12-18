@@ -100,6 +100,13 @@ button[disabled] {
     margin-bottom: 20px;
 }
 
+#d3-plot {
+    width: 800px;
+    height: 500px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
 #video {
     background-image: url('../images/mapping_placeholder.jpg');
     background-size: cover;
@@ -139,13 +146,6 @@ button[disabled] {
 
 .attendance-dates {
     display: flex;
-}
-
-#d3-plot {
-    width: 800px;
-    height: 500px;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 label, select, optgroup, option {
