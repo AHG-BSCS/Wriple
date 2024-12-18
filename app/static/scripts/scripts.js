@@ -17,7 +17,8 @@ import {
 document.addEventListener('DOMContentLoaded', () => {
   const recordButton = document.getElementById('record');
   const visualizeButton = document.getElementById('visualize');
-  const packetcount = document.getElementById('imageCount');
+  const fileList = document.getElementById('files-list');
+  const packetcount = document.getElementById('image-count');
 
   /* Visualizer Functions */
 
@@ -198,6 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           fetch('/stop_recording', { method: "POST" });
           visualize();
+          list_csv_files();
         }
       })
       .catch(err => alert("Fetch Error: " + err));
@@ -240,6 +242,20 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       timeout(visualizeButton);
   };
+
+  function list_csv_files() {
+    fetch('/list_csv_files')
+    .then(response => response.json())
+    .then(files => {
+      fileList.innerHTML = '';
+      files.forEach(file => {
+          const option = document.createElement('option');
+          option.value = file;
+          option.textContent = file;
+          fileList.appendChild(option);
+      });
+    });
+  }
   
   // Set timer to prevent spamming
   function timeout(button) {
@@ -255,7 +271,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (recordButton.style.backgroundColor === 'maroon') {
         recordButton.style.backgroundColor = '#6a3acb';
         recordButton.style.backgroundImage = "url('static/images/record-start.png')";
-          fetch('/stop_recording', { method: "POST" });
+        fetch('/stop_recording', { method: "POST" });
+        list_csv_files();
       } else {
         recordButton.style.backgroundColor = 'maroon';
         recordButton.style.backgroundImage = "url('static/images/record-stop.png')";
@@ -276,4 +293,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     timeout(visualizeButton);
   });
+
+  fileList.addEventListener('change', () => {
+    const selectedFile = fileList.value;
+    if (selectedFile) {
+      fetch(`/visualize_csv/${selectedFile}`)
+        .catch(error => alert(error));
+      visualize();
+      visualizeButton.style.backgroundColor = 'maroon';
+    }
+  });
+
+  /* Initial Loading */
+
+  list_csv_files();
 });

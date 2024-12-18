@@ -138,7 +138,6 @@ def listen_to_packets():
     while recording:
         try:
             data, addr = client.recvfrom(2048) # Adjusted buffer size for CSI Data
-            print('CSI recieved')
             packet_count += 1
             received_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
 
@@ -246,7 +245,8 @@ def stop_recording():
 def visualize():
     global csv_file_path
     # For manual visualization
-    csv_file_path = 'app/dataset/CSI_DATA_001.csv'
+    # csv_file_path = 'app/dataset/CSI_DATA_001.csv'
+    print(csv_file_path)
 
     try:
         csi_df = pd.read_csv(csv_file_path)
@@ -268,6 +268,20 @@ def visualize():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+
+@app.route('/list_csv_files', methods=['GET'])
+def list_attendance_files():
+    attendance_files = [f for f in os.listdir('app/dataset') if f.endswith('.csv')]
+    return jsonify(attendance_files)
+
+@app.route('/visualize_csv/<filename>', methods=['GET'])
+def visualize_csv(filename):
+    global csv_file_path
+    csv_file_path = os.path.join('app/dataset', filename)
+
+    if not os.path.exists(csv_file_path):
+        return jsonify({"error": "File not found"}), 404
+    return 'CSV file set for visualization.'
 
 if __name__ == '__main__':
     # Check if the device is connected to the ESP32 AP
