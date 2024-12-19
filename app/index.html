@@ -6,6 +6,7 @@
     <title>Wiremap</title>
     <link rel="stylesheet" href="static/styles/styles.css">
     <script type="module" src="static/scripts/scripts.js"></script>
+    <script src="static/scripts/jquery-3.7.1/jquery-3.7.1.min.js"></script>
 </head>
 <body>
 <div class="card">
@@ -22,10 +23,7 @@
         </div>
     </div>
     <div class="files-container">
-        <label for="files-list">CSV Files:</label>
-        <select id="files-list" class="form-select">
-            <optgroup label="CSV Files"></optgroup>
-        </select>
+        <select id="files-list" class="form-select"></select>
     </div>
     <div class="visualizer-container">
         <svg id="d3-plot"></svg>

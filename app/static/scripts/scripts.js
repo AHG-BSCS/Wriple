@@ -17,7 +17,7 @@ import {
 document.addEventListener('DOMContentLoaded', () => {
   const recordButton = document.getElementById('record');
   const visualizeButton = document.getElementById('visualize');
-  const fileList = document.getElementById('files-list');
+  const filesList = $('#files-list');
   const packetcount = document.getElementById('image-count');
 
   /* Visualizer Functions */
@@ -247,12 +247,10 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch('/list_csv_files')
     .then(response => response.json())
     .then(files => {
-      fileList.innerHTML = '';
+      filesList.empty();
       files.forEach(file => {
-          const option = document.createElement('option');
-          option.value = file;
-          option.textContent = file;
-          fileList.appendChild(option);
+          const option = new Option(file, file);
+          filesList.append(option);
       });
     });
   }
@@ -294,8 +292,12 @@ document.addEventListener('DOMContentLoaded', () => {
     timeout(visualizeButton);
   });
 
-  fileList.addEventListener('change', () => {
-    const selectedFile = fileList.value;
+
+  /* JQuery Elements */
+  
+  
+  filesList.on('change', function() {
+    const selectedFile = $(this).val();
     if (selectedFile) {
       fetch(`/visualize_csv/${selectedFile}`)
         .catch(error => alert(error));
@@ -304,7 +306,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+
   /* Initial Loading */
 
+  
   list_csv_files();
 });

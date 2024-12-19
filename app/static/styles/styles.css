@@ -138,7 +138,6 @@ button[disabled] {
 label, select, optgroup, option {
     font-size: 1rem;
     color: #444444;
-    margin-right: -2px;
 }
 
 select {
