@@ -17,19 +17,22 @@ lock = threading.Lock()
 SSID = 'Wiremap'
 PASSWORD = 'WiReMap@ESP32'
 ESP32_IP = '192.168.4.1' # Default IP address of the ESP32 AP
-PAYLOAD = 'Wiremap' # Signal Lenght is 89
+PAYLOAD = 'Wiremap' # Signal Length is 89
 ESP32_PORT = 5001
 
 recording = False
 total_packet_count = 0
 packet_count = 0
+max_packets = 25
+packet_interval = 0.1
 
 csv_file_path = None
+sending_timestamp = []
 COLUMN_NAMES = [
-    'Recording_Timestamp', 'Type', 'Mode', 'Source_IP', 'RSSI', 'Rate', 'Sig_Mode', 'MCS', 'CWB', 'Smoothing', 
+    'Sending_Timestamp', 'Recording_Timestamp', 'Type', 'Mode', 'Source_IP', 'RSSI', 'Rate', 'Sig_Mode', 'MCS', 'CWB', 'Smoothing', 
     'Not_Sounding', 'Aggregation', 'STBC', 'FEC_Coding', 'SGI', 'Noise_Floor', 'AMPDU_Cnt', 
     'Channel', 'Secondary_Channel', 'Received_Timestamp', 'Antenna', 'Signal_Length', 'RX_State', 
-    'Real_Time_Set', 'Steady_Clock_Timestamp', 'Data_Length', 'CSI_Data', 'CSI_Amplitude', 'CSI_Phase'
+    'Real_Time_Set', 'Steady_Clock_Timestamp', 'Data_Length', 'Raw_CSI', 'Amplitude', 'Phase', 'Time_of_Flight'
 ]
 
 def filter_reflections(amplitudes, phases, amplitude_threshold=10):
@@ -113,22 +116,44 @@ def parse_csi_data(data_str):
 
     return parts[:25] + [csi_data, amplitudes, phases]
 
+def compute_time_of_flight(previous_row, current_row):
+    print(f"Previous system time: {previous_row}")
+    print(f"Current system time: {current_row}")
+
+    time_of_flight_microseconds = current_row - previous_row
+    time_of_flight_seconds = time_of_flight_microseconds / 1_000_000
+    return time_of_flight_seconds
+
 def process_data(data, received_time):
     try:
         data_str = data.decode('utf-8').strip()
-        row = parse_csi_data(data_str)
-        row.insert(0, received_time)
+        csi_data = parse_csi_data(data_str)
+        csi_data.insert(0, sending_timestamp.pop(0))
+        csi_data.insert(1, received_time)
 
+        # previous_row = int(csi_data[:][20])
+        # current_row = int(csi_data[:][20])
+        # print(type(csi_data))
+        # tof = compute_time_of_flight(previous_row, current_row)
+        # csi_data.insert(30, tof)
+            
         # Write to the CSV file with a lock to ensure thread safety
         with lock:
             with open(csv_file_path, mode='a', newline='') as file:
                 writer = csv.writer(file)
-                writer.writerow(row)
+                writer.writerow(csi_data)
     except Exception as e:
         print(f'Error processing data: {e}')
+    
+    # if not recording:
+    #     csi_df = pd.read_csv(csv_file_path)
+    #     recording_time = csi_df['Recording_Timestamp']
+    #     received_time = csi_df['Received_Timestamp']
+
+
 
 def listen_to_packets():
-    global recording, packet_count, total_packet_count
+    global recording, packet_count
     client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     client.bind(('0.0.0.0', 5000))
@@ -138,10 +163,10 @@ def listen_to_packets():
     while recording:
         try:
             data, addr = client.recvfrom(2048) # Adjusted buffer size for CSI Data
-            packet_count += 1
             received_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+            packet_count += 1
 
-            if total_packet_count + packet_count <= 100:
+            if total_packet_count + packet_count <= max_packets:
                 threading.Thread(target=process_data, args=(data, received_time)).start()
             else:
                 break
@@ -160,9 +185,10 @@ def send_packets():
     udp_packet = IP(dst=ESP32_IP)/UDP(sport=5000, dport=ESP32_PORT)/Raw(load=PAYLOAD)
 
     try:
-        for i in range(50):
+        while recording and total_packet_count + packet_count <= max_packets:
             send(udp_packet)
-            time.sleep(0.1)
+            sending_timestamp.append(datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f'))
+            time.sleep(packet_interval)
     except KeyboardInterrupt:
         recording = False
         print('Stopped sending packets.')
@@ -229,7 +255,6 @@ def start_recording():
 
 @app.route('/recording_status', methods=['POST'])
 def recording_status():
-    global recording, total_packet_count
     return jsonify({
         'status': recording,
         'total_packet_count': total_packet_count,
@@ -243,10 +268,9 @@ def stop_recording():
 
 @app.route('/visualize', methods=['POST'])
 def visualize():
-    global csv_file_path
-    # For manual visualization
-    # csv_file_path = 'app/dataset/CSI_DATA_001.csv'
-
+    if not os.path.exists(csv_file_path):
+        return jsonify({"error": "No CSV file found"}), 404
+    
     try:
         csi_df = pd.read_csv(csv_file_path)
         csi_amplitude = csi_df['CSI_Amplitude'].apply(eval)
