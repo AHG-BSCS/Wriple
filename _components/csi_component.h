@@ -19,26 +19,27 @@ TimerHandle_t packet_timer;
 static char *project_type;
 static const char *CSI = "CSI";
 
-static bool sending = false;
+static bool connected = false;
 static int packet_count = 0;
 static int total_packet_count = 0;
 
 static int sock = -1;
 static sockaddr_in client_addr;
-static const uint8_t target_mac[6] = {0xE0, 0x2B, 0xE9, 0x95, 0xED, 0x68};
-static const char *target_ip = "192.168.4.2";
+static const uint8_t target_mac[6] = {0xE0, 0x2B, 0xE9, 0x95, 0xED, 0x68}; // Currectly set to specific MAC address of the station
+static const char *target_ip = "192.168.4.2"; // Currently set to the IP address of the station
 
-void packet_timer_callback(TimerHandle_t xTimer) {
-    if (sending) {
-        ESP_LOGI(CSI, "Total packets sent: %d:", total_packet_count);
-        ESP_LOGI(CSI, "Packets sent in 1s: %d\n", packet_count);
-        packet_count = 0;  // Reset the packet count for the next interval
-    }
-}
+// void packet_timer_callback(TimerHandle_t xTimer) {
+//     if (connected) {
+//         ESP_LOGI(CSI, "Total packets sent: %d:", total_packet_count);
+//         ESP_LOGI(CSI, "Packets sent in 3s: %d\n", packet_count);
+//         packet_count = 0;  // Reset the packet count for the next interval
+//     }
+// }
 
 void _wifi_csi_callback(void *ctx, wifi_csi_info_t *data) {
-    if (memcmp(data->mac, target_mac, 6) == 0) {
-        sending = true;
+    if ((memcmp(data->mac, target_mac, 6) == 0) &&
+        (data[0].rx_ctrl.cwb == 1) &&               // 40Mhz Channel Bandwidth / 128 Subcarrier
+        (data[0].rx_ctrl.sig_len == 89)) {          // Payload with "Wiremap" is 89 bytes long. Filter to only get the packets sent by the station
         if (sock == -1) {
             ESP_LOGE(CSI, "Unable to create socket");
             vTaskDelete(NULL);
@@ -77,7 +78,7 @@ void _wifi_csi_callback(void *ctx, wifi_csi_info_t *data) {
         << get_steady_clock_timestamp() << ","
         << data->len << ",[";
 
-    int data_len = 128;
+    int data_len = data->len;
 
 int8_t *my_ptr;
 #if CSI_RAW
@@ -109,9 +110,6 @@ int8_t *my_ptr;
         vTaskDelay(0);
         xSemaphoreGive(mutex);
     }
-    else {
-        sending = false;
-    }
 }
 
 void csi_init(char *type) {
@@ -126,10 +124,10 @@ void csi_init(char *type) {
     configuration_csi.channel_filter_en = 0;
     configuration_csi.manu_scale = 0;
 
-    packet_timer = xTimerCreate("PacketTimer", pdMS_TO_TICKS(1000), pdTRUE, (void *)0, packet_timer_callback);
-    if (packet_timer != NULL) {
-        xTimerStart(packet_timer, 0);
-    }
+    // packet_timer = xTimerCreate("PacketTimer", pdMS_TO_TICKS(3000), pdTRUE, (void *)0, packet_timer_callback);
+    // if (packet_timer != NULL) {
+    //     xTimerStart(packet_timer, 0);
+    // }
 
     ESP_ERROR_CHECK(esp_wifi_set_csi_config(&configuration_csi));
     ESP_ERROR_CHECK(esp_wifi_set_csi_rx_cb(&_wifi_csi_callback, NULL));

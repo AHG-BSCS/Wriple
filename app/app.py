@@ -17,7 +17,7 @@ lock = threading.Lock()
 SSID = 'Wiremap'
 PASSWORD = 'WiReMap@ESP32'
 ESP32_IP = '192.168.4.1' # Default IP address of the ESP32 AP
-PAYLOAD = 'Wiremap'
+PAYLOAD = 'Wiremap' # Signal Lenght is 89
 ESP32_PORT = 5001
 
 recording = False
@@ -160,9 +160,9 @@ def send_packets():
     udp_packet = IP(dst=ESP32_IP)/UDP(sport=5000, dport=ESP32_PORT)/Raw(load=PAYLOAD)
 
     try:
-        while recording:
+        for i in range(50):
             send(udp_packet)
-            time.sleep(0.01)
+            time.sleep(0.1)
     except KeyboardInterrupt:
         recording = False
         print('Stopped sending packets.')
@@ -223,8 +223,8 @@ def start_recording():
     prepare_csv_file()
     packet_counter()
     threading.Thread(target=listen_to_packets, daemon=True).start()
-    # time.sleep(1)  # Wait listerning thread to start
-    # threading.Thread(target=send_packets, daemon=True).start()
+    time.sleep(0.9)  # Wait for listerning thread to start
+    threading.Thread(target=send_packets, daemon=True).start()
     return 'Start recording CSI Data.'
 
 @app.route('/recording_status', methods=['POST'])
@@ -246,7 +246,6 @@ def visualize():
     global csv_file_path
     # For manual visualization
     # csv_file_path = 'app/dataset/CSI_DATA_001.csv'
-    print(csv_file_path) # BUG: Not functioning as expected
 
     try:
         csi_df = pd.read_csv(csv_file_path)
