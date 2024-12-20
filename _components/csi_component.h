@@ -3,6 +3,7 @@
 
 #include <sstream>
 #include "esp_log.h"
+#include "driver/gpio.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/timers.h"
 #include "lwip/sockets.h"
@@ -12,6 +13,7 @@
 #define CSI_AMPLITUDE 0
 #define CSI_PHASE 0
 #define CSI_TYPE CSI_RAW
+#define LED_GPIO_PIN GPIO_NUM_2
 
 SemaphoreHandle_t mutex = xSemaphoreCreateMutex();
 TimerHandle_t packet_timer;
@@ -20,8 +22,8 @@ static char *project_type;
 static const char *CSI = "CSI";
 
 static bool connected = false;
-static int packet_count = 0;
-static int total_packet_count = 0;
+// static int packet_count = 0;
+// static int total_packet_count = 0;
 
 static int sock = -1;
 static sockaddr_in client_addr;
@@ -103,8 +105,12 @@ int8_t *my_ptr;
         // Send the CSI data to the target IP
         sendto(sock, ss.str().c_str(), strlen(ss.str().c_str()), 0, (struct sockaddr *)&client_addr, sizeof(client_addr));
         
-        packet_count++;
-        total_packet_count++;
+        // packet_count++;
+        // total_packet_count++;
+
+        static bool led_on = false;
+        gpio_set_level(LED_GPIO_PIN, led_on ? 0 : 1);
+        led_on = !led_on;
 
         fflush(stdout);
         vTaskDelay(0);
@@ -112,9 +118,15 @@ int8_t *my_ptr;
     }
 }
 
+void configure_led() {
+    gpio_reset_pin(LED_GPIO_PIN);
+    gpio_set_direction(LED_GPIO_PIN, GPIO_MODE_OUTPUT);
+}
+
 void csi_init(char *type) {
     project_type = type;
     ESP_ERROR_CHECK(esp_wifi_set_csi(1));
+    configure_led();
 
     wifi_csi_config_t configuration_csi;
     configuration_csi.lltf_en = 1;
