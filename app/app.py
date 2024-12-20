@@ -24,12 +24,12 @@ recording = False
 total_packet_count = 0
 packet_count = 0
 max_packets = 25
-packet_interval = 0.1
+tx_interval = 0.1
 
 csv_file_path = None
 sending_timestamp = []
 COLUMN_NAMES = [
-    'Sending_Timestamp', 'Recording_Timestamp', 'Type', 'Mode', 'Source_IP', 'RSSI', 'Rate', 'Sig_Mode', 'MCS', 'CWB', 'Smoothing', 
+    'Transmit_Timestamp', 'Record_Timestamp', 'Type', 'Mode', 'Source_IP', 'RSSI', 'Rate', 'Sig_Mode', 'MCS', 'CWB', 'Smoothing', 
     'Not_Sounding', 'Aggregation', 'STBC', 'FEC_Coding', 'SGI', 'Noise_Floor', 'AMPDU_Cnt', 
     'Channel', 'Secondary_Channel', 'Received_Timestamp', 'Antenna', 'Signal_Length', 'RX_State', 
     'Real_Time_Set', 'Steady_Clock_Timestamp', 'Data_Length', 'Raw_CSI', 'Amplitude', 'Phase', 'Time_of_Flight'
@@ -116,27 +116,48 @@ def parse_csi_data(data_str):
 
     return parts[:25] + [csi_data, amplitudes, phases]
 
-def compute_time_of_flight(previous_row, current_row):
-    print(f"Previous system time: {previous_row}")
-    print(f"Current system time: {current_row}")
+def compute_time_of_flight():
+    '''
+    Compute time of flight for each CSI data row.
+    This is currectly not accurate and needs to be improved.
+    '''
+    tx_delay = tx_interval * 1_000_000
+    tof_list = []
+    csi_df = pd.read_csv(csv_file_path)
 
-    time_of_flight_microseconds = current_row - previous_row
-    time_of_flight_seconds = time_of_flight_microseconds / 1_000_000
-    return time_of_flight_seconds
+    for i in range(1, len(csi_df)):
+        previous_row = csi_df.iloc[i - 1]
+        current_row = csi_df.iloc[i]
 
-def process_data(data, received_time):
+        prev_tx_time = previous_row['Transmit_Timestamp']
+        curr_tx_time = current_row['Transmit_Timestamp']
+        prev_rx_time = previous_row['Received_Timestamp']
+        curr_rx_time = current_row['Received_Timestamp']
+
+        # Calculate the difference in microseconds
+        tx_offset = curr_tx_time - prev_tx_time
+        rx_offset = curr_rx_time - prev_rx_time
+
+        # Subtract the time in takes to transmit to the time of receiving
+        adjust_rx_time = curr_rx_time - tx_offset
+
+        # Calculate the difference in received times
+        tof = prev_rx_time - adjust_rx_time
+        tof_seconds = tof / 1_000_000
+        tof_list.append(tof_seconds)
+
+    # Note: The first row will not have a ToF value
+    csi_df['Time_of_Flight'] = [float('nan')] + tof_list
+    csi_df.to_csv(csv_file_path, index=False)
+    return csi_df
+
+def process_data(data, rx_time):
     try:
         data_str = data.decode('utf-8').strip()
         csi_data = parse_csi_data(data_str)
         csi_data.insert(0, sending_timestamp.pop(0))
-        csi_data.insert(1, received_time)
+        csi_data.insert(1, rx_time)
 
-        # previous_row = int(csi_data[:][20])
-        # current_row = int(csi_data[:][20])
-        # print(type(csi_data))
-        # tof = compute_time_of_flight(previous_row, current_row)
-        # csi_data.insert(30, tof)
-            
         # Write to the CSV file with a lock to ensure thread safety
         with lock:
             with open(csv_file_path, mode='a', newline='') as file:
@@ -145,13 +166,6 @@ def process_data(data, received_time):
     except Exception as e:
         print(f'Error processing data: {e}')
     
-    # if not recording:
-    #     csi_df = pd.read_csv(csv_file_path)
-    #     recording_time = csi_df['Recording_Timestamp']
-    #     received_time = csi_df['Received_Timestamp']
-
-
-
 def listen_to_packets():
     global recording, packet_count
     client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -163,11 +177,12 @@ def listen_to_packets():
     while recording:
         try:
             data, addr = client.recvfrom(2048) # Adjusted buffer size for CSI Data
-            received_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+            rx_time = time.time()
+            rx_time = int((rx_time * 1_000_000) % 1_000_000_000)
             packet_count += 1
 
             if total_packet_count + packet_count <= max_packets:
-                threading.Thread(target=process_data, args=(data, received_time)).start()
+                threading.Thread(target=process_data, args=(data, rx_time)).start()
             else:
                 break
         except socket.timeout:
@@ -179,6 +194,7 @@ def listen_to_packets():
 
     recording = False   
     print('Stopped recording CSI data.')
+    compute_time_of_flight()
 
 def send_packets():
     global recording
@@ -186,9 +202,12 @@ def send_packets():
 
     try:
         while recording and total_packet_count + packet_count <= max_packets:
+            # Get the sending timestamp as accurate as possible
             send(udp_packet)
-            sending_timestamp.append(datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f'))
-            time.sleep(packet_interval)
+            tx_time = time.time()
+            tx_time = int((tx_time * 1_000_000) % 1_000_000_000)
+            sending_timestamp.append(tx_time)
+            time.sleep(tx_interval) 
     except KeyboardInterrupt:
         recording = False
         print('Stopped sending packets.')
@@ -273,8 +292,8 @@ def visualize():
     
     try:
         csi_df = pd.read_csv(csv_file_path)
-        csi_amplitude = csi_df['CSI_Amplitude'].apply(eval)
-        csi_phase = csi_df['CSI_Phase'].apply(eval)
+        csi_amplitude = csi_df['Amplitude'].apply(eval)
+        csi_phase = csi_df['Phase'].apply(eval)
 
         amplitude_threshold = 10
         filtered_amplitudes, filtered_phases = filter_reflections(csi_amplitude, csi_phase, amplitude_threshold)
@@ -308,13 +327,13 @@ def visualize_csv(filename):
 
 if __name__ == '__main__':
     # Check if the device is connected to the ESP32 AP
-    # while not check_connection(SSID):
-    #     print('Waiting to connect to ESP32 AP')
-    #     print('SSID:', SSID)
-    #     print('Passord:', PASSWORD, '\n')
-    #     time.sleep(5)
-    # else:
-    #     print(f'Connected to {SSID}. Starting the server...')
+    while not check_connection(SSID):
+        print('Waiting to connect to ESP32 AP')
+        print('SSID:', SSID)
+        print('Passord:', PASSWORD, '\n')
+        time.sleep(5)
+    else:
+        print(f'Connected to {SSID}. Starting the server...')
     
     app.run(host='0.0.0.0', port=3000, debug=True)
     
