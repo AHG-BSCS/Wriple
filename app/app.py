@@ -21,17 +21,21 @@ PASSWORD = 'WiReMap@ESP32'
 ESP32_IP = '192.168.4.1' # Default IP address of the ESP32 AP
 PAYLOAD = 'Wiremap' # Signal Length is 89
 ESP32_PORT = 5001
+UDP_PACKET = IP(dst=ESP32_IP)/UDP(sport=5000, dport=ESP32_PORT)/Raw(load=PAYLOAD)
 
 recording = False
+monitoring = False
 total_packet_count = 0
 packet_count = 0
 max_packets = 25
 tx_interval = 0.1
-threshold = 1
+threshold = 2
 
 # csv_file_path = None
-csv_file_path = "app/utils/CSI_DATA_011.csv"
+csv_file_path = None
 sending_timestamp = []
+amplitude = []
+phase = []
 COLUMN_NAMES = [
     'Transmit_Timestamp', 'Record_Timestamp', 'Type', 'Mode', 'Source_IP', 'RSSI', 'Rate', 'Sig_Mode', 'MCS', 'CWB', 'Smoothing', 
     'Not_Sounding', 'Aggregation', 'STBC', 'FEC_Coding', 'SGI', 'Noise_Floor', 'AMPDU_Cnt', 
@@ -95,7 +99,7 @@ def get_subcarrier_threshold(data_transposed):
 
     return lower_threshold, upper_threshold
 
-def get_filtered_amp_phase():
+def filter_amp_phase():
     scaler = MinMaxScaler((-10, 10))
     filtered_positions = []
 
@@ -222,76 +226,80 @@ def process_data(data, rx_time):
     try:
         data_str = data.decode('utf-8').strip()
         csi_data = parse_csi_data(data_str)
-        csi_data.insert(0, sending_timestamp.pop(0))
-        csi_data.insert(1, rx_time)
+        if (recording):
+            csi_data.insert(0, sending_timestamp.pop(0))
+            csi_data.insert(1, rx_time)
 
-        # Write to the CSV file with a lock to ensure thread safety
-        with lock:
-            with open(csv_file_path, mode='a', newline='') as file:
-                writer = csv.writer(file)
-                writer.writerow(csi_data)
+            # Write to the CSV file with a lock to ensure thread safety
+            with lock:
+                with open(csv_file_path, mode='a', newline='') as file:
+                    writer = csv.writer(file)
+                    writer.writerow(csi_data)
+        else:
+            global amplitude, phase
+            amplitude.append(csi_data[-2])
+            phase.append(csi_data[-1])
     except Exception as e:
         print(f'Error processing data: {e}')
     
 def listen_to_packets():
-    global recording, packet_count
-    client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    client.bind(('0.0.0.0', 5000))
-    client.settimeout(1.0)
+    global recording, monitoring, total_packet_count
+    mode = 0 if recording else 1
+    packet_listener = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    packet_listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    packet_listener.bind(('0.0.0.0', 5000))
+    packet_listener.settimeout(1.0)
 
     print('Recording CSI data...')
-    while recording:
+    while recording or monitoring:
         try:
-            data, addr = client.recvfrom(2048) # Adjusted buffer size for CSI Data
+            data, addr = packet_listener.recvfrom(2048) # Adjusted buffer size for CSI Data
+            if monitoring:
+                total_packet_count += 1
+                threading.Thread(target=process_data, args=(data, None)).start()
+                continue
+
+            total_packet_count += 1
             rx_time = time.time()
             rx_time = int((rx_time * 1_000_000) % 1_000_000_000)
-            packet_count += 1
 
-            if total_packet_count + packet_count <= max_packets:
+            if total_packet_count <= max_packets:
                 threading.Thread(target=process_data, args=(data, rx_time)).start()
             else:
+                total_packet_count = 0
                 break
         except socket.timeout:
-            if not recording:
+            if not recording and not monitoring:
                 break
-            continue
+            else:
+                continue
         except KeyboardInterrupt:
             break
 
-    recording = False   
+    if mode == 0:
+        compute_time_of_flight()
+        
+    recording = False
+    monitoring = False
+    
     print('Stopped recording CSI data.')
-    compute_time_of_flight()
 
 def send_packets():
-    global recording
-    udp_packet = IP(dst=ESP32_IP)/UDP(sport=5000, dport=ESP32_PORT)/Raw(load=PAYLOAD)
-
     try:
-        while recording and total_packet_count + packet_count <= max_packets:
+        if monitoring:
+            send(UDP_PACKET)
+            threading.Timer(tx_interval, send_packets).start()
+        elif recording and not monitoring and total_packet_count <= max_packets:
             # Get the sending timestamp as accurate as possible
-            send(udp_packet)
+            send(UDP_PACKET)
             tx_time = time.time()
             tx_time = int((tx_time * 1_000_000) % 1_000_000_000)
             sending_timestamp.append(tx_time)
-            time.sleep(tx_interval) 
+            threading.Timer(tx_interval, send_packets).start()
+        else:
+            print('Stopped sending packets.')
     except KeyboardInterrupt:
-        recording = False
-        print('Stopped sending packets.')
-
-def packet_counter():
-    global total_packet_count, packet_count
-    total_packet_count += packet_count
-
-    if (recording):
-        print('Packets received in 1s:', packet_count)
-        print('Total packets received:', total_packet_count)
-        packet_count = 0 # Reset the packet counter
-        threading.Timer(1.0, packet_counter).start()
-    else:
-        time.sleep(1.0)
-        total_packet_count = 0
-        packet_count = 0
+        pass
 
 def prepare_csv_file():
     global csv_file_path
@@ -327,29 +335,34 @@ def check_connection(ssid):
 def serve_index():
     return send_from_directory('.', 'index.html')
 
-@app.route('/start_recording', methods=['POST'])
-def start_recording():
-    global recording
-    recording = True
+@app.route('/start_recording/<mode>', methods=['GET'])
+def start_recording(mode):
+    global recording, monitoring
 
-    prepare_csv_file()
-    packet_counter()
-    threading.Thread(target=listen_to_packets, daemon=True).start()
-    time.sleep(0.9)  # Wait for listerning thread to start
-    threading.Thread(target=send_packets, daemon=True).start()
-    return 'Start recording CSI Data.'
+    if mode == 'recording':
+        recording = True
+        prepare_csv_file()
+        threading.Thread(target=listen_to_packets, daemon=True).start()
+        send_packets()
+    elif mode == 'monitoring':
+        monitoring = True
+        threading.Thread(target=listen_to_packets, daemon=True).start()
+        send_packets()
+
+    return f'Start {mode} CSI Data.'
 
 @app.route('/recording_status', methods=['POST'])
 def recording_status():
     return jsonify({
-        'status': recording,
-        'total_packet_count': total_packet_count,
+        'mode': 0 if recording else 1 if monitoring else -1,
+        'total_packet': total_packet_count
     })
 
 @app.route('/stop_recording', methods=['POST'])
 def stop_recording():
-    global recording
+    global recording, monitoring
     recording = False
+    monitoring = False
     return 'Stop recording CSI Data.'
 
 @app.route('/visualize', methods=['POST'])
@@ -358,7 +371,7 @@ def visualize_amp_phase():
         return jsonify({"error": "No CSV file found"}), 404
     
     try:
-        filtered_signal = get_filtered_amp_phase()
+        filtered_signal = filter_amp_phase()
         return jsonify({"filtered_signal": filtered_signal})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -379,13 +392,13 @@ def visualize_csv(filename):
 
 if __name__ == '__main__':
     # Check if the device is connected to the ESP32 AP
-    # while not check_connection(SSID):
-    #     print('Waiting to connect to ESP32 AP')
-    #     print('SSID:', SSID)
-    #     print('Passord:', PASSWORD, '\n')
-    #     time.sleep(5)
-    # else:
-    #     print(f'Connected to {SSID}. Starting the server...')
+    while not check_connection(SSID):
+        print('Waiting to connect to ESP32 AP')
+        print('SSID:', SSID)
+        print('Passord:', PASSWORD, '\n')
+        time.sleep(5)
+    else:
+        print(f'Connected to {SSID}. Starting the server...')
     
     app.run(host='0.0.0.0', port=3000, debug=True)
     

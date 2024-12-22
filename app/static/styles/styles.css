@@ -83,6 +83,10 @@ button[disabled] {
     background-image: url('../images/record-start.png');
 }
 
+#monitor {
+    background-image: url('../images/record-start.png');
+}
+
 #visualize {
     background-image: url('../images/visualize.png');
 }

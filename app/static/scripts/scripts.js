@@ -16,9 +16,13 @@ import {
 
 document.addEventListener('DOMContentLoaded', () => {
   const recordButton = document.getElementById('record');
+  const monitorButton = document.getElementById('monitor');
   const visualizeButton = document.getElementById('visualize');
   const filesList = $('#files-list');
   const packetcount = document.getElementById('image-count');
+  let packetCountInterval;
+  let monitorVisualizeInterval;
+  var lastMode;
 
   /* Visualizer Functions */
 
@@ -174,31 +178,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* Element Functions */
 
-  function isRecording() {
+  function setPacketCount() {
     fetch('/recording_status', { method: "POST" })
       .then(response => response.json())
       .then(data => {
-        if (data.status === true) {
-          packetcount.textContent = `${data.total_packet_count}/100`
-          setTimeout(() => {
-            isRecording();
-          }, 1000);
+        if (data.mode == 0) {
+          lastMode = 0
+          packetcount.textContent = `${data.total_packet}/25`;
+        }
+        else if (data.mode == 1) {
+          lastMode = 1
+          packetcount.textContent = `${data.total_packet}`;
         }
         else {
           recordButton.style.backgroundColor = '#6a3acb';
           visualizeButton.style.backgroundColor = 'maroon';
           recordButton.style.backgroundImage = "url('static/images/record-start.png')";
 
-          if (data.total_packet_count > 95) {
-            packetcount.textContent = '100/100';
-          }
-          else {
-            packetcount.textContent = `${data.total_packet_count}/100`;
-          }
+          // fetch('/stop_recording', { method: "POST" });
+          clearInterval(packetCountInterval);
+          console.log(lastMode)
 
-          fetch('/stop_recording', { method: "POST" });
-          visualize();
-          list_csv_files();
+          if (lastMode == 0) {
+            packetcount.textContent = null
+            list_csv_files();
+            visualize();
+          }
         }
       })
       .catch(err => alert("Fetch Error: " + err));
@@ -208,6 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch('/visualize', { method: "POST" })
       .then(response => response.json())
       .then(data => {
+        // svg.disabled(false)
         xGrid = [];
         scatter = [];
         yLine = [];
@@ -238,9 +244,10 @@ document.addEventListener('DOMContentLoaded', () => {
       .catch(err => {
         visualizeButton.style.backgroundColor = '#6a3acb';
         svg.selectAll('*').remove();
+        // svg.disabled(true)
         alert("No data to visualize. Please record first." + err);
       });
-      timeout(visualizeButton);
+      button_timeout(visualizeButton);
   };
 
   function list_csv_files() {
@@ -255,8 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   
-  // Set timer to prevent spamming
-  function timeout(button) {
+  function button_timeout(button) {
     setTimeout(() => {
       button.disabled = false;
     }, 1000);
@@ -271,25 +277,48 @@ document.addEventListener('DOMContentLoaded', () => {
         recordButton.style.backgroundImage = "url('static/images/record-start.png')";
         fetch('/stop_recording', { method: "POST" });
         list_csv_files();
+        clearInterval(packetCountInterval)
       } else {
         recordButton.style.backgroundColor = 'maroon';
         recordButton.style.backgroundImage = "url('static/images/record-stop.png')";
-          fetch('/start_recording', { method: "POST" });
-          isRecording();
+          fetch('/start_recording/recording')
+            .catch(error => alert(error));
+            packetCountInterval = setInterval(setPacketCount, 500);
+            // setPacketCount();
       }
-      timeout(recordButton);
+      button_timeout(recordButton);
+  });
+
+  monitorButton.addEventListener('click', () => {
+    monitorButton.disabled = true;
+      if (monitorButton.style.backgroundColor === 'maroon') {
+        monitorButton.style.backgroundColor = '#6a3acb';
+        monitorButton.style.backgroundImage = "url('static/images/record-start.png')";
+        fetch('/stop_recording', { method: "POST" });
+        clearInterval(packetCountInterval)
+      } else {
+        monitorButton.style.backgroundColor = 'maroon';
+        monitorButton.style.backgroundImage = "url('static/images/record-stop.png')";
+          fetch('/start_recording/monitoring')
+            .catch(error => alert(error));
+            packetCountInterval = setInterval(setPacketCount, 500);
+            // setPacketCount();
+            // monitorVisualizeInterval = setInterval(visualize, 1000);
+      }
+      button_timeout(monitorButton);
   });
 
   visualizeButton.addEventListener('click', () => {
     if (visualizeButton.style.backgroundColor === 'maroon') {
       visualizeButton.style.backgroundColor = '#6a3acb';
       svg.selectAll('*').remove();
+      // svg.disabled(true)
       packetcount.textContent = null;
     } else {
       visualizeButton.style.backgroundColor = 'maroon';
       visualize();
     }
-    timeout(visualizeButton);
+    button_timeout(visualizeButton);
   });
 
 
