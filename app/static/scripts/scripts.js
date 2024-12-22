@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /* Visualizer Functions */
 
   const origin = { x: 480, y: 250 };
-  const j = 10;
+  // const j = 10;
   const scale = 20;
   const key = (d) => d.id;
   const startAngle = Math.PI / 4;
@@ -212,19 +212,20 @@ document.addEventListener('DOMContentLoaded', () => {
         xGrid = [];
         scatter = [];
         yLine = [];
-
+        let j = 10;
         let cnt = 0;
-        const ap = data.ap_position;
-        const device = data.device_position;
-        scatter = data.reflected_positions.map(pos => ({ x: pos[0], y: pos[1], z: pos[2], id: "point-" + cnt++ }));
+
+        scatter = data.filtered_signal
+          .filter(pos => pos[1] !== 0)  // Exclude points with x value of 0
+          .map(pos => ({ x: pos[0], y: pos[1], z: pos[2], id: "point-" + cnt++ }));
             
         for (let z = -j; z < j; z++) {
           for (let x = -j; x < j; x++) {
-            xGrid.push({ x: x, y: 1, z: z});
+            xGrid.push({ x: x, y: 10, z: z});
           }
         }
     
-        range(-1, 11, 1).forEach((d) => {
+        range(-10, 0, 1).forEach((d) => {
           yLine.push({ x: -j, y: -d, z: -j });
         });
     

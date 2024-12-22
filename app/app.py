@@ -4,11 +4,13 @@ import csv
 import math
 import numpy as np
 import pandas as pd
+import pywt
 import socket
 import subprocess
 import time
 import threading
-from scapy.all import Raw, IP, UDP, datetime, send
+from sklearn.preprocessing import MinMaxScaler
+from scapy.all import Raw, IP, UDP, send
 from flask import Flask, jsonify, send_from_directory
 
 app = Flask(__name__)
@@ -25,8 +27,10 @@ total_packet_count = 0
 packet_count = 0
 max_packets = 25
 tx_interval = 0.1
+threshold = 1
 
-csv_file_path = None
+# csv_file_path = None
+csv_file_path = "app/utils/CSI_DATA_011.csv"
 sending_timestamp = []
 COLUMN_NAMES = [
     'Transmit_Timestamp', 'Record_Timestamp', 'Type', 'Mode', 'Source_IP', 'RSSI', 'Rate', 'Sig_Mode', 'MCS', 'CWB', 'Smoothing', 
@@ -35,44 +39,107 @@ COLUMN_NAMES = [
     'Real_Time_Set', 'Steady_Clock_Timestamp', 'Data_Length', 'Raw_CSI', 'Amplitude', 'Phase', 'Time_of_Flight'
 ]
 
-def filter_reflections(amplitudes, phases, amplitude_threshold=10):
-    """
-    Filters out the direct path data based on amplitude threshold.
-    """
-    filtered_amplitudes = []
-    filtered_phases = []
+def clean_and_filter_data(amplitudes, phases, amp_lower_threshold, amp_upper_threshold, 
+                          phase_lower_threshold, phase_upper_threshold):
+    cleaned_amplitudes = []
+    cleaned_phases = []
+    subcarriers = range(len(amplitudes))
+
+    for i, amp, phase in zip(subcarriers, amplitudes, phases):
+        # Remove null subcarriers
+        if amp == 0: continue
+        
+        # # Retain outliers based on amplitude
+        # if (amp < amp_lower_threshold[i]) or (amp > amp_upper_threshold[i]):
+        #     cleaned_amplitudes.append(amp)
+        #     cleaned_phases.append(phase)
+
+        # # Retain outliers based on phase
+        # if (phase < phase_lower_threshold[i]) or (phase > phase_upper_threshold[i]):
+        #     cleaned_amplitudes.append(amp)
+        #     cleaned_phases.append(phase)
+        
+        # Retain outliers based on amplitude and phase
+        if ((amp < amp_lower_threshold[i]) or (amp > amp_upper_threshold[i]) and (phase < phase_lower_threshold[i]) or (phase > phase_upper_threshold[i])):
+            cleaned_amplitudes.append(amp)
+            cleaned_phases.append(phase)
+        else:
+            cleaned_amplitudes.append(0)
+            cleaned_phases.append(0)
+
+    return cleaned_amplitudes, cleaned_phases
+
+def apply_wavelet_transform(csi_amplitude, csi_phase):
+    transformed_amplitudes, transformed_phases = [], []
+
+    for i in range(len(csi_amplitude)):
+        csi_data = [a * np.exp(1j * p) for a, p in zip(csi_amplitude[i], csi_phase[i])]
+        csi_data = pywt.swt(csi_data, 'db1', level=1)
+        csi_data = pywt.iswt(csi_data, 'db1')
+
+        # Separate amplitude and phase
+        transformed_amplitudes.append(np.abs(csi_data))
+        transformed_phases.append(np.angle(csi_data))
     
-    for amp, phase in zip(amplitudes, phases):
+    return transformed_amplitudes, transformed_phases
+
+def get_subcarrier_threshold(data_transposed):
+    lower_threshold, upper_threshold = [], []
+
+    for column in data_transposed:
+        mean = np.mean(column)
+        std_dev = np.std(column)
+
+        lower_threshold.append(mean - threshold * std_dev)
+        upper_threshold.append(mean + threshold * std_dev)
+
+    return lower_threshold, upper_threshold
+
+def get_filtered_amp_phase():
+    scaler = MinMaxScaler((-10, 10))
+    filtered_positions = []
+
+    try:
+        # Convert string list to actual list
+        csi_df = pd.read_csv(csv_file_path)
+        csi_amplitude = csi_df['Amplitude'].apply(eval)  
+        csi_phase = csi_df['Phase'].apply(eval)
+    except KeyError:
+        print("Error: 'Amplitude' or 'Phase' column not found in the file.")
+        return
+
+    amps_transposed = list(map(list, zip(*csi_amplitude)))
+    phases_transposed = list(map(list, zip(*csi_phase)))
+
+    scaled_amplitudes = scaler.fit_transform(amps_transposed).T
+    scaled_phases = scaler.fit_transform(phases_transposed).T
+
+    amp_lower_threshold, amp_upper_threshold = get_subcarrier_threshold(scaled_amplitudes.T)
+    phase_lower_threshold, phase_upper_threshold = get_subcarrier_threshold(scaled_phases.T)
+
+    # csi_amplitude, csi_phase = apply_wavelet_transform(csi_amplitude, csi_phase)
+    
+    for amp, phase in zip(scaled_amplitudes, scaled_phases):
         amp = np.array(amp)
         phase = np.array(phase)
-        
-        # Filter values below the amplitude threshold
-        mask = amp < amplitude_threshold
-        filtered_amplitudes.append(amp[mask])
-        filtered_phases.append(phase[mask])
-    
-    return filtered_amplitudes, filtered_phases
 
-def map_reflections_to_3d(filtered_amplitudes, filtered_phases):
-    """
-    Maps reflected CSI data to approximate 3D coordinates.
-    """
-    reflected_positions = []
-    for amp, phase in zip(filtered_amplitudes, filtered_phases):
-        # Use amplitude to approximate distance (scaled)
-        distances = amp / np.max(amp) * 10  # Normalize and scale distances
-        angles = np.linspace(0, 2 * np.pi, len(amp))  # Spread reflections in a circular pattern
-        
-        # Map to 3D coordinates
-        x = distances * np.cos(angles)
-        y = distances * np.sin(angles)
-        z = phase  # Use phase as an approximation for height variation
-        
+        cleaned_amplitudes, cleaned_phases = clean_and_filter_data(
+            amp[5:], phase[5:], 
+            amp_lower_threshold[5:], amp_upper_threshold[5:], 
+            phase_lower_threshold[5:], phase_upper_threshold[5:]
+        )
+
+        # This loop ensures that each subcarrier is plot in the same x-axis
+        x = np.arange(-10, 10, 20/len(cleaned_amplitudes))
+        z = cleaned_phases
+        y = cleaned_amplitudes
+
         for i in range(len(x)):
-            reflected_positions.append((x[i], y[i], z[i]))
-            # reflected_positions.append((float(x[i]), float(y[i]), float(z[i])))
+            filtered_positions.append((float(x[i]), float(y[i]), float(z[i])))
     
-    return reflected_positions
+    filtered_positions
+    return filtered_positions
+
 
 def compute_csi_amplitude_phase(csi_data):
     '''
@@ -286,28 +353,13 @@ def stop_recording():
     return 'Stop recording CSI Data.'
 
 @app.route('/visualize', methods=['POST'])
-def visualize():
+def visualize_amp_phase():
     if not os.path.exists(csv_file_path):
         return jsonify({"error": "No CSV file found"}), 404
     
     try:
-        csi_df = pd.read_csv(csv_file_path)
-        csi_amplitude = csi_df['Amplitude'].apply(eval)
-        csi_phase = csi_df['Phase'].apply(eval)
-
-        amplitude_threshold = 10
-        filtered_amplitudes, filtered_phases = filter_reflections(csi_amplitude, csi_phase, amplitude_threshold)
-        reflected_positions = map_reflections_to_3d(filtered_amplitudes, filtered_phases)
-        
-        # AP and Device positions (fixed)
-        ap_position = {"x": 0, "y": 0, "z": 0}
-        device_position = {"x": 5, "y": 0, "z": 0}
-        
-        return jsonify({
-            "ap_position": ap_position,
-            "device_position": device_position,
-            "reflected_positions": reflected_positions
-        })
+        filtered_signal = get_filtered_amp_phase()
+        return jsonify({"filtered_signal": filtered_signal})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
@@ -327,13 +379,13 @@ def visualize_csv(filename):
 
 if __name__ == '__main__':
     # Check if the device is connected to the ESP32 AP
-    while not check_connection(SSID):
-        print('Waiting to connect to ESP32 AP')
-        print('SSID:', SSID)
-        print('Passord:', PASSWORD, '\n')
-        time.sleep(5)
-    else:
-        print(f'Connected to {SSID}. Starting the server...')
+    # while not check_connection(SSID):
+    #     print('Waiting to connect to ESP32 AP')
+    #     print('SSID:', SSID)
+    #     print('Passord:', PASSWORD, '\n')
+    #     time.sleep(5)
+    # else:
+    #     print(f'Connected to {SSID}. Starting the server...')
     
     app.run(host='0.0.0.0', port=3000, debug=True)
     
