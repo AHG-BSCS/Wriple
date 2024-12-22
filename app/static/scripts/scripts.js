@@ -22,11 +22,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* Visualizer Functions */
 
-  const origin = { x: 480, y: 250 };
-  // const j = 10;
+  const origin = { x: 400, y: 200 };
   const scale = 20;
   const key = (d) => d.id;
-  const startAngle = Math.PI / 4;
+  const startAngle = 180;
   const colorScale = scaleOrdinal(schemeCategory10);
   
   let scatter = [];
@@ -77,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .attr("stroke", "black")
       .attr("stroke-width", 0.3)
       .attr("fill", (d) => (d.ccw ? "#eee" : "#aaa"))
-      .attr("fill-opacity", 0.9)
+      .attr("fill-opacity", 0.8)
       .attr("d", grid3d.draw);
 
     xGrid.exit().remove();
@@ -107,18 +106,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* ----------- y-Scale ----------- */
 
-    const yScale = svg.selectAll("path.yScale").data(data[2]);
+    // const yScale = svg.selectAll("path.yScale").data(data[2]);
 
-    yScale
-      .enter()
-      .append("path")
-      .attr("class", "d3-3d yScale")
-      .merge(yScale)
-      .attr("stroke", "black")
-      .attr("stroke-width", 0.5)
-      .attr("d", yScale3d.draw);
+    // yScale
+    //   .enter()
+    //   .append("path")
+    //   .attr("class", "d3-3d yScale")
+    //   .merge(yScale)
+    //   .attr("stroke", "black")
+    //   .attr("stroke-width", 0.5)
+    //   .attr("d", yScale3d.draw);
 
-    yScale.exit().remove();
+    // yScale.exit().remove();
 
     /* ----------- y-Scale Text ----------- */
 
@@ -156,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function dragged(event) {
-    beta = (event.x - mx + mouseX) * (Math.PI / 230);
+    beta = (event.x - mx + mouseX) * (Math.PI / 230) * -1;
     alpha = (event.y - my + mouseY) * (Math.PI / 230) * -1;
 
     const data = [
@@ -221,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
         for (let z = -j; z < j; z++) {
           for (let x = -j; x < j; x++) {
-            xGrid.push({ x: x, y: 10, z: z});
+            xGrid.push({ x: x, y: -10, z: z});
           }
         }
     
