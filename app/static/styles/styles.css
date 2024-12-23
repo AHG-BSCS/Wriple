@@ -16,15 +16,25 @@ body {
 }
 
 .card-header {
-    font-size: 2.5rem;
+    font-size: 2rem;
     font-weight: bold;
     color: #6a3acb;
 }
 
 .card-subtitle {
-    font-size: 1.25rem;
+    font-size: 1rem;
     color: #6c757d;
     margin-bottom: 25px;
+}
+
+
+/* Buttons */
+
+
+.button-container {
+    margin-bottom: 20px;
+    position: relative;
+    display: inline-block;
 }
 
 button {
@@ -34,9 +44,9 @@ button {
     background-size: cover;
     background-repeat: no-repeat;
     background-position: center;
-    width: 60px;
-    height: 60px;
-    background-size: 50px 50px;
+    width: 50px;
+    height: 50px;
+    background-size: 40px 40px;
     margin-inline: 8px;
     cursor: pointer;
     transition: transform 0.3s ease;
@@ -51,12 +61,6 @@ button[disabled] {
     background-color: gray;
     opacity: 0.6;
     cursor: not-allowed; 
-}
-
-.button-container {
-    margin-bottom: 20px;
-    position: relative;
-    display: inline-block;
 }
 
 .tooltip {
@@ -91,34 +95,60 @@ button[disabled] {
     background-image: url('../images/visualize.png');
 }
 
-.files-container {
-    position: absolute;
-    margin-left: 55px;
+
+/* Selections */
+
+
+.selection-container {
+    position: relative;
+    display: inline-block;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    max-width: 780px;
+    margin-inline: auto;
+    text-align: center;
 }
+
+label, select, option, optgroup {
+    font-size: 1rem;
+    color: #444444;
+}
+
+label {
+    font-weight: bold;
+}
+
+select {
+    border-style: none;
+    cursor: pointer;
+}
+
+.form-select {
+    display: inline-block;
+    margin-right: 20px;
+}
+
+
+/* Visualizer */
+
 
 .visualizer-container {
     position: relative;
     display: inline-block;
-    margin-top: 35px;
-    margin-bottom: 30px;
+    border-radius: 12px;
+    margin-top: 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 #d3-plot {
     width: 800px;
     height: 500px;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
-#video {
-    background-image: url('../images/mapping_placeholder.jpg');
-    background-size: cover;
-    display: block;
-    border-radius: 10px;
-    border: 2px solid #ddd;
-}
-
-#image-count {
+#packet-count {
     position: absolute;
     top: 10px;
     right: 10px;
@@ -129,6 +159,18 @@ button[disabled] {
     border: 2px solid #ddd;
 }
 
+#video {
+    background-image: url('../images/mapping_placeholder.jpg');
+    background-size: cover;
+    display: block;
+    border-radius: 10px;
+    border: 2px solid #ddd;
+}
+
+
+/* Tables */
+
+
 #attendance-table {
     visibility: collapse;
     position: relative;
@@ -137,16 +179,6 @@ button[disabled] {
 
 .attendance-dates {
     display: flex;
-}
-
-label, select, optgroup, option {
-    font-size: 1rem;
-    color: #444444;
-}
-
-select {
-    border-style: none;
-    cursor: pointer;
 }
 
 option {

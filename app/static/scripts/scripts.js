@@ -19,7 +19,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const monitorButton = document.getElementById('monitor');
   const visualizeButton = document.getElementById('visualize');
   const filesList = $('#files-list');
-  const packetcount = document.getElementById('image-count');
+  const activityList = $('#activity-list');
+  const classList = $('#class-list');
+  const packetcount = document.getElementById('packet-count');
   let packetCountInterval;
   let monitorVisualizeInterval;
   var lastMode;
@@ -246,7 +248,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // svg.disabled(true)
         alert("No data to visualize." + err);
       });
-      // button_timeout(visualizeButton);
   };
 
   function list_csv_files() {
@@ -254,6 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
     .then(response => response.json())
     .then(files => {
       filesList.empty();
+      filesList.append(new Option('', 'no-selection'));
       files.forEach(file => {
           const option = new Option(file, file);
           filesList.append(option);
@@ -343,6 +345,24 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(error => alert(error));
       visualize();
       visualizeButton.style.backgroundColor = 'maroon';
+    }
+  });
+
+  activityList.on('change', function() {
+    const selectedAct = $(this).val();
+    if (selectedAct) {
+      // fetch(`/visualize_csv/${selectedFile}`)
+      //   .catch(error => alert(error));
+      alert(selectedAct)
+    }
+  });
+
+  classList.on('change', function() {
+    const selectedClass = $(this).val();
+    if (selectedClass) {
+      // fetch(`/visualize_csv/${selectedFile}`)
+      //   .catch(error => alert(error));
+      alert(selectedClass)
     }
   });
 
