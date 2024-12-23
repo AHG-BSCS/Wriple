@@ -40,7 +40,7 @@ phase_queue = []
 activity = None
 class_label = None
 COLUMN_NAMES = [
-    'Transmit_Timestamp', 'Record_Timestamp', 'Type', 'Mode', 'Source_IP', 'RSSI', 'Rate', 'Sig_Mode', 'MCS', 'CWB', 'Smoothing', 
+    'Transmit_Timestamp', 'Record_Timestamp', 'Type', 'Mode', 'Activity', 'Movement', 'Source_IP', 'RSSI', 'Rate', 'Sig_Mode', 'MCS', 'CWB', 'Smoothing', 
     'Not_Sounding', 'Aggregation', 'STBC', 'FEC_Coding', 'SGI', 'Noise_Floor', 'AMPDU_Cnt', 
     'Channel', 'Secondary_Channel', 'Received_Timestamp', 'Antenna', 'Signal_Length', 'RX_State', 
     'Real_Time_Set', 'Steady_Clock_Timestamp', 'Data_Length', 'Raw_CSI', 'Amplitude', 'Phase', 'Time_of_Flight'
@@ -244,6 +244,8 @@ def process_data(data, rx_time):
         if (recording):
             csi_data.insert(0, sending_timestamp.pop(0))
             csi_data.insert(1, rx_time)
+            csi_data.insert(4, activity)
+            csi_data.insert(5, class_label)
 
             # Write to the CSV file with a lock to ensure thread safety
             with lock:
@@ -349,18 +351,24 @@ def serve_index():
 @app.route('/start_recording/<mode>', methods=['GET'])
 def start_recording(mode):
     global recording, monitoring
+    try:
+        if mode == 'recording':
+            if activity is None or class_label is None:
+                raise Exception('Activity and Class is missing!')
+            
+            recording = True
+            prepare_csv_file()
+            threading.Thread(target=listen_to_packets, daemon=True).start()
+            send_packets()
+        elif mode == 'monitoring':
+            monitoring = True
+            threading.Thread(target=listen_to_packets, daemon=True).start()
+            send_packets()
 
-    if mode == 'recording':
-        recording = True
-        prepare_csv_file()
-        threading.Thread(target=listen_to_packets, daemon=True).start()
-        send_packets()
-    elif mode == 'monitoring':
-        monitoring = True
-        threading.Thread(target=listen_to_packets, daemon=True).start()
-        send_packets()
-
-    return f'Start {mode} CSI Data.'
+        return jsonify({"mode": mode})
+    except Exception as e:
+        return jsonify({'status': 'error'}), 400
+        
 
 @app.route('/recording_status', methods=['POST'])
 def recording_status():
@@ -379,9 +387,6 @@ def stop_recording():
 
 @app.route('/visualize', methods=['POST'])
 def visualize_amp_phase():
-    if recording and not os.path.exists(csv_file_path):
-        return jsonify({"error": "No CSV file found"}), 404
-    
     try:
         filtered_signal = filter_amp_phase()
         return jsonify({"filtered_signal": filtered_signal})
@@ -405,13 +410,19 @@ def visualize_csv(filename):
 @app.route('/set_activity/<act>', methods=['GET'])
 def set_activity(act):
     global activity
-    activity = act
+    if act != 'None':
+        activity = act
+    else:
+        activity = None
     return f'set {act} as activity.'
 
 @app.route('/set_class/<target_class>', methods=['GET'])
 def set_class(target_class):
     global class_label
-    class_label = int(target_class)
+    if target_class != 'None':
+        class_label = int(target_class)
+    else:
+        class_label = None
     return f'set {target_class} as target class.'
 
 @app.route('/set_threshold/<value>', methods=['GET'])

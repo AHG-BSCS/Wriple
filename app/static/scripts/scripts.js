@@ -211,6 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
             list_csv_files();
             visualize();
           }
+          lastMode = 2;
         }
       })
       .catch(err => alert("Fetch Error: " + err));
@@ -221,7 +222,6 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(response => response.json())
       .then(data => {
         visualizeButton.style.backgroundColor = buttonInactiveColor;
-        // svg.disabled(false)
         xGrid = [];
         scatter = [];
         yLine = [];
@@ -251,7 +251,6 @@ document.addEventListener('DOMContentLoaded', () => {
         visualizeButton.style.backgroundColor = buttonActiveColor;
         visualizeButton.disabled = false;
         svg.selectAll('*').remove();
-        // svg.disabled(true)
         alert("No data to visualize." + err);
       });
   };
@@ -290,13 +289,26 @@ document.addEventListener('DOMContentLoaded', () => {
         recordButton.style.backgroundImage = "url('static/images/record-start.png')";
         visualizeButton.style.backgroundColor = buttonActiveColor;
       } else {
-        monitorButton.disabled = true;
-        visualizeButton.disabled = true;
-        recordButton.style.backgroundColor = buttonInactiveColor;
-        recordButton.style.backgroundImage = "url('static/images/record-stop.png')";
         fetch('/start_recording/recording')
-          .catch(error => alert(error));
-        packetCountInterval = setInterval(setPacketCount, 300);
+          .then(response => response.json())
+          .then(data => {
+            if (data.status === "error") {
+              throw new Error(data.message);
+            }
+            monitorButton.disabled = true;
+            visualizeButton.disabled = true;
+            recordButton.style.backgroundColor = buttonInactiveColor;
+            recordButton.style.backgroundImage = "url('static/images/record-stop.png')";
+            packetCountInterval = setInterval(setPacketCount, 300);
+          })
+          .catch(err => {
+            alert('Activity or Class is missing!');
+            monitorButton.disabled = false;
+            visualizeButton.disabled = false;
+            recordButton.style.backgroundColor = buttonActiveColor;
+            recordButton.style.backgroundImage = "url('static/images/record-start.png')";
+            visualizeButton.style.backgroundColor = buttonActiveColor;
+          })
       }
       button_timeout(recordButton);
   });
@@ -331,7 +343,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (visualizeButton.style.backgroundColor === buttonInactiveColor) {
       visualizeButton.style.backgroundColor = buttonActiveColor;
       svg.selectAll('*').remove();
-      // svg.disabled(true)
       packetcount.textContent = null;
     } else {
       visualizeButton.style.backgroundColor = buttonInactiveColor;
@@ -346,7 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   filesList.on('change', function() {
     const selectedFile = $(this).val();
-    if (selectedFile) {
+    if (selectedFile !== 'no-selection') {
       fetch(`/visualize_csv/${selectedFile}`)
         .catch(error => alert(error));
       visualize();
