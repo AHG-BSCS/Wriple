@@ -1,10 +1,18 @@
+:root {
+    --primary-color: #323A3F;
+    --secondary-color: #A0ACB1;
+    --background-color: #C6CDD0;
+    --text-color: #444444;
+    --button-hover-color: #555;
+}
+
 body {
-    background-color: #f9f9f9;
+    background-color: var(--primary-color);
     font-family: 'Segoe UI', Tahoma, Verdana, sans-serif;
 }
 
 .card {
-    background-color: #ffffff;
+    background-color: var(--background-color);
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     padding: 20px;
@@ -18,13 +26,12 @@ body {
 .card-header {
     font-size: 2rem;
     font-weight: bold;
-    color: #6a3acb;
+    color: var(--primary-color);
 }
 
 .card-subtitle {
     font-size: 1rem;
-    color: #6c757d;
-    margin-bottom: 25px;
+    color: var(--text-color);
 }
 
 
@@ -32,13 +39,13 @@ body {
 
 
 .button-container {
-    margin-bottom: 20px;
+    margin-top: 20px;
     position: relative;
     display: inline-block;
 }
 
 button {
-    background-color: #6a3acb;
+    background-color: var(--primary-color);
     border-radius: 8px;
     border: 2px solid #ddd;
     background-size: cover;
@@ -53,8 +60,8 @@ button {
 }
 
 button:hover {
-    background-color: #552da5;
-    transform: translateY(5px);
+    background-color: var(--secondary-color);
+    transform: translateY(3px);
 }
 
 button[disabled] {
@@ -66,7 +73,7 @@ button[disabled] {
 .tooltip {
     visibility: hidden;
     width: max-content;
-    background-color: #6c757d;
+    background-color: var(--primary-color);
     color: white;
     text-align: center;
     border-radius: 6px;
@@ -88,7 +95,7 @@ button[disabled] {
 }
 
 #monitor {
-    background-image: url('../images/record-start.png');
+    background-image: url('../images/monitor-start.png');
 }
 
 #visualize {
@@ -102,18 +109,19 @@ button[disabled] {
 .selection-container {
     position: relative;
     display: inline-block;
-    background-color: #ffffff;
+    background-color: var(--background-color);
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     padding: 15px;
     max-width: 780px;
+    margin-top: 20px;
     margin-inline: auto;
     text-align: center;
 }
 
 label, select, option, optgroup {
     font-size: 1rem;
-    color: #444444;
+    color: var(--text-color);
 }
 
 label {
@@ -122,6 +130,7 @@ label {
 
 select {
     border-style: none;
+    background-color: var(--background-color);
     cursor: pointer;
 }
 
@@ -160,7 +169,7 @@ select {
 }
 
 #video {
-    background-image: url('../images/mapping_placeholder.jpg');
+    background-image: url('../images/mapping_placeholder.png');
     background-size: cover;
     display: block;
     border-radius: 10px;
@@ -196,7 +205,7 @@ tr:hover {
 th {
     padding: 8px;
     text-align: left;
-    background-color: #6a3acb;
+    background-color: var(--primary-color);
     color: white;
 }
 

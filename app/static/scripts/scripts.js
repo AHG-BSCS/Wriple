@@ -21,9 +21,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const filesList = $('#files-list');
   const activityList = $('#activity-list');
   const classList = $('#class-list');
+  const thresholdList = $('#threshold-list');
   const packetcount = document.getElementById('packet-count');
+
   let packetCountInterval;
   let monitorVisualizeInterval;
+  
+  var buttonActiveColor = '#323A3F';
+  var buttonInactiveColor = 'saddlebrown';
   var lastMode;
 
   /* Visualizer Functions */
@@ -161,6 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function dragged(event) {
+    visualizeButton.style.backgroundColor = buttonInactiveColor;
     beta = (event.x - mx + mouseX) * (Math.PI / 230) * -1;
     alpha = (event.y - my + mouseY) * (Math.PI / 230) * -1;
 
@@ -197,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
           clearInterval(monitorVisualizeInterval);
 
           if (lastMode == 0) {
-            recordButton.style.backgroundColor = '#6a3acb';
+            recordButton.style.backgroundColor = buttonActiveColor;
             recordButton.style.backgroundImage = "url('static/images/record-start.png')";
             monitorButton.disabled = false;
             visualizeButton.disabled = false;
@@ -214,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch('/visualize', { method: "POST" })
       .then(response => response.json())
       .then(data => {
-        visualizeButton.style.backgroundColor = 'maroon';
+        visualizeButton.style.backgroundColor = buttonInactiveColor;
         // svg.disabled(false)
         xGrid = [];
         scatter = [];
@@ -242,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
         processData(datas, 1000);
       })
       .catch(err => {
-        visualizeButton.style.backgroundColor = '#6a3acb';
+        visualizeButton.style.backgroundColor = buttonActiveColor;
         visualizeButton.disabled = false;
         svg.selectAll('*').remove();
         // svg.disabled(true)
@@ -273,20 +279,20 @@ document.addEventListener('DOMContentLoaded', () => {
   /* Elements Event Listener */
 
   recordButton.addEventListener('click', () => {
-      if (recordButton.style.backgroundColor === 'maroon') {
+      if (recordButton.style.backgroundColor === buttonInactiveColor) {
         fetch('/stop_recording', { method: "POST" });
         list_csv_files();
         clearInterval(packetCountInterval)
 
         monitorButton.disabled = false;
         visualizeButton.disabled = false;
-        recordButton.style.backgroundColor = '#6a3acb';
+        recordButton.style.backgroundColor = buttonActiveColor;
         recordButton.style.backgroundImage = "url('static/images/record-start.png')";
-        visualizeButton.style.backgroundColor = '#6a3acb';
+        visualizeButton.style.backgroundColor = buttonActiveColor;
       } else {
         monitorButton.disabled = true;
         visualizeButton.disabled = true;
-        recordButton.style.backgroundColor = 'maroon';
+        recordButton.style.backgroundColor = buttonInactiveColor;
         recordButton.style.backgroundImage = "url('static/images/record-stop.png')";
         fetch('/start_recording/recording')
           .catch(error => alert(error));
@@ -296,23 +302,23 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   monitorButton.addEventListener('click', () => {
-      if (monitorButton.style.backgroundColor === 'maroon') {
+      if (monitorButton.style.backgroundColor === buttonInactiveColor) {
         fetch('/stop_recording', { method: "POST" });
         clearInterval(packetCountInterval)
         clearInterval(monitorVisualizeInterval)
 
         recordButton.disabled = false;
         visualizeButton.disabled = false;
-        monitorButton.style.backgroundColor = '#6a3acb';
-        monitorButton.style.backgroundImage = "url('static/images/record-start.png')";
-        visualizeButton.style.backgroundColor = '#6a3acb';
+        monitorButton.style.backgroundColor = buttonActiveColor;
+        monitorButton.style.backgroundImage = "url('static/images/monitor-start.png')";
+        visualizeButton.style.backgroundColor = buttonActiveColor;
         packetcount.textContent = null;
         svg.selectAll('*').remove();
       } else {
         recordButton.disabled = true;
         visualizeButton.disabled = true;
-        monitorButton.style.backgroundColor = 'maroon';
-        monitorButton.style.backgroundImage = "url('static/images/record-stop.png')";
+        monitorButton.style.backgroundColor = buttonInactiveColor;
+        monitorButton.style.backgroundImage = "url('static/images/monitor-stop.png')";
         fetch('/start_recording/monitoring')
           .catch(error => alert(error));
         monitorVisualizeInterval = setInterval(visualize, 500);
@@ -322,13 +328,13 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   visualizeButton.addEventListener('click', () => {
-    if (visualizeButton.style.backgroundColor === 'maroon') {
-      visualizeButton.style.backgroundColor = '#6a3acb';
+    if (visualizeButton.style.backgroundColor === buttonInactiveColor) {
+      visualizeButton.style.backgroundColor = buttonActiveColor;
       svg.selectAll('*').remove();
       // svg.disabled(true)
       packetcount.textContent = null;
     } else {
-      visualizeButton.style.backgroundColor = 'maroon';
+      visualizeButton.style.backgroundColor = buttonInactiveColor;
       visualize();
     }
     button_timeout(visualizeButton);
@@ -344,14 +350,14 @@ document.addEventListener('DOMContentLoaded', () => {
       fetch(`/visualize_csv/${selectedFile}`)
         .catch(error => alert(error));
       visualize();
-      visualizeButton.style.backgroundColor = 'maroon';
+      visualizeButton.style.backgroundColor = buttonInactiveColor;
     }
   });
 
   activityList.on('change', function() {
     const selectedAct = $(this).val();
     if (selectedAct) {
-      // fetch(`/visualize_csv/${selectedFile}`)
+      // fetch(`/visualize_csv/${selectedAct}`)
       //   .catch(error => alert(error));
       alert(selectedAct)
     }
@@ -360,9 +366,18 @@ document.addEventListener('DOMContentLoaded', () => {
   classList.on('change', function() {
     const selectedClass = $(this).val();
     if (selectedClass) {
-      // fetch(`/visualize_csv/${selectedFile}`)
+      // fetch(`/visualize_csv/${selectedClass}`)
       //   .catch(error => alert(error));
       alert(selectedClass)
+    }
+  });
+
+  thresholdList.on('change', function() {
+    const selectedValue = $(this).val();
+    if (selectedValue) {
+      // fetch(`/visualize_csv/${selectedValue}`)
+      //   .catch(error => alert(error));
+      alert(selectedValue)
     }
   });
 

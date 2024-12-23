@@ -10,8 +10,8 @@
 </head>
 <body>
 <div class="card">
-    <div class="card-header">Wiremap v1</div>
-    <div class="card-subtitle">Wi-Fi Signal Sensing System</div>
+    <div class="card-header">Wiremap</div>
+    <div class="card-subtitle">Wi-Fi Signal Human Sensing System</div>
     <div>
         <div class="button-container">
             <button id="record"></button>
@@ -41,10 +41,20 @@
             <option value="running">Running</option>
         </select>
         <label for="class-list">Class:</label>
-        <select id="class-list">
+        <select id="class-list" class="form-select">
             <option value="no-selection"></option>
             <option value="idle">Idle</option>
             <option value="active">Active</option>
+        </select>
+        <label for="threshold-list">Threshold:</label>
+        <select id="threshold-list">
+            <option value="0.0">0.00</option>
+            <option value="0.5">0.50</option>
+            <option value="0.75">0.75</option>
+            <option value="1.0">1.00</option>
+            <option value="1.25">1.25</option>
+            <option value="1.75" selected>1.75</option>
+            <option value="2.0">2.00</option>
         </select>
     </div>
     <div class="visualizer-container">
