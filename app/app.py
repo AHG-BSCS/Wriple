@@ -37,6 +37,8 @@ csv_file_path = None
 sending_timestamp = []
 amplitude_queue = []
 phase_queue = []
+activity = None
+class_label = None
 COLUMN_NAMES = [
     'Transmit_Timestamp', 'Record_Timestamp', 'Type', 'Mode', 'Source_IP', 'RSSI', 'Rate', 'Sig_Mode', 'MCS', 'CWB', 'Smoothing', 
     'Not_Sounding', 'Aggregation', 'STBC', 'FEC_Coding', 'SGI', 'Noise_Floor', 'AMPDU_Cnt', 
@@ -400,15 +402,33 @@ def visualize_csv(filename):
         return jsonify({"error": "File not found"}), 404
     return 'CSV file set for visualization.'
 
+@app.route('/set_activity/<act>', methods=['GET'])
+def set_activity(act):
+    global activity
+    activity = act
+    return f'set {act} as activity.'
+
+@app.route('/set_class/<target_class>', methods=['GET'])
+def set_class(target_class):
+    global class_label
+    class_label = int(target_class)
+    return f'set {target_class} as target class.'
+
+@app.route('/set_threshold/<value>', methods=['GET'])
+def set_threshold(value):
+    global threshold
+    threshold = float(value)
+    return f'set {value} as threshold.'
+
 if __name__ == '__main__':
     # Ensure that the device is connectted to ESP32 AP since starting disconnected can cause packet sending error.
-    # while not check_connection(SSID):
-    #     print('Waiting to connect to ESP32 AP')
-    #     print('SSID:', SSID)
-    #     print('Passord:', PASSWORD, '\n')
-    #     time.sleep(5)
-    # else:
-    #     print(f'Connected to {SSID}. Starting the server...')
+    while not check_connection(SSID):
+        print('Waiting to connect to ESP32 AP')
+        print('SSID:', SSID)
+        print('Passord:', PASSWORD, '\n')
+        time.sleep(5)
+    else:
+        print(f'Connected to {SSID}. Starting the server...')
     
     app.run(host='0.0.0.0', port=3000, debug=True)
     

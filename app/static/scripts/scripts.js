@@ -357,27 +357,27 @@ document.addEventListener('DOMContentLoaded', () => {
   activityList.on('change', function() {
     const selectedAct = $(this).val();
     if (selectedAct) {
-      // fetch(`/visualize_csv/${selectedAct}`)
-      //   .catch(error => alert(error));
-      alert(selectedAct)
+      fetch(`/set_activity/${selectedAct}`)
+        .catch(error => alert(error));
     }
   });
 
   classList.on('change', function() {
     const selectedClass = $(this).val();
     if (selectedClass) {
-      // fetch(`/visualize_csv/${selectedClass}`)
-      //   .catch(error => alert(error));
-      alert(selectedClass)
+      fetch(`/set_class/${selectedClass}`)
+        .catch(error => alert(error));
     }
   });
 
   thresholdList.on('change', function() {
     const selectedValue = $(this).val();
     if (selectedValue) {
-      // fetch(`/visualize_csv/${selectedValue}`)
-      //   .catch(error => alert(error));
-      alert(selectedValue)
+      fetch(`/set_threshold/${selectedValue}`)
+        .catch(error => alert(error));
+      if (visualizeButton.style.backgroundColor === buttonInactiveColor) {
+        visualize();
+      }
     }
   });
 
