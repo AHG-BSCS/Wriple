@@ -21,9 +21,9 @@ TimerHandle_t packet_timer;
 static char *project_type;
 static const char *CSI = "CSI";
 
-static bool connected = false;
+// static bool connected = false;
 // static int packet_count = 0;
-// static int total_packet_count = 0;
+static int total_packet_count = 0;
 
 static int sock = -1;
 static sockaddr_in client_addr;
@@ -104,13 +104,13 @@ int8_t *my_ptr;
         ss << "]\n";
         // Send the CSI data to the target IP
         sendto(sock, ss.str().c_str(), strlen(ss.str().c_str()), 0, (struct sockaddr *)&client_addr, sizeof(client_addr));
-        
-        // packet_count++;
-        // total_packet_count++;
+        total_packet_count++;
 
-        static bool led_on = false;
-        gpio_set_level(LED_GPIO_PIN, led_on ? 0 : 1);
-        led_on = !led_on;
+        // Blink the LED every 10 packets
+        if (total_packet_count == 10) {
+            gpio_set_level(LED_GPIO_PIN, 0);
+            total_packet_count = 0;
+        }
 
         fflush(stdout);
         vTaskDelay(0);

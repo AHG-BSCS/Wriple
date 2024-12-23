@@ -191,15 +191,14 @@ document.addEventListener('DOMContentLoaded', () => {
           packetcount.textContent = `${data.total_packet}`;
         }
         else {
-          recordButton.style.backgroundColor = '#6a3acb';
-          visualizeButton.style.backgroundColor = 'maroon';
-          recordButton.style.backgroundImage = "url('static/images/record-start.png')";
-
           clearInterval(packetCountInterval);
           clearInterval(monitorVisualizeInterval);
-          console.log(lastMode)
 
           if (lastMode == 0) {
+            recordButton.style.backgroundColor = '#6a3acb';
+            recordButton.style.backgroundImage = "url('static/images/record-start.png')";
+            monitorButton.disabled = false;
+            visualizeButton.disabled = false;
             packetcount.textContent = null
             list_csv_files();
             visualize();
@@ -213,6 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch('/visualize', { method: "POST" })
       .then(response => response.json())
       .then(data => {
+        visualizeButton.style.backgroundColor = 'maroon';
         // svg.disabled(false)
         xGrid = [];
         scatter = [];
@@ -220,10 +220,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let j = 10;
         let cnt = 0;
 
-        scatter = data.filtered_signal
-          .filter(pos => pos[1] !== 0)  // Exclude points with x value of 0
-          .map(pos => ({ x: pos[0], y: pos[1], z: pos[2], id: "point-" + cnt++ }));
-            
+        scatter = data.filtered_signal.map(pos => ({ x: pos[0], y: pos[1], z: pos[2], id: "point-" + cnt++ }));
+
         for (let z = -j; z < j; z++) {
           for (let x = -j; x < j; x++) {
             xGrid.push({ x: x, y: -10, z: z});
@@ -243,11 +241,12 @@ document.addEventListener('DOMContentLoaded', () => {
       })
       .catch(err => {
         visualizeButton.style.backgroundColor = '#6a3acb';
+        visualizeButton.disabled = false;
         svg.selectAll('*').remove();
         // svg.disabled(true)
         alert("No data to visualize." + err);
       });
-      button_timeout(visualizeButton);
+      // button_timeout(visualizeButton);
   };
 
   function list_csv_files() {
@@ -263,6 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   function button_timeout(button) {
+    button.disabled = true;
     setTimeout(() => {
       button.disabled = false;
     }, 1000);
@@ -271,38 +271,50 @@ document.addEventListener('DOMContentLoaded', () => {
   /* Elements Event Listener */
 
   recordButton.addEventListener('click', () => {
-    recordButton.disabled = true;
       if (recordButton.style.backgroundColor === 'maroon') {
-        recordButton.style.backgroundColor = '#6a3acb';
-        recordButton.style.backgroundImage = "url('static/images/record-start.png')";
         fetch('/stop_recording', { method: "POST" });
         list_csv_files();
         clearInterval(packetCountInterval)
+
+        monitorButton.disabled = false;
+        visualizeButton.disabled = false;
+        recordButton.style.backgroundColor = '#6a3acb';
+        recordButton.style.backgroundImage = "url('static/images/record-start.png')";
+        visualizeButton.style.backgroundColor = '#6a3acb';
       } else {
+        monitorButton.disabled = true;
+        visualizeButton.disabled = true;
         recordButton.style.backgroundColor = 'maroon';
         recordButton.style.backgroundImage = "url('static/images/record-stop.png')";
-          fetch('/start_recording/recording')
-            .catch(error => alert(error));
-            packetCountInterval = setInterval(setPacketCount, 300);
+        fetch('/start_recording/recording')
+          .catch(error => alert(error));
+        packetCountInterval = setInterval(setPacketCount, 300);
       }
       button_timeout(recordButton);
   });
 
   monitorButton.addEventListener('click', () => {
-    monitorButton.disabled = true;
       if (monitorButton.style.backgroundColor === 'maroon') {
-        monitorButton.style.backgroundColor = '#6a3acb';
-        monitorButton.style.backgroundImage = "url('static/images/record-start.png')";
         fetch('/stop_recording', { method: "POST" });
         clearInterval(packetCountInterval)
         clearInterval(monitorVisualizeInterval)
+
+        recordButton.disabled = false;
+        visualizeButton.disabled = false;
+        monitorButton.style.backgroundColor = '#6a3acb';
+        monitorButton.style.backgroundImage = "url('static/images/record-start.png')";
+        visualizeButton.style.backgroundColor = '#6a3acb';
+        packetcount.textContent = null;
+        svg.selectAll('*').remove();
       } else {
+        recordButton.disabled = true;
+        visualizeButton.disabled = true;
         monitorButton.style.backgroundColor = 'maroon';
         monitorButton.style.backgroundImage = "url('static/images/record-stop.png')";
-          fetch('/start_recording/monitoring')
-            .catch(error => alert(error));
-            packetCountInterval = setInterval(setPacketCount, 2000);
-            monitorVisualizeInterval = setInterval(visualize, 250);
+        fetch('/start_recording/monitoring')
+          .catch(error => alert(error));
+        monitorVisualizeInterval = setInterval(visualize, 500);
+        packetCountInterval = setInterval(setPacketCount, 2000);
       }
       button_timeout(monitorButton);
   });

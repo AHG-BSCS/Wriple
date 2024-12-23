@@ -28,7 +28,7 @@ monitoring = False
 total_packet_count = 0
 packet_count = 0
 max_packets = 25
-max_monitoring_packets = 20
+max_monitoring_packets = 10
 tx_interval = 0.1
 threshold = 1.75
 scaler = MinMaxScaler((-10, 10))
@@ -79,7 +79,7 @@ def apply_wavelet_transform(csi_amplitude, csi_phase):
 
     for i in range(len(csi_amplitude)):
         csi_data = [a * np.exp(1j * p) for a, p in zip(csi_amplitude[i], csi_phase[i])]
-        csi_data = pywt.swt(csi_data, 'db1', level=1)
+        csi_data = pywt.swt(csi_data, 'db1', level=2)
         csi_data = pywt.iswt(csi_data, 'db1')
 
         # Separate amplitude and phase
@@ -106,7 +106,7 @@ def filter_amp_phase():
     if monitoring:
         csi_amplitude = amplitude_queue
         csi_phase = phase_queue
-    elif recording:
+    else:
         try:
             # Convert string list to actual list
             csi_df = pd.read_csv(csv_file_path)
@@ -116,6 +116,8 @@ def filter_amp_phase():
             print("Error: 'Amplitude' or 'Phase' column not found in the file.")
             return
 
+    # csi_amplitude, csi_phase = apply_wavelet_transform(csi_amplitude, csi_phase)
+
     amps_transposed = list(map(list, zip(*csi_amplitude)))
     phases_transposed = list(map(list, zip(*csi_phase)))
 
@@ -124,8 +126,6 @@ def filter_amp_phase():
 
     amp_lower_threshold, amp_upper_threshold = get_subcarrier_threshold(scaled_amplitudes.T)
     phase_lower_threshold, phase_upper_threshold = get_subcarrier_threshold(scaled_phases.T)
-
-    # csi_amplitude, csi_phase = apply_wavelet_transform(csi_amplitude, csi_phase)
     
     for amp, phase in zip(scaled_amplitudes, scaled_phases):
         amp = np.array(amp)
@@ -144,6 +144,8 @@ def filter_amp_phase():
         y = cleaned_amplitudes
 
         for i in range(len(x)):
+            if z[i] == 0:
+                continue
             filtered_positions.append((float(x[i]), float(y[i]), float(z[i])))
     
     filtered_positions
@@ -367,9 +369,10 @@ def recording_status():
 
 @app.route('/stop_recording', methods=['POST'])
 def stop_recording():
-    global recording, monitoring
+    global recording, monitoring, total_packet_count
     recording = False
     monitoring = False
+    total_packet_count = 0
     return 'Stop recording CSI Data.'
 
 @app.route('/visualize', methods=['POST'])
@@ -398,7 +401,7 @@ def visualize_csv(filename):
     return 'CSV file set for visualization.'
 
 if __name__ == '__main__':
-    # Check if the device is connected to the ESP32 AP
+    # Ensure that the device is connectted to ESP32 AP since starting disconnected can cause packet sending error.
     while not check_connection(SSID):
         print('Waiting to connect to ESP32 AP')
         print('SSID:', SSID)
