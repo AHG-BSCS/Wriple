@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .attr("cx", posPointX)
       .attr("cy", posPointY)
       .merge(points)
-      // .transition() returns a transition with the d3.transition.prototype
+      // .transition() // returns a transition with the d3.transition.prototype
       // .duration(tt)
       .attr("r", 3)
       .attr("stroke", (d) => color(colorScale(d.id)).darker(3))
@@ -195,8 +195,8 @@ document.addEventListener('DOMContentLoaded', () => {
           visualizeButton.style.backgroundColor = 'maroon';
           recordButton.style.backgroundImage = "url('static/images/record-start.png')";
 
-          // fetch('/stop_recording', { method: "POST" });
           clearInterval(packetCountInterval);
+          clearInterval(monitorVisualizeInterval);
           console.log(lastMode)
 
           if (lastMode == 0) {
@@ -245,7 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
         visualizeButton.style.backgroundColor = '#6a3acb';
         svg.selectAll('*').remove();
         // svg.disabled(true)
-        alert("No data to visualize. Please record first." + err);
+        alert("No data to visualize." + err);
       });
       button_timeout(visualizeButton);
   };
@@ -283,8 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
         recordButton.style.backgroundImage = "url('static/images/record-stop.png')";
           fetch('/start_recording/recording')
             .catch(error => alert(error));
-            packetCountInterval = setInterval(setPacketCount, 500);
-            // setPacketCount();
+            packetCountInterval = setInterval(setPacketCount, 300);
       }
       button_timeout(recordButton);
   });
@@ -296,14 +295,14 @@ document.addEventListener('DOMContentLoaded', () => {
         monitorButton.style.backgroundImage = "url('static/images/record-start.png')";
         fetch('/stop_recording', { method: "POST" });
         clearInterval(packetCountInterval)
+        clearInterval(monitorVisualizeInterval)
       } else {
         monitorButton.style.backgroundColor = 'maroon';
         monitorButton.style.backgroundImage = "url('static/images/record-stop.png')";
           fetch('/start_recording/monitoring')
             .catch(error => alert(error));
-            packetCountInterval = setInterval(setPacketCount, 500);
-            // setPacketCount();
-            // monitorVisualizeInterval = setInterval(visualize, 1000);
+            packetCountInterval = setInterval(setPacketCount, 2000);
+            monitorVisualizeInterval = setInterval(visualize, 250);
       }
       button_timeout(monitorButton);
   });

@@ -28,14 +28,15 @@ monitoring = False
 total_packet_count = 0
 packet_count = 0
 max_packets = 25
+max_monitoring_packets = 20
 tx_interval = 0.1
-threshold = 2
+threshold = 1.75
+scaler = MinMaxScaler((-10, 10))
 
-# csv_file_path = None
 csv_file_path = None
 sending_timestamp = []
-amplitude = []
-phase = []
+amplitude_queue = []
+phase_queue = []
 COLUMN_NAMES = [
     'Transmit_Timestamp', 'Record_Timestamp', 'Type', 'Mode', 'Source_IP', 'RSSI', 'Rate', 'Sig_Mode', 'MCS', 'CWB', 'Smoothing', 
     'Not_Sounding', 'Aggregation', 'STBC', 'FEC_Coding', 'SGI', 'Noise_Floor', 'AMPDU_Cnt', 
@@ -100,17 +101,20 @@ def get_subcarrier_threshold(data_transposed):
     return lower_threshold, upper_threshold
 
 def filter_amp_phase():
-    scaler = MinMaxScaler((-10, 10))
     filtered_positions = []
 
-    try:
-        # Convert string list to actual list
-        csi_df = pd.read_csv(csv_file_path)
-        csi_amplitude = csi_df['Amplitude'].apply(eval)  
-        csi_phase = csi_df['Phase'].apply(eval)
-    except KeyError:
-        print("Error: 'Amplitude' or 'Phase' column not found in the file.")
-        return
+    if monitoring:
+        csi_amplitude = amplitude_queue
+        csi_phase = phase_queue
+    elif recording:
+        try:
+            # Convert string list to actual list
+            csi_df = pd.read_csv(csv_file_path)
+            csi_amplitude = csi_df['Amplitude'].apply(eval)
+            csi_phase = csi_df['Phase'].apply(eval)
+        except KeyError:
+            print("Error: 'Amplitude' or 'Phase' column not found in the file.")
+            return
 
     amps_transposed = list(map(list, zip(*csi_amplitude)))
     phases_transposed = list(map(list, zip(*csi_phase)))
@@ -128,6 +132,7 @@ def filter_amp_phase():
         phase = np.array(phase)
 
         cleaned_amplitudes, cleaned_phases = clean_and_filter_data(
+            # Exclude the first 5 null subcarrier
             amp[5:], phase[5:], 
             amp_lower_threshold[5:], amp_upper_threshold[5:], 
             phase_lower_threshold[5:], phase_upper_threshold[5:]
@@ -143,7 +148,6 @@ def filter_amp_phase():
     
     filtered_positions
     return filtered_positions
-
 
 def compute_csi_amplitude_phase(csi_data):
     '''
@@ -167,6 +171,13 @@ def compute_csi_amplitude_phase(csi_data):
         
         amplitudes.append(amplitude)
         phases.append(phase)
+    
+    if len(amplitude_queue) >= max_monitoring_packets:
+        amplitude_queue.pop(0)
+        phase_queue.pop(0)
+
+    amplitude_queue.append(amplitudes)
+    phase_queue.append(phases)
     
     return amplitudes, phases
 
@@ -235,10 +246,6 @@ def process_data(data, rx_time):
                 with open(csv_file_path, mode='a', newline='') as file:
                     writer = csv.writer(file)
                     writer.writerow(csi_data)
-        else:
-            global amplitude, phase
-            amplitude.append(csi_data[-2])
-            phase.append(csi_data[-1])
     except Exception as e:
         print(f'Error processing data: {e}')
     
@@ -253,7 +260,7 @@ def listen_to_packets():
     print('Recording CSI data...')
     while recording or monitoring:
         try:
-            data, addr = packet_listener.recvfrom(2048) # Adjusted buffer size for CSI Data
+            data, addr = packet_listener.recvfrom(2048) # Adjusted buffer size for CSI Data (2048)
             if monitoring:
                 total_packet_count += 1
                 threading.Thread(target=process_data, args=(data, None)).start()
@@ -367,7 +374,7 @@ def stop_recording():
 
 @app.route('/visualize', methods=['POST'])
 def visualize_amp_phase():
-    if not os.path.exists(csv_file_path):
+    if recording and not os.path.exists(csv_file_path):
         return jsonify({"error": "No CSV file found"}), 404
     
     try:
