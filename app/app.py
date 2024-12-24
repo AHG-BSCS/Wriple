@@ -11,6 +11,7 @@ import time
 import threading
 from sklearn.preprocessing import MinMaxScaler
 from scapy.all import Raw, IP, UDP, send
+from scipy.signal import butter, filtfilt
 from flask import Flask, jsonify, send_from_directory
 
 app = Flask(__name__)
@@ -30,13 +31,16 @@ packet_count = 0
 max_packets = 25
 max_monitoring_packets = 10
 tx_interval = 0.1
-threshold = 1.75
+
 scaler = MinMaxScaler((-10, 10))
+std_threshold = 1.75
+cutoff_frequency = 0.1
+sampling_rate = 1.0
 
 csv_file_path = None
 sending_timestamp = []
-amplitude_queue = []
-phase_queue = []
+amplitude_queue = pd.Series(dtype='object')
+phase_queue = pd.Series(dtype='object')
 activity = None
 class_label = None
 COLUMN_NAMES = [
@@ -52,21 +56,8 @@ def clean_and_filter_data(amplitudes, phases, amp_lower_threshold, amp_upper_thr
     cleaned_phases = []
     subcarriers = range(len(amplitudes))
 
+    # Retain outliers based on amplitude and phase
     for i, amp, phase in zip(subcarriers, amplitudes, phases):
-        # Remove null subcarriers
-        if amp == 0: continue
-        
-        # # Retain outliers based on amplitude
-        # if (amp < amp_lower_threshold[i]) or (amp > amp_upper_threshold[i]):
-        #     cleaned_amplitudes.append(amp)
-        #     cleaned_phases.append(phase)
-
-        # # Retain outliers based on phase
-        # if (phase < phase_lower_threshold[i]) or (phase > phase_upper_threshold[i]):
-        #     cleaned_amplitudes.append(amp)
-        #     cleaned_phases.append(phase)
-        
-        # Retain outliers based on amplitude and phase
         if ((amp < amp_lower_threshold[i]) or (amp > amp_upper_threshold[i]) and (phase < phase_lower_threshold[i]) or (phase > phase_upper_threshold[i])):
             cleaned_amplitudes.append(amp)
             cleaned_phases.append(phase)
@@ -76,20 +67,6 @@ def clean_and_filter_data(amplitudes, phases, amp_lower_threshold, amp_upper_thr
 
     return cleaned_amplitudes, cleaned_phases
 
-def apply_wavelet_transform(csi_amplitude, csi_phase):
-    transformed_amplitudes, transformed_phases = [], []
-
-    for i in range(len(csi_amplitude)):
-        csi_data = [a * np.exp(1j * p) for a, p in zip(csi_amplitude[i], csi_phase[i])]
-        csi_data = pywt.swt(csi_data, 'db1', level=2)
-        csi_data = pywt.iswt(csi_data, 'db1')
-
-        # Separate amplitude and phase
-        transformed_amplitudes.append(np.abs(csi_data))
-        transformed_phases.append(np.angle(csi_data))
-    
-    return transformed_amplitudes, transformed_phases
-
 def get_subcarrier_threshold(data_transposed):
     lower_threshold, upper_threshold = [], []
 
@@ -97,10 +74,21 @@ def get_subcarrier_threshold(data_transposed):
         mean = np.mean(column)
         std_dev = np.std(column)
 
-        lower_threshold.append(mean - threshold * std_dev)
-        upper_threshold.append(mean + threshold * std_dev)
+        lower_threshold.append(mean - std_threshold * std_dev)
+        upper_threshold.append(mean + std_threshold * std_dev)
 
     return lower_threshold, upper_threshold
+
+def butter_highpass(order=5):
+    nyquist = 0.5 * sampling_rate
+    normal_cutoff = cutoff_frequency / nyquist
+    b, a = butter(order, normal_cutoff, btype='high', analog=False)
+    return b, a
+
+def highpass_filter(data):
+    b, a = butter_highpass()
+    y = filtfilt(b, a, data)
+    return y
 
 def filter_amp_phase():
     filtered_positions = []
@@ -110,7 +98,6 @@ def filter_amp_phase():
         csi_phase = phase_queue
     else:
         try:
-            # Convert string list to actual list
             csi_df = pd.read_csv(csv_file_path)
             csi_amplitude = csi_df['Amplitude'].apply(eval)
             csi_phase = csi_df['Phase'].apply(eval)
@@ -118,14 +105,19 @@ def filter_amp_phase():
             print("Error: 'Amplitude' or 'Phase' column not found in the file.")
             return
 
-    # csi_amplitude, csi_phase = apply_wavelet_transform(csi_amplitude, csi_phase)
+    # Apply high-pass filter to amplitude and phase data
+    csi_amplitude = csi_amplitude.apply(lambda x: highpass_filter(np.array(x)))
+    csi_phase = csi_phase.apply(lambda x: highpass_filter(np.array(x)))
 
+    # Transpose to make subcarriers as rows
     amps_transposed = list(map(list, zip(*csi_amplitude)))
     phases_transposed = list(map(list, zip(*csi_phase)))
 
+    # Scaled because of d3 visualization
     scaled_amplitudes = scaler.fit_transform(amps_transposed).T
     scaled_phases = scaler.fit_transform(phases_transposed).T
 
+    # Get the threshold for each subcarrier
     amp_lower_threshold, amp_upper_threshold = get_subcarrier_threshold(scaled_amplitudes.T)
     phase_lower_threshold, phase_upper_threshold = get_subcarrier_threshold(scaled_phases.T)
     
@@ -133,24 +125,23 @@ def filter_amp_phase():
         amp = np.array(amp)
         phase = np.array(phase)
 
-        cleaned_amplitudes, cleaned_phases = clean_and_filter_data(
-            # Exclude the first 5 null subcarrier
-            amp[5:], phase[5:], 
-            amp_lower_threshold[5:], amp_upper_threshold[5:], 
-            phase_lower_threshold[5:], phase_upper_threshold[5:]
+        # Limit the number of data to plot for better performance using standard deviation threshold
+        amp, phase = clean_and_filter_data(
+            amp, phase, 
+            amp_lower_threshold, amp_upper_threshold, 
+            phase_lower_threshold, phase_upper_threshold
         )
 
-        # This loop ensures that each subcarrier is plot in the same x-axis
-        x = np.arange(-10, 10, 20/len(cleaned_amplitudes))
-        z = cleaned_phases
-        y = cleaned_amplitudes
+        # Ensures that each subcarrier is plot in the same x-axis
+        x = np.arange(-10, 10, 20/len(amp))
+        z = phase
+        y = amp
 
         for i in range(len(x)):
             if z[i] == 0:
                 continue
             filtered_positions.append((float(x[i]), float(y[i]), float(z[i])))
     
-    filtered_positions
     return filtered_positions
 
 def compute_csi_amplitude_phase(csi_data):
@@ -159,6 +150,7 @@ def compute_csi_amplitude_phase(csi_data):
     param csi_data: List of raw CSI values (alternating I and Q components).
     return: Two lists - amplitudes and phases for each subcarrier.
     '''
+    global amplitude_queue, phase_queue
     amplitudes = []
     phases = []
     
@@ -176,14 +168,19 @@ def compute_csi_amplitude_phase(csi_data):
         amplitudes.append(amplitude)
         phases.append(phase)
     
-    if len(amplitude_queue) >= max_monitoring_packets:
-        amplitude_queue.pop(0)
-        phase_queue.pop(0)
+    # Specifically choosen ranges of subcarrier for accuracy
+    filtered_amplitude = amplitudes[6:32] + amplitudes[33:59] + amplitudes[64:65] + amplitudes[66:123] + amplitudes[127:184] + amplitudes[185:186] + amplitudes[187:244] + amplitudes[248:305]
+    filtered_phase = phases[6:32] + phases[33:59] + phases[64:65] + phases[66:123] + phases[127:184] + phases[185:186] + phases[187:244] + phases[248:305]
 
-    amplitude_queue.append(amplitudes)
-    phase_queue.append(phases)
+    if monitoring:
+        if len(amplitude_queue) >= max_monitoring_packets:
+            amplitude_queue = amplitude_queue.iloc[1:].reset_index(drop=True)
+            phase_queue = phase_queue.iloc[1:].reset_index(drop=True)
+
+        amplitude_queue = pd.concat([amplitude_queue, pd.Series([filtered_amplitude])], ignore_index=True)
+        phase_queue = pd.concat([phase_queue, pd.Series([filtered_phase])], ignore_index=True)
     
-    return amplitudes, phases
+    return filtered_amplitude, filtered_phase
 
 def parse_csi_data(data_str):
     parts = data_str.split(',')
@@ -427,11 +424,11 @@ def set_class(target_class):
         class_label = None
     return f'set {target_class} as target class.'
 
-@app.route('/set_threshold/<value>', methods=['GET'])
-def set_threshold(value):
-    global threshold
-    threshold = float(value)
-    return f'set {value} as threshold.'
+@app.route('/set_threshold/<threshold>', methods=['GET'])
+def set_threshold(threshold):
+    global std_threshold
+    std_threshold = float(threshold)
+    return f'set {threshold} as threshold.'
 
 if __name__ == '__main__':
     # Ensure that the device is connectted to ESP32 AP since starting disconnected can cause packet sending error.

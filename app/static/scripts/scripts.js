@@ -248,10 +248,12 @@ document.addEventListener('DOMContentLoaded', () => {
         processData(datas, 1000);
       })
       .catch(err => {
-        visualizeButton.style.backgroundColor = buttonActiveColor;
-        visualizeButton.disabled = false;
-        svg.selectAll('*').remove();
-        alert("No data to visualize." + err);
+        if (lastMode == 0) {
+          visualizeButton.style.backgroundColor = buttonActiveColor;
+          visualizeButton.disabled = false;
+          svg.selectAll('*').remove();
+        }
+        console.log("No data to visualize." + err);
       });
   };
 
@@ -299,7 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
             visualizeButton.disabled = true;
             recordButton.style.backgroundColor = buttonInactiveColor;
             recordButton.style.backgroundImage = "url('static/images/record-stop.png')";
-            packetCountInterval = setInterval(setPacketCount, 300);
+            packetCountInterval = setInterval(setPacketCount, 250);
           })
           .catch(err => {
             alert('Activity or Class is missing!');
