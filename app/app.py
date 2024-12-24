@@ -266,7 +266,7 @@ def listen_to_packets():
     print('Recording CSI data...')
     while recording or monitoring:
         try:
-            data, addr = packet_listener.recvfrom(2048) # Adjusted buffer size for CSI Data (2048)
+            data, addr = packet_listener.recvfrom(2048) # Adjusted buffer size for CSI Data
             if monitoring:
                 total_packet_count += 1
                 threading.Thread(target=process_data, args=(data, None)).start()
@@ -288,6 +288,9 @@ def listen_to_packets():
                 continue
         except KeyboardInterrupt:
             break
+        except Exception:
+            print('Packet size is larger than buffer size. Restarting...')
+            continue
 
     if mode == 0:
         compute_time_of_flight()
@@ -300,7 +303,7 @@ def listen_to_packets():
 def send_packets():
     try:
         if monitoring:
-            send(UDP_PACKET)
+            send(UDP_PACKET, verbose=False)
             threading.Timer(tx_interval, send_packets).start()
         elif recording and not monitoring and total_packet_count <= max_packets:
             # Get the sending timestamp as accurate as possible
@@ -368,7 +371,6 @@ def start_recording(mode):
         return jsonify({"mode": mode})
     except Exception as e:
         return jsonify({'status': 'error'}), 400
-        
 
 @app.route('/recording_status', methods=['POST'])
 def recording_status():
