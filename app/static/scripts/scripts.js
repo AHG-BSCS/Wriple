@@ -31,8 +31,10 @@ document.addEventListener('DOMContentLoaded', () => {
   var buttonInactiveColor = 'saddlebrown';
   var lastMode;
 
+
   /* Visualizer Functions */
 
+  
   const origin = { x: 400, y: 200 };
   const scale = 20;
   const key = (d) => d.id;
@@ -184,7 +186,9 @@ document.addEventListener('DOMContentLoaded', () => {
     mouseY = event.y - my + mouseY;
   }
 
+  
   /* Element Functions */
+
 
   function setPacketCount() {
     fetch('/recording_status', { method: "POST" })
@@ -277,7 +281,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1000);
   }
 
+
   /* Elements Event Listener */
+
 
   recordButton.addEventListener('click', () => {
       if (recordButton.style.backgroundColor === buttonInactiveColor) {
@@ -291,6 +297,10 @@ document.addEventListener('DOMContentLoaded', () => {
         recordButton.style.backgroundImage = "url('static/images/record-start.png')";
         visualizeButton.style.backgroundColor = buttonActiveColor;
       } else {
+        recordButton.disabled = true;
+        setTimeout(() => {
+          recordButton.disabled = false;
+        }, 3000);
         fetch('/start_recording/recording')
           .then(response => response.json())
           .then(data => {

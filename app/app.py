@@ -27,10 +27,9 @@ UDP_PACKET = IP(dst=ESP32_IP)/UDP(sport=5000, dport=ESP32_PORT)/Raw(load=PAYLOAD
 recording = False
 monitoring = False
 total_packet_count = 0
-packet_count = 0
-max_packets = 25
-max_monitoring_packets = 10
-tx_interval = 0.1
+max_packets = 200
+max_monitoring_packets = 100
+tx_interval = 0.01
 
 scaler = MinMaxScaler((-10, 10))
 std_threshold = 1.75
@@ -106,12 +105,19 @@ def filter_amp_phase():
             return
 
     # Apply high-pass filter to amplitude and phase data
-    csi_amplitude = csi_amplitude.apply(lambda x: highpass_filter(np.array(x)))
-    csi_phase = csi_phase.apply(lambda x: highpass_filter(np.array(x)))
+    # csi_amplitude = csi_amplitude.apply(lambda x: highpass_filter(np.array(x)))
+    # csi_phase = csi_phase.apply(lambda x: highpass_filter(np.array(x)))
 
     # Transpose to make subcarriers as rows
     amps_transposed = list(map(list, zip(*csi_amplitude)))
     phases_transposed = list(map(list, zip(*csi_phase)))
+
+    # Limit the number of subcarriers to plot for the most relevant ones
+    # amplitudes[64:65] + amplitudes[66:123] + amplitudes[127:184] + amplitudes[185:186]
+    # amps_transposed = amps_transposed[54:166]
+    # phases_transposed = phases_transposed[53:166]
+    # amps_transposed = amps_transposed[:53]
+    # phases_transposed = phases_transposed[:53]
 
     # Scaled because of d3 visualization
     scaled_amplitudes = scaler.fit_transform(amps_transposed).T
