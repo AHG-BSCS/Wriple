@@ -1,10 +1,9 @@
 #include "esp_log.h"
 #include "esp_mac.h"
 #include "esp_wifi.h"
+#include "nvs_flash.h"
 
 #include "../_components/csi_component.h"
-#include "../_components/nvs_component.h"
-#include "../_components/time_component.h"
 
 #define ESP_WIFI_SSID   CONFIG_ESP_WIFI_SSID
 #define ESP_WIFI_PASS   CONFIG_ESP_WIFI_PASSWORD
@@ -76,8 +75,14 @@ void wifi_init_softap() {
 }
 
 extern "C" void app_main() {
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(ret);
+
     config_print();
-    nvs_init();
     wifi_init_softap();
-    csi_init((char *) "CSI_AP");
+    csi_init();
 }

@@ -7,21 +7,14 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/timers.h"
 #include "lwip/sockets.h"
-#include "time_component.h"
 
-#define CSI_RAW 1
-#define CSI_AMPLITUDE 0
-#define CSI_PHASE 0
-#define CSI_TYPE CSI_RAW
 #define LED_GPIO_PIN GPIO_NUM_2
 
 SemaphoreHandle_t mutex = xSemaphoreCreateMutex();
-TimerHandle_t packet_timer;
+TimerHandle_t led_timer;
 
-static char *project_type;
 static const char *CSI = "CSI";
-
-// static bool connected = false;
+static bool connected = false;
 // static int packet_count = 0;
 static int total_packet_count = 0;
 
@@ -30,13 +23,15 @@ static sockaddr_in client_addr;
 static const uint8_t target_mac[6] = {0xE0, 0x2B, 0xE9, 0x95, 0xED, 0x68}; // Currectly set to specific MAC address of the station
 static const char *target_ip = "192.168.4.2"; // Currently set to the IP address of the station
 
-// void packet_timer_callback(TimerHandle_t xTimer) {
-//     if (connected) {
-//         ESP_LOGI(CSI, "Total packets sent: %d:", total_packet_count);
-//         ESP_LOGI(CSI, "Packets sent in 3s: %d\n", packet_count);
-//         packet_count = 0;  // Reset the packet count for the next interval
-//     }
-// }
+void led_timer_callback(TimerHandle_t xTimer) {
+    if (connected && total_packet_count > 100) {
+        gpio_set_level(LED_GPIO_PIN, 1);
+        total_packet_count = 0;
+    }
+    else {
+        gpio_set_level(LED_GPIO_PIN, 0);
+    }
+}
 
 void _wifi_csi_callback(void *ctx, wifi_csi_info_t *data) {
     if ((memcmp(data->mac, target_mac, 6) == 0) &&
@@ -54,63 +49,32 @@ void _wifi_csi_callback(void *ctx, wifi_csi_info_t *data) {
         char mac[20] = {0};
         sprintf(mac, "%02X:%02X:%02X:%02X:%02X:%02X", d.mac[0], d.mac[1], d.mac[2], d.mac[3], d.mac[4], d.mac[5]);
 
-        ss << "CSI_DATA,"
-        << project_type << ","
-        << mac << ","
-        << d.rx_ctrl.rssi << ","
-        << d.rx_ctrl.rate << ","
-        << d.rx_ctrl.sig_mode << ","
+        ss << d.rx_ctrl.rssi << ","
         << d.rx_ctrl.mcs << ","
         << d.rx_ctrl.cwb << ","
         << d.rx_ctrl.smoothing << ","
         << d.rx_ctrl.not_sounding << ","
-        << d.rx_ctrl.aggregation << ","
-        << d.rx_ctrl.stbc << ","
-        << d.rx_ctrl.fec_coding << ","
-        << d.rx_ctrl.sgi << ","
         << d.rx_ctrl.noise_floor << ","
-        << d.rx_ctrl.ampdu_cnt << ","
         << d.rx_ctrl.channel << ","
         << d.rx_ctrl.secondary_channel << ","
         << d.rx_ctrl.timestamp << ","
         << d.rx_ctrl.ant << ","
         << d.rx_ctrl.sig_len << ","
         << d.rx_ctrl.rx_state << ","
-        << real_time_set << ","
-        << get_steady_clock_timestamp() << ","
         << data->len << ",[";
 
-    int data_len = data->len;
+        int data_len = data->len;
+        int8_t *my_ptr;
+        my_ptr = data->buf;
 
-int8_t *my_ptr;
-#if CSI_RAW
-    my_ptr = data->buf;
-    for (int i = 0; i < data_len; i++) {
-        ss << (int) my_ptr[i] << " ";
-    }
-#endif
-#if CSI_AMPLITUDE
-    my_ptr = data->buf;
-    for (int i = 0; i < data_len / 2; i++) {
-        ss << (int) sqrt(pow(my_ptr[i * 2], 2) + pow(my_ptr[(i * 2) + 1], 2)) << " ";
-    }
-#endif
-#if CSI_PHASE
-    my_ptr = data->buf;
-    for (int i = 0; i < data_len / 2; i++) {
-        ss << (int) atan2(my_ptr[i*2], my_ptr[(i*2)+1]) << " ";
-    }
-#endif
+        for (int i = 0; i < data_len; i++) {
+            ss << (int) my_ptr[i] << " ";
+        }
+
         ss << "]\n";
         // Send the CSI data to the target IP
         sendto(sock, ss.str().c_str(), strlen(ss.str().c_str()), 0, (struct sockaddr *)&client_addr, sizeof(client_addr));
         total_packet_count++;
-
-        // Blink the LED every 10 packets
-        if (total_packet_count == 10) {
-            gpio_set_level(LED_GPIO_PIN, 0);
-            total_packet_count = 0;
-        }
 
         fflush(stdout);
         vTaskDelay(0);
@@ -123,8 +87,7 @@ void configure_led() {
     gpio_set_direction(LED_GPIO_PIN, GPIO_MODE_OUTPUT);
 }
 
-void csi_init(char *type) {
-    project_type = type;
+void csi_init() {
     ESP_ERROR_CHECK(esp_wifi_set_csi(1));
     configure_led();
 
@@ -136,10 +99,10 @@ void csi_init(char *type) {
     configuration_csi.channel_filter_en = 0;
     configuration_csi.manu_scale = 0;
 
-    // packet_timer = xTimerCreate("PacketTimer", pdMS_TO_TICKS(3000), pdTRUE, (void *)0, packet_timer_callback);
-    // if (packet_timer != NULL) {
-    //     xTimerStart(packet_timer, 0);
-    // }
+    led_timer = xTimerCreate("LedTimer", pdMS_TO_TICKS(1000), pdTRUE, (void *)0, led_timer_callback);
+    if (led_timer != NULL) {
+        xTimerStart(led_timer, 0);
+    }
 
     ESP_ERROR_CHECK(esp_wifi_set_csi_config(&configuration_csi));
     ESP_ERROR_CHECK(esp_wifi_set_csi_rx_cb(&_wifi_csi_callback, NULL));
