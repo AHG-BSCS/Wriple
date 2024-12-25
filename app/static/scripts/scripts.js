@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* Visualizer Functions */
 
-  
+
   const origin = { x: 400, y: 200 };
   const scale = 20;
   const key = (d) => d.id;
@@ -196,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(data => {
         if (data.mode == 0) {
           lastMode = 0
-          packetcount.textContent = `${data.total_packet}/25`;
+          packetcount.textContent = `${data.total_packet}/250`;
         }
         else if (data.mode == 1) {
           lastMode = 1
@@ -299,9 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         recordButton.disabled = true;
         setTimeout(() => {
-          recordButton.disabled = false;
-        }, 3000);
-        fetch('/start_recording/recording')
+          fetch('/start_recording/recording')
           .then(response => response.json())
           .then(data => {
             if (data.status === "error") {
@@ -321,7 +319,9 @@ document.addEventListener('DOMContentLoaded', () => {
             recordButton.style.backgroundImage = "url('static/images/record-start.png')";
             visualizeButton.style.backgroundColor = buttonActiveColor;
           })
+        }, 3000);
       }
+      recordButton.disabled = false;
       button_timeout(recordButton);
   });
 

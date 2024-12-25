@@ -27,7 +27,7 @@ UDP_PACKET = IP(dst=ESP32_IP)/UDP(sport=5000, dport=ESP32_PORT)/Raw(load=PAYLOAD
 recording = False
 monitoring = False
 total_packet_count = 0
-max_packets = 200
+max_packets = 250
 max_monitoring_packets = 100
 tx_interval = 0.01
 
@@ -37,16 +37,16 @@ cutoff_frequency = 0.1
 sampling_rate = 1.0
 
 csv_file_path = None
-sending_timestamp = []
-amplitude_queue = pd.Series(dtype='object')
-phase_queue = pd.Series(dtype='object')
+csv_file_directory = 'app/dataset/data_recorded'
+transmit_timestamp = []
+amplitude_queue = []
+phase_queue = []
 activity = None
 class_label = None
 COLUMN_NAMES = [
-    'Transmit_Timestamp', 'Record_Timestamp', 'Type', 'Mode', 'Activity', 'Movement', 'Source_IP', 'RSSI', 'Rate', 'Sig_Mode', 'MCS', 'CWB', 'Smoothing', 
-    'Not_Sounding', 'Aggregation', 'STBC', 'FEC_Coding', 'SGI', 'Noise_Floor', 'AMPDU_Cnt', 
-    'Channel', 'Secondary_Channel', 'Received_Timestamp', 'Antenna', 'Signal_Length', 'RX_State', 
-    'Real_Time_Set', 'Steady_Clock_Timestamp', 'Data_Length', 'Raw_CSI', 'Amplitude', 'Phase', 'Time_of_Flight'
+    'Transmit_Timestamp', 'Activity', 'Movement', 'RSSI', 'MCS', 'CWB', 'Smoothing', 
+    'Not_Sounding', 'Noise_Floor', 'Channel', 'Secondary_Channel', 'Received_Timestamp',
+    'Antenna', 'Signal_Length', 'RX_State', 'Data_Length', 'Raw_CSI', 'Time_of_Flight'
 ]
 
 def clean_and_filter_data(amplitudes, phases, amp_lower_threshold, amp_upper_threshold, 
@@ -90,19 +90,17 @@ def highpass_filter(data):
     return y
 
 def filter_amp_phase():
+    global max_monitoring_packets
     filtered_positions = []
 
-    if monitoring:
-        csi_amplitude = amplitude_queue
-        csi_phase = phase_queue
-    else:
-        try:
-            csi_df = pd.read_csv(csv_file_path)
-            csi_amplitude = csi_df['Amplitude'].apply(eval)
-            csi_phase = csi_df['Phase'].apply(eval)
-        except KeyError:
-            print("Error: 'Amplitude' or 'Phase' column not found in the file.")
-            return
+    csi_amplitude = pd.Series(amplitude_queue)
+    csi_phase = pd.Series(phase_queue)
+
+    if recording:
+        # Reset the monitoring limit and data queue after recording
+        max_monitoring_packets = 100
+        amplitude_queue.clear()
+        phase_queue.clear()
 
     # Apply high-pass filter to amplitude and phase data
     # csi_amplitude = csi_amplitude.apply(lambda x: highpass_filter(np.array(x)))
@@ -156,7 +154,6 @@ def compute_csi_amplitude_phase(csi_data):
     param csi_data: List of raw CSI values (alternating I and Q components).
     return: Two lists - amplitudes and phases for each subcarrier.
     '''
-    global amplitude_queue, phase_queue
     amplitudes = []
     phases = []
     
@@ -169,24 +166,17 @@ def compute_csi_amplitude_phase(csi_data):
         Q = csi_data[i + 1]
         
         amplitude = math.sqrt(I**2 + Q**2)
-        phase = math.atan2(Q, I)  # atan2 handles quadrant ambiguity
+        phase = math.atan2(Q, I)
         
         amplitudes.append(amplitude)
         phases.append(phase)
     
-    # Specifically choosen ranges of subcarrier for accuracy
-    filtered_amplitude = amplitudes[6:32] + amplitudes[33:59] + amplitudes[64:65] + amplitudes[66:123] + amplitudes[127:184] + amplitudes[185:186] + amplitudes[187:244] + amplitudes[248:305]
-    filtered_phase = phases[6:32] + phases[33:59] + phases[64:65] + phases[66:123] + phases[127:184] + phases[185:186] + phases[187:244] + phases[248:305]
+    while len(amplitude_queue) >= max_monitoring_packets:
+        amplitude_queue.pop(0)
+        phase_queue.pop(0)
 
-    if monitoring:
-        if len(amplitude_queue) >= max_monitoring_packets:
-            amplitude_queue = amplitude_queue.iloc[1:].reset_index(drop=True)
-            phase_queue = phase_queue.iloc[1:].reset_index(drop=True)
-
-        amplitude_queue = pd.concat([amplitude_queue, pd.Series([filtered_amplitude])], ignore_index=True)
-        phase_queue = pd.concat([phase_queue, pd.Series([filtered_phase])], ignore_index=True)
-    
-    return filtered_amplitude, filtered_phase
+    amplitude_queue.append(amplitudes)
+    phase_queue.append(phases)
 
 def parse_csi_data(data_str):
     parts = data_str.split(',')
@@ -196,14 +186,15 @@ def parse_csi_data(data_str):
     # Extract CSI data as a string of integers
     csi_data = data_str[csi_data_start + 1:csi_data_end].strip().split(' ')
     csi_data = list(filter(None, csi_data))  # Remove empty strings
-
+    
     try:
         csi_data = [int(x) for x in csi_data]
-        amplitudes, phases = compute_csi_amplitude_phase(csi_data)
+        compute_csi_amplitude_phase(csi_data[12:64] + csi_data[66:118])
     except ValueError:
-        csi_data, amplitudes, phases = [], [], []
+        csi_data = []
 
-    return parts[:25] + [csi_data, amplitudes, phases]
+    # Use -1 to exclude the unformatted Raw CSI data
+    return parts[:-1] + [csi_data]
 
 def compute_time_of_flight():
     '''
@@ -240,15 +231,14 @@ def compute_time_of_flight():
     csi_df.to_csv(csv_file_path, index=False)
     return csi_df
 
-def process_data(data, rx_time):
+def process_data(data, m):
     try:
         data_str = data.decode('utf-8').strip()
         csi_data = parse_csi_data(data_str)
         if (recording):
-            csi_data.insert(0, sending_timestamp.pop(0))
-            csi_data.insert(1, rx_time)
-            csi_data.insert(4, activity)
-            csi_data.insert(5, class_label)
+            csi_data.insert(0, transmit_timestamp.pop(0))
+            csi_data.insert(1, activity)
+            csi_data.insert(2, class_label)
 
             # Write to the CSV file with a lock to ensure thread safety
             with lock:
@@ -269,23 +259,20 @@ def listen_to_packets():
     print('Recording CSI data...')
     while recording or monitoring:
         try:
-            data, addr = packet_listener.recvfrom(2048) # Adjusted buffer size for CSI Data
-            if monitoring:
-                total_packet_count += 1
-                threading.Thread(target=process_data, args=(data, None)).start()
-                continue
-
+            # Adjusted buffer size for CSI Data. May rarely cause buffer overflow.
+            data, addr = packet_listener.recvfrom(2048) 
             total_packet_count += 1
-            rx_time = time.time()
-            rx_time = int((rx_time * 1_000_000) % 1_000_000_000)
-
-            if total_packet_count <= max_packets:
-                threading.Thread(target=process_data, args=(data, rx_time)).start()
+            if monitoring:
+                threading.Thread(target=process_data, args=(data, True)).start()
+                continue
+            elif total_packet_count <= max_packets:
+                threading.Thread(target=process_data, args=(data, True)).start()
             else:
                 total_packet_count = 0
                 break
         except socket.timeout:
             if not recording and not monitoring:
+                total_packet_count = 0
                 break
             else:
                 continue
@@ -295,9 +282,9 @@ def listen_to_packets():
             print('Packet size is larger than buffer size. Restarting...')
             continue
 
-    if mode == 0:
-        compute_time_of_flight()
-        
+    # if mode == 0:
+    #     compute_time_of_flight()
+    
     recording = False
     monitoring = False
     
@@ -310,10 +297,10 @@ def send_packets():
             threading.Timer(tx_interval, send_packets).start()
         elif recording and not monitoring and total_packet_count <= max_packets:
             # Get the sending timestamp as accurate as possible
-            send(UDP_PACKET)
+            send(UDP_PACKET, verbose=False)
             tx_time = time.time()
             tx_time = int((tx_time * 1_000_000) % 1_000_000_000)
-            sending_timestamp.append(tx_time)
+            transmit_timestamp.append(tx_time)
             threading.Timer(tx_interval, send_packets).start()
         else:
             print('Stopped sending packets.')
@@ -322,7 +309,7 @@ def send_packets():
 
 def prepare_csv_file():
     global csv_file_path
-    csv_dir = 'app/dataset'
+    csv_dir = csv_file_directory
     files = os.listdir(csv_dir)
     
     # Filter files that match the pattern CSI_DATA_XXX
@@ -356,18 +343,20 @@ def serve_index():
 
 @app.route('/start_recording/<mode>', methods=['GET'])
 def start_recording(mode):
-    global recording, monitoring
+    global recording, monitoring, max_monitoring_packets
     try:
         if mode == 'recording':
             if activity is None or class_label is None:
                 raise Exception('Activity and Class is missing!')
             
             recording = True
+            max_monitoring_packets = max_packets
             prepare_csv_file()
             threading.Thread(target=listen_to_packets, daemon=True).start()
             send_packets()
         elif mode == 'monitoring':
             monitoring = True
+            max_monitoring_packets = 100
             threading.Thread(target=listen_to_packets, daemon=True).start()
             send_packets()
 
@@ -388,6 +377,8 @@ def stop_recording():
     recording = False
     monitoring = False
     total_packet_count = 0
+    amplitude_queue.clear()
+    phase_queue.clear()
     return 'Stop recording CSI Data.'
 
 @app.route('/visualize', methods=['POST'])
@@ -400,13 +391,13 @@ def visualize_amp_phase():
 
 @app.route('/list_csv_files', methods=['GET'])
 def list_attendance_files():
-    attendance_files = [f for f in os.listdir('app/dataset') if f.endswith('.csv')]
+    attendance_files = [f for f in os.listdir(csv_file_directory) if f.endswith('.csv')]
     return jsonify(attendance_files)
 
 @app.route('/visualize_csv/<filename>', methods=['GET'])
 def visualize_csv(filename):
     global csv_file_path
-    csv_file_path = os.path.join('app/dataset', filename)
+    csv_file_path = os.path.join(csv_file_directory, filename)
 
     if not os.path.exists(csv_file_path):
         return jsonify({"error": "File not found"}), 404
