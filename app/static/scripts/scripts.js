@@ -18,11 +18,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const recordButton = document.getElementById('record');
   const monitorButton = document.getElementById('monitor');
   const visualizeButton = document.getElementById('visualize');
+  const packetcount = document.getElementById('packet-count');
+  const prediction = document.getElementById('prediction');
   const filesList = $('#files-list');
   const activityList = $('#activity-list');
   const classList = $('#class-list');
   const thresholdList = $('#threshold-list');
-  const packetcount = document.getElementById('packet-count');
 
   let packetCountInterval;
   let monitorVisualizeInterval;
@@ -212,6 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
             monitorButton.disabled = false;
             visualizeButton.disabled = false;
             packetcount.textContent = null
+            prediction.textContent = null
             list_csv_files();
             visualize();
           }
@@ -232,7 +234,12 @@ document.addEventListener('DOMContentLoaded', () => {
         let j = 10;
         let cnt = 0;
 
-        scatter = data.filtered_signal.map(pos => ({ x: pos[0], y: pos[1], z: pos[2], id: "point-" + cnt++ }));
+        if (data.prediction == "1")
+          prediction.textContent = "Movement Detected"
+        else
+          prediction.textContent = null
+
+        scatter = data.signal_coordinates.map(pos => ({ x: pos[0], y: pos[1], z: pos[2], id: "point-" + cnt++ }));
 
         for (let z = -j; z < j; z++) {
           for (let x = -j; x < j; x++) {
@@ -337,6 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
         monitorButton.style.backgroundImage = "url('static/images/monitor-start.png')";
         visualizeButton.style.backgroundColor = buttonActiveColor;
         packetcount.textContent = null;
+        prediction.textContent = null
         svg.selectAll('*').remove();
       } else {
         recordButton.disabled = true;
@@ -356,6 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
       visualizeButton.style.backgroundColor = buttonActiveColor;
       svg.selectAll('*').remove();
       packetcount.textContent = null;
+      prediction.textContent = null
     } else {
       visualizeButton.style.backgroundColor = buttonInactiveColor;
       visualize();

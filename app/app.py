@@ -1,6 +1,7 @@
 import os
 import re
 import csv
+import joblib
 import math
 import numpy as np
 import pandas as pd
@@ -41,8 +42,10 @@ csv_file_directory = 'app/dataset/data_recorded'
 transmit_timestamp = []
 amplitude_queue = []
 phase_queue = []
+model = None
 activity = None
 class_label = None
+prediction = None
 COLUMN_NAMES = [
     'Transmit_Timestamp', 'Activity', 'Movement', 'RSSI', 'MCS', 'CWB', 'Smoothing', 
     'Not_Sounding', 'Noise_Floor', 'Channel', 'Secondary_Channel', 'Received_Timestamp',
@@ -90,8 +93,8 @@ def highpass_filter(data):
     return y
 
 def filter_amp_phase():
-    global max_monitoring_packets
-    filtered_positions = []
+    global max_monitoring_packets, prediction
+    signal_coordinates = []
 
     csi_amplitude = pd.Series(amplitude_queue)
     csi_phase = pd.Series(phase_queue)
@@ -101,6 +104,12 @@ def filter_amp_phase():
         max_monitoring_packets = 100
         amplitude_queue.clear()
         phase_queue.clear()
+    
+    # Make prediction
+    columns = [f'A{i + 1}' for i in range(len(amplitude_queue[0]))] + [f'P{i + 1}' for i in range(len(phase_queue[0]))]
+    X_test = pd.DataFrame(np.hstack((amplitude_queue, phase_queue)), columns=columns)
+    predictions = model.predict(X_test)
+    prediction = round(predictions.mean())
 
     # Apply high-pass filter to amplitude and phase data
     # csi_amplitude = csi_amplitude.apply(lambda x: highpass_filter(np.array(x)))
@@ -144,9 +153,9 @@ def filter_amp_phase():
         for i in range(len(x)):
             if z[i] == 0:
                 continue
-            filtered_positions.append((float(x[i]), float(y[i]), float(z[i])))
+            signal_coordinates.append((float(x[i]), float(y[i]), float(z[i])))
     
-    return filtered_positions
+    return signal_coordinates
 
 def compute_csi_amplitude_phase(csi_data):
     '''
@@ -260,7 +269,7 @@ def listen_to_packets():
     while recording or monitoring:
         try:
             # Adjusted buffer size for CSI Data. May rarely cause buffer overflow.
-            data, addr = packet_listener.recvfrom(2048) 
+            data, addr = packet_listener.recvfrom(2048)
             total_packet_count += 1
             if monitoring:
                 threading.Thread(target=process_data, args=(data, True)).start()
@@ -278,6 +287,9 @@ def listen_to_packets():
                 continue
         except KeyboardInterrupt:
             break
+        except OverflowError:
+            total_packet_count = 0
+            continue
         except Exception:
             print('Packet size is larger than buffer size. Restarting...')
             continue
@@ -332,6 +344,15 @@ def prepare_csv_file():
     except FileExistsError:
         pass
 
+def load_model():
+    global model
+    model_path = 'app/model/treesense_v0.1.pkl'
+    if os.path.exists(model_path):
+        model = joblib.load(model_path)
+        print('Model loaded successfully')
+    else:
+        print('Model file not found.')
+
 def check_connection(ssid):
     result = subprocess.run(['netsh', 'wlan', 'show', 'interfaces'], capture_output=True, text=True, shell=True)
     return ssid in result.stdout
@@ -384,8 +405,11 @@ def stop_recording():
 @app.route('/visualize', methods=['POST'])
 def visualize_amp_phase():
     try:
-        filtered_signal = filter_amp_phase()
-        return jsonify({"filtered_signal": filtered_signal})
+        signal_coordinates = filter_amp_phase()
+        return jsonify({
+            "prediction": prediction,
+            "signal_coordinates": signal_coordinates
+        })
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
@@ -437,5 +461,6 @@ if __name__ == '__main__':
     else:
         print(f'Connected to {SSID}. Starting the server...')
     
+    load_model()
     app.run(host='0.0.0.0', port=3000, debug=True)
     
