@@ -5,14 +5,12 @@ import joblib
 import math
 import numpy as np
 import pandas as pd
-import pywt
 import socket
 import subprocess
 import time
 import threading
 from sklearn.preprocessing import MinMaxScaler
 from scapy.all import Raw, IP, UDP, send
-from scipy.signal import butter, filtfilt
 from flask import Flask, jsonify, send_from_directory
 
 app = Flask(__name__)
@@ -34,8 +32,6 @@ tx_interval = 0.01
 
 scaler = MinMaxScaler((-10, 10))
 std_threshold = 1.75
-cutoff_frequency = 0.1
-sampling_rate = 1.0
 
 csv_file_path = None
 csv_file_directory = 'app/dataset/data_recorded'
@@ -81,17 +77,6 @@ def get_subcarrier_threshold(data_transposed):
 
     return lower_threshold, upper_threshold
 
-def butter_highpass(order=5):
-    nyquist = 0.5 * sampling_rate
-    normal_cutoff = cutoff_frequency / nyquist
-    b, a = butter(order, normal_cutoff, btype='high', analog=False)
-    return b, a
-
-def highpass_filter(data):
-    b, a = butter_highpass()
-    y = filtfilt(b, a, data)
-    return y
-
 def filter_amp_phase():
     global max_monitoring_packets, prediction
     signal_coordinates = []
@@ -111,20 +96,9 @@ def filter_amp_phase():
     predictions = model.predict(X_test)
     prediction = round(predictions.mean())
 
-    # Apply high-pass filter to amplitude and phase data
-    # csi_amplitude = csi_amplitude.apply(lambda x: highpass_filter(np.array(x)))
-    # csi_phase = csi_phase.apply(lambda x: highpass_filter(np.array(x)))
-
     # Transpose to make subcarriers as rows
     amps_transposed = list(map(list, zip(*csi_amplitude)))
     phases_transposed = list(map(list, zip(*csi_phase)))
-
-    # Limit the number of subcarriers to plot for the most relevant ones
-    # amplitudes[64:65] + amplitudes[66:123] + amplitudes[127:184] + amplitudes[185:186]
-    # amps_transposed = amps_transposed[54:166]
-    # phases_transposed = phases_transposed[53:166]
-    # amps_transposed = amps_transposed[:53]
-    # phases_transposed = phases_transposed[:53]
 
     # Scaled because of d3 visualization
     scaled_amplitudes = scaler.fit_transform(amps_transposed).T
