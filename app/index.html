@@ -19,31 +19,22 @@
         </div>
         <div class="button-container">
             <button id="monitor"></button>
-            <div class="tooltip">Monitor Wi-Fi Signal </div>
+            <div class="tooltip">Monitor Wi-Fi Signal</div>
         </div>
         <div class="button-container">
             <button id="visualize"></button>
-            <div class="tooltip">Visualize Wi-Fi Signal </div>
+            <div class="tooltip">Visualize Wi-Fi Signal</div>
         </div>
     </div>
     <div class="selection-container">
         <label for="files-list">CSV Files:</label>
         <select id="files-list" class="form-select"></select>
         <label for="activity-list">Activity:</label>
-        <select id="activity-list" class="form-select">
-            <option value="None"></option>
-            <option value="no-movement">No Movement</option>
-            <option value="stationary">Stationary</option>
-            <option value="talking">Talking</option>
-            <option value="sit-stand">Sitdown/Standup</option>
-            <option value="walking">Walking</option>
-            <option value="running">Running</option>
-            <option value="moving">Moving</option>
-        </select>
+        <select id="activity-list" class="form-select"></select>
         <label for="class-list">Class:</label>
         <select id="class-list" class="form-select">
             <option value="None"></option>
-            <option value="0">Idle</option>
+            <option value="0">Motionless</option>
             <option value="1">Active</option>
         </select>
         <label for="threshold-list">Sensitivity:</label>
@@ -55,6 +46,7 @@
             <option value="1.25">1.25</option>
             <option value="1.75" selected>1.75</option>
             <option value="2.0">2.00</option>
+            <option value="2.5">2.50</option>
         </select>
     </div>
     <div class="visualizer-container">

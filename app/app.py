@@ -9,7 +9,8 @@ import socket
 import subprocess
 import time
 import threading
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.decomposition import PCA
 from scapy.all import Raw, IP, UDP, send
 from flask import Flask, jsonify, send_from_directory
 
@@ -30,13 +31,17 @@ max_packets = 250
 max_monitoring_packets = 100
 tx_interval = 0.01
 
-scaler = MinMaxScaler((-10, 10))
+min_max_scaler = MinMaxScaler((-10, 10))
+std_scaler = None
+pca = None
+
 std_threshold = 1.75
 
 csv_file_path = None
-csv_file_directory = 'app/dataset/data_recorded'
+csv_file_directory = 'app/dataset/data_s2'
 transmit_timestamp = []
 amplitude_queue = []
+rssi_queue = []
 phase_queue = []
 model = None
 activity = None
@@ -81,8 +86,23 @@ def filter_amp_phase():
     global max_monitoring_packets, prediction
     signal_coordinates = []
 
+    if not recording and not monitoring:
+        try:
+            csi_df = pd.read_csv(csv_file_path)
+            raw_csi = csi_df['Raw_CSI'].apply(eval)
+            max_monitoring_packets = max_packets
+
+            for csi_data in raw_csi:
+                compute_csi_amplitude_phase(csi_data[72:78])
+                
+            max_monitoring_packets = 100
+        except KeyError:
+            print("Error: 'Amplitude' or 'Phase' column not found in the file.")
+            return
+    
     csi_amplitude = pd.Series(amplitude_queue)
     csi_phase = pd.Series(phase_queue)
+    # rssi = pd.Series(rssi_queue)
 
     if recording:
         # Reset the monitoring limit and data queue after recording
@@ -91,18 +111,31 @@ def filter_amp_phase():
         phase_queue.clear()
     
     # Make prediction
-    columns = [f'A{i + 1}' for i in range(len(amplitude_queue[0]))] + [f'P{i + 1}' for i in range(len(phase_queue[0]))]
-    X_test = pd.DataFrame(np.hstack((amplitude_queue, phase_queue)), columns=columns)
+    columns = ['RSSI']
+    columns.extend([f'AM{i}' for i in range(30, 33)])
+    # Can cause error if not properly sync
+    packet_ranges = [(i, i + 50) for i in range(0, len(amplitude_queue), 50)]
+    amplitude_mins = [np.min(amplitude_queue[start:end], axis=0) for start, end in packet_ranges]
+    rows = []
+
+    for i, amplitude_min in zip(range(1, len(amplitude_queue), 50), amplitude_mins):
+        row = np.concatenate([np.expand_dims(rssi_queue[i], axis=0), amplitude_min])
+        rows.append(row)
+
+    X_test = pd.DataFrame(rows, columns=columns)
+    X_test = std_scaler.transform(X_test)
+    X_test = pca.transform(X_test)
     predictions = model.predict(X_test)
-    prediction = round(predictions.mean())
+    prediction = 1 if 1 in predictions else 0
+    print(predictions)
 
     # Transpose to make subcarriers as rows
     amps_transposed = list(map(list, zip(*csi_amplitude)))
     phases_transposed = list(map(list, zip(*csi_phase)))
 
     # Scaled because of d3 visualization
-    scaled_amplitudes = scaler.fit_transform(amps_transposed).T
-    scaled_phases = scaler.fit_transform(phases_transposed).T
+    scaled_amplitudes = min_max_scaler.fit_transform(amps_transposed).T
+    scaled_phases = min_max_scaler.fit_transform(phases_transposed).T
 
     # Get the threshold for each subcarrier
     amp_lower_threshold, amp_upper_threshold = get_subcarrier_threshold(scaled_amplitudes.T)
@@ -131,7 +164,7 @@ def filter_amp_phase():
     
     return signal_coordinates
 
-def compute_csi_amplitude_phase(csi_data):
+def compute_csi_amplitude_phase(csi_data, rssi):
     '''
     Compute amplitude and phase from raw CSI data.
     param csi_data: List of raw CSI values (alternating I and Q components).
@@ -157,9 +190,11 @@ def compute_csi_amplitude_phase(csi_data):
     while len(amplitude_queue) >= max_monitoring_packets:
         amplitude_queue.pop(0)
         phase_queue.pop(0)
+        rssi_queue.pop(0)
 
     amplitude_queue.append(amplitudes)
     phase_queue.append(phases)
+    rssi_queue.append(rssi)
 
 def parse_csi_data(data_str):
     parts = data_str.split(',')
@@ -172,7 +207,7 @@ def parse_csi_data(data_str):
     
     try:
         csi_data = [int(x) for x in csi_data]
-        compute_csi_amplitude_phase(csi_data[12:64] + csi_data[66:118])
+        compute_csi_amplitude_phase(csi_data[72:78], int(parts[0]))
     except ValueError:
         csi_data = []
 
@@ -319,13 +354,17 @@ def prepare_csv_file():
         pass
 
 def load_model():
-    global model
-    model_path = 'app/model/treesense_v0.1.pkl'
-    if os.path.exists(model_path):
+    global model, std_scaler, pca
+    model_path = 'app/model/treesense_v0.3.pkl'
+    std_scaler_path = 'app/model/scaler_v0.3.pkl'
+    pca_path = 'app/model/pca_v0.3.pkl'
+    if os.path.exists(model_path) and os.path.exists(std_scaler_path) and os.path.exists(pca_path):
         model = joblib.load(model_path)
-        print('Model loaded successfully')
+        std_scaler = joblib.load(std_scaler_path)
+        pca = joblib.load(pca_path)
+        print('Models loaded successfully')
     else:
-        print('Model file not found.')
+        print('Model files not found.')
 
 def check_connection(ssid):
     result = subprocess.run(['netsh', 'wlan', 'show', 'interfaces'], capture_output=True, text=True, shell=True)
@@ -363,7 +402,8 @@ def start_recording(mode):
 def recording_status():
     return jsonify({
         'mode': 0 if recording else 1 if monitoring else -1,
-        'total_packet': total_packet_count
+        'total_packet': total_packet_count,
+        'prediction': prediction
     })
 
 @app.route('/stop_recording', methods=['POST'])

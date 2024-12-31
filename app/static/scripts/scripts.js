@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   var buttonActiveColor = '#323A3F';
   var buttonInactiveColor = 'saddlebrown';
-  var lastMode;
+  var lastMode = -1;
 
 
   /* Visualizer Functions */
@@ -195,19 +195,29 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch('/recording_status', { method: "POST" })
       .then(response => response.json())
       .then(data => {
-        if (data.mode == 0) {
+        if (data.mode === 0) {
           lastMode = 0
           packetcount.textContent = `${data.total_packet}/250`;
+
+          if (data.prediction === 1)
+            prediction.textContent = "Movement Detected"
+          else
+            prediction.textContent = "No Movement Detected"
         }
-        else if (data.mode == 1) {
+        else if (data.mode === 1) {
           lastMode = 1
           packetcount.textContent = `${data.total_packet}`;
+
+          if (data.prediction === 1)
+            prediction.textContent = "Movement Detected"
+          else
+            prediction.textContent = null
         }
         else {
           clearInterval(packetCountInterval);
           clearInterval(monitorVisualizeInterval);
 
-          if (lastMode == 0) {
+          if (lastMode === 0) {
             recordButton.style.backgroundColor = buttonActiveColor;
             recordButton.style.backgroundImage = "url('static/images/record-start.png')";
             monitorButton.disabled = false;
@@ -217,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
             list_csv_files();
             visualize();
           }
-          lastMode = 2;
+          lastMode = -1;
         }
       })
       .catch(err => alert("Fetch Error: " + err));
@@ -234,7 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let j = 10;
         let cnt = 0;
 
-        if (data.prediction == "1")
+        if (data.prediction === 1)
           prediction.textContent = "Movement Detected"
         else
           prediction.textContent = null
@@ -259,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
         processData(datas, 1000);
       })
       .catch(err => {
-        if (lastMode == 0) {
+        if (lastMode === 0) {
           visualizeButton.style.backgroundColor = buttonActiveColor;
           visualizeButton.disabled = false;
           svg.selectAll('*').remove();
@@ -317,6 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
             recordButton.style.backgroundColor = buttonInactiveColor;
             recordButton.style.backgroundImage = "url('static/images/record-stop.png')";
             packetCountInterval = setInterval(setPacketCount, 250);
+            lastMode = 0;
           })
           .catch(err => {
             alert('Activity or Class is missing!');
@@ -348,13 +359,13 @@ document.addEventListener('DOMContentLoaded', () => {
         svg.selectAll('*').remove();
       } else {
         recordButton.disabled = true;
-        visualizeButton.disabled = true;
         monitorButton.style.backgroundColor = buttonInactiveColor;
         monitorButton.style.backgroundImage = "url('static/images/monitor-stop.png')";
         fetch('/start_recording/monitoring')
           .catch(error => alert(error));
-        monitorVisualizeInterval = setInterval(visualize, 500);
+        
         packetCountInterval = setInterval(setPacketCount, 2000);
+        lastMode = 1;
       }
       button_timeout(monitorButton);
   });
@@ -362,12 +373,18 @@ document.addEventListener('DOMContentLoaded', () => {
   visualizeButton.addEventListener('click', () => {
     if (visualizeButton.style.backgroundColor === buttonInactiveColor) {
       visualizeButton.style.backgroundColor = buttonActiveColor;
+      clearInterval(monitorVisualizeInterval);
       svg.selectAll('*').remove();
       packetcount.textContent = null;
       prediction.textContent = null
     } else {
-      visualizeButton.style.backgroundColor = buttonInactiveColor;
-      visualize();
+      if (lastMode === 1) {
+        monitorVisualizeInterval = setInterval(visualize, 500);
+      }
+      else {
+        visualizeButton.style.backgroundColor = buttonInactiveColor;
+        visualize();
+      }
     }
     button_timeout(visualizeButton);
   });
@@ -399,6 +416,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (selectedClass) {
       fetch(`/set_class/${selectedClass}`)
         .catch(error => alert(error));
+        if (selectedClass === '0') {
+          activityList.empty();
+          activityList.append(new Option('', 'None'));
+          activityList.append(new Option('No Presence', 'No_Presence'));
+          activityList.append(new Option('No Movement', 'No_Movement'));
+        } else if (selectedClass === '1') {
+          activityList.empty();
+          activityList.append(new Option('', 'None'));
+          activityList.append(new Option('In Place', 'In_Place'));
+          activityList.append(new Option('Sit/Stand', 'Sit_Stand'));
+          activityList.append(new Option('Moving', 'Moving'));
+          activityList.append(new Option('Walking', 'Walking'));
+          activityList.append(new Option('Running', 'Running'));
+        } else {
+          activityList.empty();
+        }
     }
   });
 
