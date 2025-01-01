@@ -202,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (data.prediction === 1)
             prediction.textContent = "Movement Detected"
           else
-            prediction.textContent = "No Movement Detected"
+            prediction.textContent = null
         }
         else if (data.mode === 1) {
           lastMode = 1
@@ -337,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
             recordButton.style.backgroundImage = "url('static/images/record-start.png')";
             visualizeButton.style.backgroundColor = buttonActiveColor;
           })
-        }, 3000);
+        }, 1000);
       }
       recordButton.disabled = false;
       button_timeout(recordButton);
@@ -366,6 +366,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         packetCountInterval = setInterval(setPacketCount, 2000);
         lastMode = 1;
+      }
+      if (visualizeButton.style.backgroundColor === buttonInactiveColor) {
+        monitorVisualizeInterval = setInterval(visualize, 500);
       }
       button_timeout(monitorButton);
   });
@@ -398,8 +401,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (selectedFile !== 'no-selection') {
       fetch(`/visualize_csv/${selectedFile}`)
         .catch(error => alert(error));
-      visualize();
-      visualizeButton.style.backgroundColor = buttonInactiveColor;
+      setTimeout(() => {
+        visualize();
+        visualizeButton.style.backgroundColor = buttonInactiveColor;
+      }, 50)
     }
   });
 
@@ -440,9 +445,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (selectedValue) {
       fetch(`/set_threshold/${selectedValue}`)
         .catch(error => alert(error));
-      if (visualizeButton.style.backgroundColor === buttonInactiveColor) {
+      
+    }
+    if (visualizeButton.style.backgroundColor === buttonInactiveColor) {
+      setTimeout(() => {
         visualize();
-      }
+      }, 50)
     }
   });
 

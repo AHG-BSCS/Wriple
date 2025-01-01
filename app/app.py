@@ -38,7 +38,7 @@ pca = None
 std_threshold = 1.75
 
 csv_file_path = None
-csv_file_directory = 'app/dataset/data_s2'
+csv_file_directory = 'app/dataset/data_recorded'
 transmit_timestamp = []
 amplitude_queue = []
 rssi_queue = []
@@ -86,48 +86,43 @@ def filter_amp_phase():
     global max_monitoring_packets, prediction
     signal_coordinates = []
 
-    if not recording and not monitoring:
+    if max_monitoring_packets == max_packets:
         try:
             csi_df = pd.read_csv(csv_file_path)
             raw_csi = csi_df['Raw_CSI'].apply(eval)
-            max_monitoring_packets = max_packets
+            rssi_df = csi_df['RSSI']
 
-            for csi_data in raw_csi:
-                compute_csi_amplitude_phase(csi_data[72:78])
-                
-            max_monitoring_packets = 100
-        except KeyError:
-            print("Error: 'Amplitude' or 'Phase' column not found in the file.")
+            for csi_data, rssi in zip(raw_csi, rssi_df):
+                compute_csi_amplitude_phase(csi_data[12:64] + csi_data[66:118], rssi) # csi_data[12:64] + csi_data[66:118] | csi_data[72:78]
+        except Exception as e:
+            print("Error: 'Amplitude' or 'Phase' column not found in the file.", e)
             return
     
     csi_amplitude = pd.Series(amplitude_queue)
     csi_phase = pd.Series(phase_queue)
-    # rssi = pd.Series(rssi_queue)
-
-    if recording:
-        # Reset the monitoring limit and data queue after recording
-        max_monitoring_packets = 100
-        amplitude_queue.clear()
-        phase_queue.clear()
     
     # Make prediction
     columns = ['RSSI']
     columns.extend([f'AM{i}' for i in range(30, 33)])
-    # Can cause error if not properly sync
-    packet_ranges = [(i, i + 50) for i in range(0, len(amplitude_queue), 50)]
-    amplitude_mins = [np.min(amplitude_queue[start:end], axis=0) for start, end in packet_ranges]
-    rows = []
+    try:
+        # Can cause error if not properly sync
+        selected_subcarrier = [row[30:33] for row in amplitude_queue]
+        packet_ranges = [(i, i + 50) for i in range(0, len(amplitude_queue), 50)]
+        amplitude_mins = [np.min(selected_subcarrier[start:end], axis=0) for start, end in packet_ranges]
+        rows = []
 
-    for i, amplitude_min in zip(range(1, len(amplitude_queue), 50), amplitude_mins):
-        row = np.concatenate([np.expand_dims(rssi_queue[i], axis=0), amplitude_min])
-        rows.append(row)
+        for i, amplitude_min in zip(range(1, len(amplitude_queue), 50), amplitude_mins):
+            row = np.concatenate([np.expand_dims(rssi_queue[i], axis=0), amplitude_min])
+            rows.append(row)
 
-    X_test = pd.DataFrame(rows, columns=columns)
-    X_test = std_scaler.transform(X_test)
-    X_test = pca.transform(X_test)
-    predictions = model.predict(X_test)
-    prediction = 1 if 1 in predictions else 0
-    print(predictions)
+        X_test = pd.DataFrame(rows, columns=columns)
+        X_test = std_scaler.transform(X_test)
+        X_test = pca.transform(X_test)
+        predictions = model.predict(X_test)
+        prediction = 1 if 1 in predictions else 0
+        print(predictions)
+    except Exception as e:
+        print(e)
 
     # Transpose to make subcarriers as rows
     amps_transposed = list(map(list, zip(*csi_amplitude)))
@@ -161,6 +156,12 @@ def filter_amp_phase():
             if z[i] == 0:
                 continue
             signal_coordinates.append((float(x[i]), float(y[i]), float(z[i])))
+    
+    if not monitoring:
+        # Reset the monitoring limit and data queue after recording
+        max_monitoring_packets = 100
+        amplitude_queue.clear()
+        phase_queue.clear()
     
     return signal_coordinates
 
@@ -207,7 +208,8 @@ def parse_csi_data(data_str):
     
     try:
         csi_data = [int(x) for x in csi_data]
-        compute_csi_amplitude_phase(csi_data[72:78], int(parts[0]))
+        if monitoring:
+            compute_csi_amplitude_phase(csi_data[12:64] + csi_data[66:118], int(parts[0]))
     except ValueError:
         csi_data = []
 
@@ -250,6 +252,7 @@ def compute_time_of_flight():
     return csi_df
 
 def process_data(data, m):
+    global max_monitoring_packets
     try:
         data_str = data.decode('utf-8').strip()
         csi_data = parse_csi_data(data_str)
@@ -257,6 +260,7 @@ def process_data(data, m):
             csi_data.insert(0, transmit_timestamp.pop(0))
             csi_data.insert(1, activity)
             csi_data.insert(2, class_label)
+            max_monitoring_packets = max_packets
 
             # Write to the CSV file with a lock to ensure thread safety
             with lock:
@@ -267,7 +271,7 @@ def process_data(data, m):
         print(f'Error processing data: {e}')
     
 def listen_to_packets():
-    global recording, monitoring, total_packet_count
+    global recording, monitoring, total_packet_count, max_monitoring_packets
     mode = 0 if recording else 1
     packet_listener = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     packet_listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -290,6 +294,7 @@ def listen_to_packets():
                 break
         except socket.timeout:
             if not recording and not monitoring:
+                max_monitoring_packets = 100
                 total_packet_count = 0
                 break
             else:
@@ -377,20 +382,20 @@ def serve_index():
 
 @app.route('/start_recording/<mode>', methods=['GET'])
 def start_recording(mode):
-    global recording, monitoring, max_monitoring_packets
+    global recording, monitoring, prediction
+    prediction = None
+
     try:
         if mode == 'recording':
             if activity is None or class_label is None:
                 raise Exception('Activity and Class is missing!')
             
             recording = True
-            max_monitoring_packets = max_packets
             prepare_csv_file()
             threading.Thread(target=listen_to_packets, daemon=True).start()
             send_packets()
         elif mode == 'monitoring':
             monitoring = True
-            max_monitoring_packets = 100
             threading.Thread(target=listen_to_packets, daemon=True).start()
             send_packets()
 
@@ -434,8 +439,9 @@ def list_attendance_files():
 
 @app.route('/visualize_csv/<filename>', methods=['GET'])
 def visualize_csv(filename):
-    global csv_file_path
+    global csv_file_path, max_monitoring_packets
     csv_file_path = os.path.join(csv_file_directory, filename)
+    max_monitoring_packets = max_packets
 
     if not os.path.exists(csv_file_path):
         return jsonify({"error": "File not found"}), 404
@@ -461,8 +467,10 @@ def set_class(target_class):
 
 @app.route('/set_threshold/<threshold>', methods=['GET'])
 def set_threshold(threshold):
-    global std_threshold
+    global std_threshold, max_monitoring_packets
     std_threshold = float(threshold)
+    if not monitoring:
+        max_monitoring_packets = max_packets
     return f'set {threshold} as threshold.'
 
 if __name__ == '__main__':
