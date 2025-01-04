@@ -36,6 +36,8 @@ COLUMN_NAMES = [
 
 MM_SCALER = MinMaxScaler((-10, 10))
 WINDOW_SIZE = 40
+# SUBCARRIER_COUNT = 52
+SMOOTH_SUBCARRIER_COUNT = math.floor(52 / (WINDOW_SIZE * 0.1))
 
 recording = False
 monitoring = False
@@ -70,6 +72,17 @@ def clean_and_filter_data(amplitudes, phases, amp_lower_threshold, amp_upper_thr
 
     return cleaned_amplitudes, cleaned_phases
 
+def aggregate_features(data):
+    features = []
+    features.extend(np.mean(data, axis=0))
+    features.extend(np.min(data, axis=0))
+    
+    # FFT Features
+    fft_data = np.abs(fft(data, axis=0))[:26]  # Use half-spectrum
+    features.extend(np.mean(fft_data, axis=0))
+
+    return np.array(features)
+
 def get_subcarrier_threshold(data_transposed):
     lower_threshold, upper_threshold = [], []
 
@@ -86,6 +99,7 @@ def filter_amp_phase():
     global max_monitoring_packets, prediction
     signal_coordinates = []
 
+    # Load the data if file was selected for visualization
     if max_monitoring_packets == RECORDING_PACKET_LIMIT:
         try:
             csi_df = pd.read_csv(csv_file_path)
@@ -93,29 +107,28 @@ def filter_amp_phase():
             rssi_df = csi_df['RSSI']
 
             for csi_data, rssi in zip(raw_csi, rssi_df):
-                compute_csi_amplitude_phase(csi_data[12:64] + csi_data[66:118], rssi) # csi_data[12:64] + csi_data[66:118] | csi_data[72:78]
+                compute_csi_amplitude_phase(csi_data[12:64] + csi_data[66:118], rssi)
         except Exception as e:
             print("Error: 'Amplitude' or 'Phase' column not found in the file.", e)
             return
     
+    if len(amplitude_queue) < 125:
+        return
+
     csi_amplitude = pd.Series(amplitude_queue)
     csi_phase = pd.Series(phase_queue)
     
     # Make prediction
     columns = ['RSSI']
-    columns.extend([f'AM{i}' for i in range(30, 33)])
+    columns.extend([f'Amean{i + 1}' for i in range(SMOOTH_SUBCARRIER_COUNT)])
+    columns.extend([f'Amin{i + 1}' for i in range(SMOOTH_SUBCARRIER_COUNT)])
+    columns.extend([f'Afft_Mean{i + 1}' for i in range(SMOOTH_SUBCARRIER_COUNT)])
+
     try:
-        # Can cause error if not properly sync
-        selected_subcarrier = [row[30:33] for row in amplitude_queue]
-        packet_ranges = [(i, i + 50) for i in range(0, len(amplitude_queue), 50)]
-        amplitude_mins = [np.min(selected_subcarrier[start:end], axis=0) for start, end in packet_ranges]
-        rows = []
+        features_split = aggregate_features(amplitude_queue[:125])
+        row = np.concatenate([[rssi_queue[50]], features_split])
 
-        for i, amplitude_min in zip(range(1, len(amplitude_queue), 50), amplitude_mins):
-            row = np.concatenate([np.expand_dims(rssi_queue[i], axis=0), amplitude_min])
-            rows.append(row)
-
-        X_test = pd.DataFrame(rows, columns=columns)
+        X_test = pd.DataFrame([row], columns=columns)
         predictions = model.predict(X_test)
         prediction = 1 if 1 in predictions else 0
         print(predictions)
@@ -187,8 +200,8 @@ def compute_csi_amplitude_phase(csi_data, rssi):
         phases.append(phase)
 
     # Compute moving average of the last 100 packets
-    # amplitudes = np.convolve(amplitudes, np.ones(WINDOW_SIZE) / WINDOW_SIZE, mode='valid')
-    # phases = np.convolve(phases, np.ones(WINDOW_SIZE) / WINDOW_SIZE, mode='valid')
+    amplitudes = np.convolve(amplitudes, np.ones(WINDOW_SIZE) / WINDOW_SIZE, mode='valid')
+    phases = np.convolve(phases, np.ones(WINDOW_SIZE) / WINDOW_SIZE, mode='valid')
     
     while len(amplitude_queue) >= max_monitoring_packets:
         amplitude_queue.pop(0)
