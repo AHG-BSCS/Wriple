@@ -9,8 +9,8 @@ import socket
 import subprocess
 import time
 import threading
-from sklearn.preprocessing import MinMaxScaler, StandardScaler
-from sklearn.decomposition import PCA
+from scipy.fftpack import fft
+from sklearn.preprocessing import MinMaxScaler
 from scapy.all import Raw, IP, UDP, send
 from flask import Flask, jsonify, send_from_directory
 
@@ -23,35 +23,35 @@ ESP32_IP = '192.168.4.1' # Default IP address of the ESP32 AP
 PAYLOAD = 'Wiremap' # Signal Length is 89
 ESP32_PORT = 5001
 UDP_PACKET = IP(dst=ESP32_IP)/UDP(sport=5000, dport=ESP32_PORT)/Raw(load=PAYLOAD)
+TX_INTERVAL = 0.01
+MONITORING_PACKET_LIMIT = 125
+RECORDING_PACKET_LIMIT = 250
+
+csv_file_path = None
+CSV_DIRECTORY = 'app/dataset/data_recorded'
+COLUMN_NAMES = [
+    'Transmit_Timestamp', 'Activity', 'Movement', 'RSSI', 'MCS', 'CWB', 'Smoothing', 
+    'Not_Sounding', 'Noise_Floor', 'Channel', 'Secondary_Channel', 'Received_Timestamp',
+    'Antenna', 'Signal_Length', 'RX_State', 'Data_Length', 'Raw_CSI', 'Time_of_Flight']
+
+MM_SCALER = MinMaxScaler((-10, 10))
+WINDOW_SIZE = 40
 
 recording = False
 monitoring = False
 total_packet_count = 0
-max_packets = 250
-max_monitoring_packets = 100
-tx_interval = 0.01
+max_monitoring_packets = MONITORING_PACKET_LIMIT
 
-min_max_scaler = MinMaxScaler((-10, 10))
-std_scaler = None
-pca = None
-
-std_threshold = 1.75
-
-csv_file_path = None
-csv_file_directory = 'app/dataset/data_recorded'
 transmit_timestamp = []
 amplitude_queue = []
-rssi_queue = []
 phase_queue = []
+rssi_queue = []
+
 model = None
+prediction = None
 activity = None
 class_label = None
-prediction = None
-COLUMN_NAMES = [
-    'Transmit_Timestamp', 'Activity', 'Movement', 'RSSI', 'MCS', 'CWB', 'Smoothing', 
-    'Not_Sounding', 'Noise_Floor', 'Channel', 'Secondary_Channel', 'Received_Timestamp',
-    'Antenna', 'Signal_Length', 'RX_State', 'Data_Length', 'Raw_CSI', 'Time_of_Flight'
-]
+std_threshold = 1.75
 
 def clean_and_filter_data(amplitudes, phases, amp_lower_threshold, amp_upper_threshold, 
                           phase_lower_threshold, phase_upper_threshold):
@@ -86,7 +86,7 @@ def filter_amp_phase():
     global max_monitoring_packets, prediction
     signal_coordinates = []
 
-    if max_monitoring_packets == max_packets:
+    if max_monitoring_packets == RECORDING_PACKET_LIMIT:
         try:
             csi_df = pd.read_csv(csv_file_path)
             raw_csi = csi_df['Raw_CSI'].apply(eval)
@@ -116,8 +116,6 @@ def filter_amp_phase():
             rows.append(row)
 
         X_test = pd.DataFrame(rows, columns=columns)
-        X_test = std_scaler.transform(X_test)
-        X_test = pca.transform(X_test)
         predictions = model.predict(X_test)
         prediction = 1 if 1 in predictions else 0
         print(predictions)
@@ -129,8 +127,8 @@ def filter_amp_phase():
     phases_transposed = list(map(list, zip(*csi_phase)))
 
     # Scaled because of d3 visualization
-    scaled_amplitudes = min_max_scaler.fit_transform(amps_transposed).T
-    scaled_phases = min_max_scaler.fit_transform(phases_transposed).T
+    scaled_amplitudes = MM_SCALER.fit_transform(amps_transposed).T
+    scaled_phases = MM_SCALER.fit_transform(phases_transposed).T
 
     # Get the threshold for each subcarrier
     amp_lower_threshold, amp_upper_threshold = get_subcarrier_threshold(scaled_amplitudes.T)
@@ -159,7 +157,7 @@ def filter_amp_phase():
     
     if not monitoring:
         # Reset the monitoring limit and data queue after recording
-        max_monitoring_packets = 100
+        max_monitoring_packets = MONITORING_PACKET_LIMIT
         amplitude_queue.clear()
         phase_queue.clear()
     
@@ -187,6 +185,10 @@ def compute_csi_amplitude_phase(csi_data, rssi):
         
         amplitudes.append(amplitude)
         phases.append(phase)
+
+    # Compute moving average of the last 100 packets
+    # amplitudes = np.convolve(amplitudes, np.ones(WINDOW_SIZE) / WINDOW_SIZE, mode='valid')
+    # phases = np.convolve(phases, np.ones(WINDOW_SIZE) / WINDOW_SIZE, mode='valid')
     
     while len(amplitude_queue) >= max_monitoring_packets:
         amplitude_queue.pop(0)
@@ -221,7 +223,7 @@ def compute_time_of_flight():
     Compute time of flight for each CSI data row.
     This is currectly not accurate and needs to be improved.
     '''
-    tx_delay = tx_interval * 1_000_000
+    tx_delay = TX_INTERVAL * 1_000_000
     tof_list = []
     csi_df = pd.read_csv(csv_file_path)
 
@@ -260,7 +262,7 @@ def process_data(data, m):
             csi_data.insert(0, transmit_timestamp.pop(0))
             csi_data.insert(1, activity)
             csi_data.insert(2, class_label)
-            max_monitoring_packets = max_packets
+            max_monitoring_packets = RECORDING_PACKET_LIMIT
 
             # Write to the CSV file with a lock to ensure thread safety
             with lock:
@@ -287,7 +289,7 @@ def listen_to_packets():
             if monitoring:
                 threading.Thread(target=process_data, args=(data, True)).start()
                 continue
-            elif total_packet_count <= max_packets:
+            elif total_packet_count <= RECORDING_PACKET_LIMIT:
                 threading.Thread(target=process_data, args=(data, True)).start()
             else:
                 total_packet_count = 0
@@ -320,14 +322,14 @@ def send_packets():
     try:
         if monitoring:
             send(UDP_PACKET, verbose=False)
-            threading.Timer(tx_interval, send_packets).start()
-        elif recording and not monitoring and total_packet_count <= max_packets:
+            threading.Timer(TX_INTERVAL, send_packets).start()
+        elif recording and not monitoring and total_packet_count <= RECORDING_PACKET_LIMIT:
             # Get the sending timestamp as accurate as possible
             send(UDP_PACKET, verbose=False)
             tx_time = time.time()
             tx_time = int((tx_time * 1_000_000) % 1_000_000_000)
             transmit_timestamp.append(tx_time)
-            threading.Timer(tx_interval, send_packets).start()
+            threading.Timer(TX_INTERVAL, send_packets).start()
         else:
             print('Stopped sending packets.')
     except KeyboardInterrupt:
@@ -335,7 +337,7 @@ def send_packets():
 
 def prepare_csv_file():
     global csv_file_path
-    csv_dir = csv_file_directory
+    csv_dir = CSV_DIRECTORY
     files = os.listdir(csv_dir)
     
     # Filter files that match the pattern CSI_DATA_XXX
@@ -359,17 +361,13 @@ def prepare_csv_file():
         pass
 
 def load_model():
-    global model, std_scaler, pca
-    model_path = 'app/model/treesense_v0.3.pkl'
-    std_scaler_path = 'app/model/scaler_v0.3.pkl'
-    pca_path = 'app/model/pca_v0.3.pkl'
-    if os.path.exists(model_path) and os.path.exists(std_scaler_path) and os.path.exists(pca_path):
+    global model
+    model_path = 'app/model/treesense_v0.4.pkl'
+    if os.path.exists(model_path):
         model = joblib.load(model_path)
-        std_scaler = joblib.load(std_scaler_path)
-        pca = joblib.load(pca_path)
-        print('Models loaded successfully')
+        print('Model loaded successfully')
     else:
-        print('Model files not found.')
+        print('Model file not found.')
 
 def check_connection(ssid):
     result = subprocess.run(['netsh', 'wlan', 'show', 'interfaces'], capture_output=True, text=True, shell=True)
@@ -421,8 +419,8 @@ def stop_recording():
     phase_queue.clear()
     return 'Stop recording CSI Data.'
 
-@app.route('/visualize', methods=['POST'])
-def visualize_amp_phase():
+@app.route('/visualize_data', methods=['POST'])
+def visualize_data():
     try:
         signal_coordinates = filter_amp_phase()
         return jsonify({
@@ -433,15 +431,15 @@ def visualize_amp_phase():
         return jsonify({"error": str(e)}), 400
 
 @app.route('/list_csv_files', methods=['GET'])
-def list_attendance_files():
-    attendance_files = [f for f in os.listdir(csv_file_directory) if f.endswith('.csv')]
+def list_csv_files():
+    attendance_files = [f for f in os.listdir(CSV_DIRECTORY) if f.endswith('.csv')]
     return jsonify(attendance_files)
 
-@app.route('/visualize_csv/<filename>', methods=['GET'])
-def visualize_csv(filename):
+@app.route('/visualize_csv_file/<filename>', methods=['GET'])
+def visualize_csv_file(filename):
     global csv_file_path, max_monitoring_packets
-    csv_file_path = os.path.join(csv_file_directory, filename)
-    max_monitoring_packets = max_packets
+    csv_file_path = os.path.join(CSV_DIRECTORY, filename)
+    max_monitoring_packets = RECORDING_PACKET_LIMIT
 
     if not os.path.exists(csv_file_path):
         return jsonify({"error": "File not found"}), 404
@@ -470,7 +468,7 @@ def set_threshold(threshold):
     global std_threshold, max_monitoring_packets
     std_threshold = float(threshold)
     if not monitoring:
-        max_monitoring_packets = max_packets
+        max_monitoring_packets = RECORDING_PACKET_LIMIT
     return f'set {threshold} as threshold.'
 
 if __name__ == '__main__':

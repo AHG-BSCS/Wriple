@@ -234,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function visualize() {
-    fetch('/visualize', { method: "POST" })
+    fetch('/visualize_data', { method: "POST" })
       .then(response => response.json())
       .then(data => {
         visualizeButton.style.backgroundColor = buttonInactiveColor;
@@ -399,7 +399,7 @@ document.addEventListener('DOMContentLoaded', () => {
   filesList.on('change', function() {
     const selectedFile = $(this).val();
     if (selectedFile !== 'no-selection') {
-      fetch(`/visualize_csv/${selectedFile}`)
+      fetch(`/visualize_csv_file/${selectedFile}`)
         .catch(error => alert(error));
       setTimeout(() => {
         visualize();
