@@ -24,17 +24,16 @@ PAYLOAD = 'Wiremap' # Signal Length is 89
 ESP32_PORT = 5001
 UDP_PACKET = IP(dst=ESP32_IP)/UDP(sport=5000, dport=ESP32_PORT)/Raw(load=PAYLOAD)
 TX_INTERVAL = 0.01
-MONITORING_PACKET_LIMIT = 125
+MONITORING_PACKET_LIMIT = 225
 RECORDING_PACKET_LIMIT = 250
 
 csv_file_path = None
 CSV_DIRECTORY = 'app/dataset/data_recorded'
-COLUMN_NAMES = [
-    'Transmit_Timestamp', 'Activity', 'Movement', 'RSSI', 'MCS', 'CWB', 'Smoothing', 
-    'Not_Sounding', 'Noise_Floor', 'Channel', 'Secondary_Channel', 'Received_Timestamp',
-    'Antenna', 'Signal_Length', 'RX_State', 'Data_Length', 'Raw_CSI', 'Time_of_Flight']
+DATASET_COLUMNS = []
+FEATURES_COLUMNS = []
 
 MM_SCALER = MinMaxScaler((-10, 10))
+WINDOW_RANGE = [(0, 125), (50, 175), (100, -1)]
 WINDOW_SIZE = 40
 # SUBCARRIER_COUNT = 52
 SMOOTH_SUBCARRIER_COUNT = math.floor(52 / (WINDOW_SIZE * 0.1))
@@ -112,28 +111,23 @@ def filter_amp_phase():
             print("Error: 'Amplitude' or 'Phase' column not found in the file.", e)
             return
     
-    if len(amplitude_queue) < 125:
+    if len(amplitude_queue) < MONITORING_PACKET_LIMIT:
         return
 
     csi_amplitude = pd.Series(amplitude_queue)
     csi_phase = pd.Series(phase_queue)
     
-    # Make prediction
-    columns = ['RSSI']
-    columns.extend([f'Amean{i + 1}' for i in range(SMOOTH_SUBCARRIER_COUNT)])
-    columns.extend([f'Amin{i + 1}' for i in range(SMOOTH_SUBCARRIER_COUNT)])
-    columns.extend([f'Afft_Mean{i + 1}' for i in range(SMOOTH_SUBCARRIER_COUNT)])
+    features_splits = [aggregate_features(amplitude_queue[start:end]) for start, end in WINDOW_RANGE]
+    rows = []
 
-    try:
-        features_split = aggregate_features(amplitude_queue[:125])
-        row = np.concatenate([[rssi_queue[50]], features_split])
+    for i, features_split in zip(range(50, len(amplitude_queue), 50), features_splits):
+        row = np.concatenate([[rssi_queue[i]], features_split])
+        rows.append(row)
 
-        X_test = pd.DataFrame([row], columns=columns)
-        predictions = model.predict(X_test)
-        prediction = 1 if 1 in predictions else 0
-        print(predictions)
-    except Exception as e:
-        print(e)
+    X_test = pd.DataFrame(rows, columns=FEATURES_COLUMNS)
+    predictions = model.predict(X_test)
+    prediction = 0 if 0 in predictions else 1
+    print(predictions)
 
     # Transpose to make subcarriers as rows
     amps_transposed = list(map(list, zip(*csi_amplitude)))
@@ -369,9 +363,21 @@ def prepare_csv_file():
     try:
         with open(csv_file_path, mode='x', newline='') as file:  # 'x' ensures the file is created and not overwritten
             writer = csv.writer(file)
-            writer.writerow(COLUMN_NAMES)
+            writer.writerow(DATASET_COLUMNS)
     except FileExistsError:
         pass
+
+def set_columns():
+    global DATASET_COLUMNS, FEATURES_COLUMNS
+
+    DATASET_COLUMNS = ['Transmit_Timestamp', 'Activity', 'Movement', 'RSSI', 'MCS', 'CWB', 'Smoothing', 
+                        'Not_Sounding', 'Noise_Floor', 'Channel', 'Secondary_Channel', 'Received_Timestamp',
+                        'Antenna', 'Signal_Length', 'RX_State', 'Data_Length', 'Raw_CSI', 'Time_of_Flight']
+
+    FEATURES_COLUMNS = ['RSSI'] + \
+                       [f'Amean{i + 1}' for i in range(SMOOTH_SUBCARRIER_COUNT)] + \
+                       [f'Amin{i + 1}' for i in range(SMOOTH_SUBCARRIER_COUNT)] + \
+                       [f'Afft_Mean{i + 1}' for i in range(SMOOTH_SUBCARRIER_COUNT)]
 
 def load_model():
     global model
@@ -495,5 +501,6 @@ if __name__ == '__main__':
         print(f'Connected to {SSID}. Starting the server...')
     
     load_model()
+    set_columns()
     app.run(host='0.0.0.0', port=3000, debug=True)
     
