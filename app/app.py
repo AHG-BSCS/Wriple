@@ -24,7 +24,7 @@ PAYLOAD = 'Wiremap' # Signal Length is 89
 ESP32_PORT = 5001
 UDP_PACKET = IP(dst=ESP32_IP)/UDP(sport=5000, dport=ESP32_PORT)/Raw(load=PAYLOAD)
 TX_INTERVAL = 0.01
-MONITORING_PACKET_LIMIT = 225
+MONITORING_PACKET_LIMIT = 300
 RECORDING_PACKET_LIMIT = 250
 
 csv_file_path = None
@@ -33,10 +33,13 @@ DATASET_COLUMNS = []
 FEATURES_COLUMNS = []
 
 MM_SCALER = MinMaxScaler((-10, 10))
-WINDOW_RANGE = [(0, 125), (50, 175), (100, -1)]
-WINDOW_SIZE = 40
-# SUBCARRIER_COUNT = 52
-SMOOTH_SUBCARRIER_COUNT = math.floor(52 / (WINDOW_SIZE * 0.1))
+WINDOW_RANGE = [(0, 200), (100, -1)]
+WINDOW_SIZE = 35
+# SUBCARRIER_COUNT = 57
+# SMOOTH_SUBCARRIER_COUNT = int(57 / (WINDOW_SIZE * 0.1))
+SMOOTH_SUBCARRIER_COUNT = 23 # TODO: The value was estimated based on missing columns. Find the correct calculation.
+START_SUBCARRIER = 132
+END_SUBCARRIER = 246
 
 recording = False
 monitoring = False
@@ -46,7 +49,6 @@ max_monitoring_packets = MONITORING_PACKET_LIMIT
 transmit_timestamp = []
 amplitude_queue = []
 phase_queue = []
-rssi_queue = []
 
 model = None
 prediction = None
@@ -62,7 +64,8 @@ def clean_and_filter_data(amplitudes, phases, amp_lower_threshold, amp_upper_thr
 
     # Retain outliers based on amplitude and phase
     for i, amp, phase in zip(subcarriers, amplitudes, phases):
-        if ((amp < amp_lower_threshold[i]) or (amp > amp_upper_threshold[i]) and (phase < phase_lower_threshold[i]) or (phase > phase_upper_threshold[i])):
+        if ((amp < amp_lower_threshold[i]) or (amp > amp_upper_threshold[i]) and 
+            (phase < phase_lower_threshold[i]) or (phase > phase_upper_threshold[i])):
             cleaned_amplitudes.append(amp)
             cleaned_phases.append(phase)
         else:
@@ -71,15 +74,16 @@ def clean_and_filter_data(amplitudes, phases, amp_lower_threshold, amp_upper_thr
 
     return cleaned_amplitudes, cleaned_phases
 
-def aggregate_features(data):
+def aggregate_amps_features(data):
     features = []
-    features.extend(np.mean(data, axis=0))
-    features.extend(np.min(data, axis=0))
-    
-    # FFT Features
-    fft_data = np.abs(fft(data, axis=0))[:26]  # Use half-spectrum
-    features.extend(np.mean(fft_data, axis=0))
+    features.extend(np.std(data, axis=0))
+    return np.array(features)
 
+def aggregate_phases_features(data):
+    features = []
+    features.extend(np.std(data, axis=0))
+    features.extend(np.percentile(data, 75, axis=0))
+    features.extend(np.var(data, axis=0))
     return np.array(features)
 
 def get_subcarrier_threshold(data_transposed):
@@ -103,31 +107,31 @@ def filter_amp_phase():
         try:
             csi_df = pd.read_csv(csv_file_path)
             raw_csi = csi_df['Raw_CSI'].apply(eval)
-            rssi_df = csi_df['RSSI']
 
-            for csi_data, rssi in zip(raw_csi, rssi_df):
-                compute_csi_amplitude_phase(csi_data[12:64] + csi_data[66:118], rssi)
+            for csi_data in raw_csi:
+                compute_csi_amplitude_phase(csi_data[START_SUBCARRIER:END_SUBCARRIER])
         except Exception as e:
             print("Error: 'Amplitude' or 'Phase' column not found in the file.", e)
             return
     
-    if len(amplitude_queue) < MONITORING_PACKET_LIMIT:
+    if len(amplitude_queue) < RECORDING_PACKET_LIMIT:
         return
 
     csi_amplitude = pd.Series(amplitude_queue)
     csi_phase = pd.Series(phase_queue)
     
-    features_splits = [aggregate_features(amplitude_queue[start:end]) for start, end in WINDOW_RANGE]
+    amps_features = [aggregate_amps_features(amplitude_queue[start:end]) for start, end in WINDOW_RANGE]
+    phases_features = [aggregate_phases_features(phase_queue[start:end]) for start, end in WINDOW_RANGE]
+
     rows = []
 
-    for i, features_split in zip(range(50, len(amplitude_queue), 50), features_splits):
-        row = np.concatenate([[rssi_queue[i]], features_split])
+    for amp_features, phase_features in zip(amps_features, phases_features):
+        row = np.concatenate([amp_features, phase_features])
         rows.append(row)
 
     X_test = pd.DataFrame(rows, columns=FEATURES_COLUMNS)
     predictions = model.predict(X_test)
     prediction = 0 if 0 in predictions else 1
-    print(predictions)
 
     # Transpose to make subcarriers as rows
     amps_transposed = list(map(list, zip(*csi_amplitude)))
@@ -170,7 +174,7 @@ def filter_amp_phase():
     
     return signal_coordinates
 
-def compute_csi_amplitude_phase(csi_data, rssi):
+def compute_csi_amplitude_phase(csi_data):
     '''
     Compute amplitude and phase from raw CSI data.
     param csi_data: List of raw CSI values (alternating I and Q components).
@@ -192,6 +196,9 @@ def compute_csi_amplitude_phase(csi_data, rssi):
         
         amplitudes.append(amplitude)
         phases.append(phase)
+    
+    # Use phase unwrapping to prevent discontinuities in phase
+    phases = np.unwrap(phases)
 
     # Compute moving average of the last 100 packets
     amplitudes = np.convolve(amplitudes, np.ones(WINDOW_SIZE) / WINDOW_SIZE, mode='valid')
@@ -200,11 +207,9 @@ def compute_csi_amplitude_phase(csi_data, rssi):
     while len(amplitude_queue) >= max_monitoring_packets:
         amplitude_queue.pop(0)
         phase_queue.pop(0)
-        rssi_queue.pop(0)
 
     amplitude_queue.append(amplitudes)
     phase_queue.append(phases)
-    rssi_queue.append(rssi)
 
 def parse_csi_data(data_str):
     parts = data_str.split(',')
@@ -218,7 +223,7 @@ def parse_csi_data(data_str):
     try:
         csi_data = [int(x) for x in csi_data]
         if monitoring:
-            compute_csi_amplitude_phase(csi_data[12:64] + csi_data[66:118], int(parts[0]))
+            compute_csi_amplitude_phase(csi_data[START_SUBCARRIER:END_SUBCARRIER])
     except ValueError:
         csi_data = []
 
@@ -374,14 +379,14 @@ def set_columns():
                         'Not_Sounding', 'Noise_Floor', 'Channel', 'Secondary_Channel', 'Received_Timestamp',
                         'Antenna', 'Signal_Length', 'RX_State', 'Data_Length', 'Raw_CSI', 'Time_of_Flight']
 
-    FEATURES_COLUMNS = ['RSSI'] + \
-                       [f'Amean{i + 1}' for i in range(SMOOTH_SUBCARRIER_COUNT)] + \
-                       [f'Amin{i + 1}' for i in range(SMOOTH_SUBCARRIER_COUNT)] + \
-                       [f'Afft_Mean{i + 1}' for i in range(SMOOTH_SUBCARRIER_COUNT)]
+    FEATURES_COLUMNS = [f'AM_Std{i + 1}' for i in range(SMOOTH_SUBCARRIER_COUNT)] + \
+                       [f'PH_Std{i + 1}' for i in range(SMOOTH_SUBCARRIER_COUNT)] + \
+                       [f'PH_Per{i + 1}' for i in range(SMOOTH_SUBCARRIER_COUNT)] + \
+                       [f'PH_Var{i + 1}' for i in range(SMOOTH_SUBCARRIER_COUNT)]
 
 def load_model():
     global model
-    model_path = 'app/model/treesense_v0.4.pkl'
+    model_path = 'app/model/treesense_v0.5.pkl'
     if os.path.exists(model_path):
         model = joblib.load(model_path)
         print('Model loaded successfully')
