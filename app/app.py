@@ -9,7 +9,6 @@ import socket
 import subprocess
 import time
 import threading
-from scipy.fftpack import fft
 from sklearn.preprocessing import MinMaxScaler
 from scapy.all import Raw, IP, UDP, send
 from flask import Flask, jsonify, send_from_directory
@@ -386,7 +385,7 @@ def set_columns():
 
 def load_model():
     global model
-    model_path = 'app/model/treesense_v0.5.pkl'
+    model_path = 'app/model/wriple_v1.6.pkl'
     if os.path.exists(model_path):
         model = joblib.load(model_path)
         print('Model loaded successfully')
@@ -497,13 +496,13 @@ def set_threshold(threshold):
 
 if __name__ == '__main__':
     # Ensure that the device is connectted to ESP32 AP since starting disconnected can cause packet sending error.
-    while not check_connection(SSID):
-        print('Waiting to connect to ESP32 AP')
-        print('SSID:', SSID)
-        print('Passord:', PASSWORD, '\n')
-        time.sleep(5)
-    else:
-        print(f'Connected to {SSID}. Starting the server...')
+    # while not check_connection(SSID):
+    #     print('Waiting to connect to ESP32 AP')
+    #     print('SSID:', SSID)
+    #     print('Passord:', PASSWORD, '\n')
+    #     time.sleep(5)
+    # else:
+    #     print(f'Connected to {SSID}. Starting the server...')
     
     load_model()
     set_columns()
