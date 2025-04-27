@@ -8,6 +8,7 @@
     "idf.portWin": "COM3",
     "idf.toolsPathWin": "C:\\Espressif",
     "files.associations": {
+        "*.embeddedhtml": "html",
         "*.bpstat": "bat",
         "esp_event_internal.h": "c",
         "freertos.h": "c",
@@ -37,6 +38,25 @@
         "esp_log.h": "c",
         "optional": "cpp",
         "sockets.h": "c",
-        "timers.h": "c"
+        "timers.h": "c",
+        "ostream": "cpp",
+        "array": "cpp",
+        "deque": "cpp",
+        "list": "cpp",
+        "string": "cpp",
+        "unordered_map": "cpp",
+        "vector": "cpp",
+        "string_view": "cpp",
+        "initializer_list": "cpp",
+        "span": "cpp",
+        "regex": "cpp",
+        "cmath": "cpp",
+        "memory": "cpp",
+        "future": "cpp",
+        "istream": "cpp",
+        "functional": "cpp",
+        "tuple": "cpp",
+        "utility": "cpp",
+        "variant": "cpp"
     }
 }

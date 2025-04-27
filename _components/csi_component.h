@@ -1,5 +1,5 @@
-#ifndef ESP32_CSI_CSI_COMPONENT_H
-#define ESP32_CSI_CSI_COMPONENT_H
+#ifndef ESP32_CSI_COMPONENT_H
+#define ESP32_CSI_COMPONENT_H
 
 #include <sstream>
 #include "esp_log.h"
@@ -8,12 +8,14 @@
 #include "freertos/timers.h"
 #include "lwip/sockets.h"
 
+#include "../_components/radar_component.h"
+
 #define LED_GPIO_PIN GPIO_NUM_2
 
 SemaphoreHandle_t mutex = xSemaphoreCreateMutex();
 TimerHandle_t led_timer;
 
-static const char *CSI = "CSI";
+static const char *CSI_TAG = "ESP32";
 static bool connected = false;
 // static int packet_count = 0;
 static int total_packet_count = 0;
@@ -37,14 +39,14 @@ void _wifi_csi_callback(void *ctx, wifi_csi_info_t *data) {
     if ((memcmp(data->mac, target_mac, 6) == 0) &&
         (data[0].rx_ctrl.cwb == 1) &&               // 40Mhz Channel Bandwidth / 128 Subcarrier
         (data[0].rx_ctrl.sig_len == 89)) {          // Payload with "Wiremap" is 89 bytes long. Filter to only get the packets sent by the station
+        
         if (sock == -1) {
-            ESP_LOGE(CSI, "Unable to create socket");
+            ESP_LOGE(CSI_TAG, "Unable to create socket");
             vTaskDelete(NULL);
         }
 
         xSemaphoreTake(mutex, portMAX_DELAY);
         std::stringstream ss;
-
         wifi_csi_info_t d = data[0];
         char mac[20] = {0};
         sprintf(mac, "%02X:%02X:%02X:%02X:%02X:%02X", d.mac[0], d.mac[1], d.mac[2], d.mac[3], d.mac[4], d.mac[5]);
@@ -72,7 +74,7 @@ void _wifi_csi_callback(void *ctx, wifi_csi_info_t *data) {
         }
 
         ss << "]\n";
-        // Send the CSI data to the target IP
+        // Send the CSI data to the station
         sendto(sock, ss.str().c_str(), strlen(ss.str().c_str()), 0, (struct sockaddr *)&client_addr, sizeof(client_addr));
         total_packet_count++;
 
