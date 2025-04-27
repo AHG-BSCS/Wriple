@@ -22,7 +22,7 @@ ESP32_IP = '192.168.4.1' # Default IP address of the ESP32 AP
 PAYLOAD = 'Wiremap' # Signal Length is 89
 ESP32_PORT = 5001
 UDP_PACKET = IP(dst=ESP32_IP)/UDP(sport=5000, dport=ESP32_PORT)/Raw(load=PAYLOAD)
-TX_INTERVAL = 0.01
+TX_INTERVAL = 1
 MONITORING_PACKET_LIMIT = 300
 RECORDING_PACKET_LIMIT = 250
 
@@ -269,6 +269,11 @@ def process_data(data, m):
     try:
         data_str = data.decode('utf-8').strip()
         csi_data = parse_csi_data(data_str)
+
+        print(f'Target 1 X:{csi_data[5]}, Y:{csi_data[6]}')
+        print(f'Target 2 X:{csi_data[9]}, Y:{csi_data[10]}')
+        print(f'Target 3 X:{csi_data[13]}, Y:{csi_data[14]}')
+
         if (recording):
             csi_data.insert(0, transmit_timestamp.pop(0))
             csi_data.insert(1, activity)
@@ -374,9 +379,11 @@ def prepare_csv_file():
 def set_columns():
     global DATASET_COLUMNS, FEATURES_COLUMNS
 
-    DATASET_COLUMNS = ['Transmit_Timestamp', 'Activity', 'Movement', 'RSSI', 'MCS', 'CWB', 'Smoothing', 
-                        'Not_Sounding', 'Noise_Floor', 'Channel', 'Secondary_Channel', 'Received_Timestamp',
-                        'Antenna', 'Signal_Length', 'RX_State', 'Data_Length', 'Raw_CSI', 'Time_of_Flight']
+    DATASET_COLUMNS = ['Transmit_Timestamp', 'Activity', 'Movement', 'RSSI', 'Rate', 'MCS', 'Channel', 
+                       'Received_Timestamp', 'Target 1 X', 'Target 1 Y', 'Target 1 Speed',
+                       'Target 1 Resolution', 'Target 2 X', 'Target 2 Y', 'Target 2 Speed',
+                       'Target 2 Resolution', 'Target 3 X', 'Target 3 Y', 'Target 3 Speed',
+                       'Target 3 Resolution', 'Raw_CSI']
 
     FEATURES_COLUMNS = [f'AM_Std{i + 1}' for i in range(SMOOTH_SUBCARRIER_COUNT)] + \
                        [f'PH_Std{i + 1}' for i in range(SMOOTH_SUBCARRIER_COUNT)] + \

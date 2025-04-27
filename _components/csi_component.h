@@ -17,13 +17,12 @@ TimerHandle_t led_timer;
 
 static const char *CSI_TAG = "ESP32";
 static bool connected = false;
-// static int packet_count = 0;
 static int total_packet_count = 0;
 
 static int sock = -1;
 static sockaddr_in client_addr;
-static const uint8_t target_mac[6] = {0xE0, 0x2B, 0xE9, 0x95, 0xED, 0x68}; // Currectly set to specific MAC address of the station
-static const char *target_ip = "192.168.4.2"; // Currently set to the IP address of the station
+static const uint8_t target_mac[6] = {0xE0, 0x2B, 0xE9, 0x95, 0xED, 0x68}; // MAC address of the station
+static const char *target_ip = "192.168.4.2"; // IP address of the station
 
 void led_timer_callback(TimerHandle_t xTimer) {
     if (connected && total_packet_count > 100) {
@@ -37,8 +36,8 @@ void led_timer_callback(TimerHandle_t xTimer) {
 
 void _wifi_csi_callback(void *ctx, wifi_csi_info_t *data) {
     if ((memcmp(data->mac, target_mac, 6) == 0) &&
-        (data[0].rx_ctrl.cwb == 1) &&               // 40Mhz Channel Bandwidth / 128 Subcarrier
-        (data[0].rx_ctrl.sig_len == 89)) {          // Payload with "Wiremap" is 89 bytes long. Filter to only get the packets sent by the station
+        (data[0].rx_ctrl.cwb == 1) &&       // 40Mhz Channel Bandwidth / 128 Subcarrier
+        (data[0].rx_ctrl.sig_len == 89)) {  // Payload from station is 89 bytes long
         
         if (sock == -1) {
             ESP_LOGE(CSI_TAG, "Unable to create socket");
@@ -46,28 +45,33 @@ void _wifi_csi_callback(void *ctx, wifi_csi_info_t *data) {
         }
 
         xSemaphoreTake(mutex, portMAX_DELAY);
+        rd03d_read_multiple_target(); // Read the radar data
+
         std::stringstream ss;
         wifi_csi_info_t d = data[0];
         char mac[20] = {0};
         sprintf(mac, "%02X:%02X:%02X:%02X:%02X:%02X", d.mac[0], d.mac[1], d.mac[2], d.mac[3], d.mac[4], d.mac[5]);
 
         ss << d.rx_ctrl.rssi << ","
+        << d.rx_ctrl.rate << ","
         << d.rx_ctrl.mcs << ","
-        << d.rx_ctrl.cwb << ","
-        << d.rx_ctrl.smoothing << ","
-        << d.rx_ctrl.not_sounding << ","
-        << d.rx_ctrl.noise_floor << ","
         << d.rx_ctrl.channel << ","
-        << d.rx_ctrl.secondary_channel << ","
         << d.rx_ctrl.timestamp << ","
-        << d.rx_ctrl.ant << ","
-        << d.rx_ctrl.sig_len << ","
-        << d.rx_ctrl.rx_state << ","
-        << data->len << ",[";
+        << get_target1_x() << ","
+        << get_target1_y() << ","
+        << get_target1_speed() << ","
+        << get_target1_dist_res() << ","
+        << get_target2_x() << ","
+        << get_target2_y() << ","
+        << get_target2_speed() << ","
+        << get_target2_dist_res() << ","
+        << get_target3_x() << ","
+        << get_target3_y() << ","
+        << get_target3_speed() << ","
+        << get_target3_dist_res() << ",[";
 
         int data_len = data->len;
-        int8_t *my_ptr;
-        my_ptr = data->buf;
+        int8_t *my_ptr = data->buf;
 
         for (int i = 0; i < data_len; i++) {
             ss << (int) my_ptr[i] << " ";
