@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wiremap</title>
+    <title>Wriple</title>
     <link rel="stylesheet" href="static/styles/styles.css">
     <script type="module" src="static/scripts/scripts.js"></script>
     <script src="static/scripts/jquery-3.7.1/jquery-3.7.1.min.js"></script>
@@ -11,20 +11,18 @@
 <body>
 <div class="card">
     <div class="card-header">Wriple</div>
-    <div class="card-subtitle">Wi-Fi Signal Motion Sensing System</div>
-    <div>
-        <div class="button-container">
-            <button id="record"></button>
-            <div class="tooltip">Record Wi-Fi Signal</div>
-        </div>
-        <div class="button-container">
-            <button id="monitor"></button>
-            <div class="tooltip">Monitor Wi-Fi Signal</div>
-        </div>
-        <div class="button-container">
-            <button id="visualize"></button>
-            <div class="tooltip">Visualize Wi-Fi Signal</div>
-        </div>
+    <div class="card-subtitle">Wi-Fi & Millimeter Wave Human Presense Detection System</div>
+    <div class="button-container">
+        <button id="record"></button>
+        <div class="tooltip">Record Wi-Fi Signal</div>
+    </div>
+    <div class="button-container">
+        <button id="monitor"></button>
+        <div class="tooltip">Monitor Wi-Fi Signal</div>
+    </div>
+    <div class="button-container">
+        <button id="visualize"></button>
+        <div class="tooltip">Visualize Wi-Fi Signal</div>
     </div>
     <div class="selection-container">
         <label for="files-list">CSV Files:</label>
@@ -48,6 +46,10 @@
             <option value="2.0">2.00</option>
             <option value="2.5">2.50</option>
         </select>
+    </div>
+    <div class="radar-container">
+        <img id="radar">
+        <div id="points"></div>
     </div>
     <div class="visualizer-container">
         <svg id="d3-plot"></svg>

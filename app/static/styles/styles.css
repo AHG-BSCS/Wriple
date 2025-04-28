@@ -181,60 +181,37 @@ select {
     text-align: left;
 }
 
-#video {
-    background-image: url('../images/mapping_placeholder.png');
-    background-size: cover;
-    display: block;
-    border-radius: 10px;
-    border: 2px solid #ddd;
-}
-
-
-/* Tables */
-
-
-#attendance-table {
-    visibility: collapse;
+.radar-container {
     position: relative;
     display: inline-block;
+    border-radius: 12px;
+    margin-top: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    background-image: url('../images/radar.png');
+    background-size: cover;
+    width: 800px;
+    height: 400px;
 }
 
-.attendance-dates {
-    display: flex;
+#radar {
+    width: 100%;
+    height: 100%;
 }
 
-option {
-    font-weight: normal;
+#points {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
 }
 
-tr:nth-child(even) {
-    background-color: #dddddd;
-}
-
-tr:hover {
-    background-color: #bebebe;
-}
-
-th {
-    padding: 8px;
-    text-align: left;
-    background-color: var(--primary-color);
-    color: white;
-}
-
-td {
-    text-align: left;
-    padding: 8px;
-}
-
-.no {
-    padding-right: 20px;
-}
-
-.name {
-    padding-right: 300px;
-}
-
-.time {
-    padding-right: 100px;
+.point {
+    width: 10px;
+    height: 10px;
+    background-color: red;
+    border-radius: 50%;
+    position: absolute;
+    transform: translate(-50%, -50%);
 }

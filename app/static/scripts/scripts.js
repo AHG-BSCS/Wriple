@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const activityList = $('#activity-list');
   const classList = $('#class-list');
   const thresholdList = $('#threshold-list');
+  const pointsContainer = document.getElementById('points');
 
   let packetCountInterval;
   let monitorVisualizeInterval;
@@ -267,6 +268,23 @@ document.addEventListener('DOMContentLoaded', () => {
           yScale3d([yLine]),
         ];
         processData(datas, 1000);
+
+        pointsContainer.innerHTML = ''; // Clear previous points
+        // Convert the radar coordinates into pixel positions
+        const x1 = scale_x(data.radar_x[0]);
+        const y1 = scale_y(data.radar_y[0]);
+
+        const x2 = scale_x(data.radar_x[1]);
+        const y2 = scale_y(data.radar_y[1]);
+
+        const x3 = scale_x(data.radar_x[2]);
+        const y3 = scale_y(data.radar_y[2]);
+        const centerX = pointsContainer.offsetWidth / 2;
+        const topY = 0;
+
+        createPoint((centerX + x1), (topY + y1));
+        createPoint((centerX + x2), (topY + y2));
+        createPoint((centerX + x3), (topY + y3));
       })
       .catch(err => {
         if (lastMode === 0) {
@@ -277,6 +295,16 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("No data to visualize." + err);
       });
   };
+
+  function scale_x(x) {
+    x = parseInt(x)
+    return Math.floor((x / 13856) * (800 / 2));
+  }
+
+  function scale_y(y) {
+    y = parseInt(y)
+    return Math.floor((y / 8000) * 400);
+  }
 
   function list_csv_files() {
     fetch('/list_csv_files')
@@ -296,6 +324,14 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
       button.disabled = false;
     }, 1000);
+  }
+
+  function createPoint(x, y) {
+    const point = document.createElement('div');
+    point.className = 'point';
+    point.style.left = `${x}px`;
+    point.style.top = `${y}px`;
+    pointsContainer.appendChild(point);
   }
 
 
@@ -382,7 +418,7 @@ document.addEventListener('DOMContentLoaded', () => {
       prediction.textContent = null
     } else {
       if (lastMode === 1) {
-        monitorVisualizeInterval = setInterval(visualize, 500);
+        monitorVisualizeInterval = setInterval(visualize, 100);
       }
       else {
         visualizeButton.style.backgroundColor = buttonInactiveColor;

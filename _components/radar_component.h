@@ -135,18 +135,18 @@ void rd03d_init() {
 }
 
 void parse_single_target(const uint8_t* buf, bool& is_updated, int16_t& x, int16_t& y, int16_t& speed, 
-                         uint16_t& dist_res, const char* target_name) {
+                         uint16_t& dist_res, const int target_num) {
     if (buf[0] != 0x00 && buf[1] != 0x00) {
         is_updated = true;
         uint16_t x_raw = buf[0] | (buf[1] << 8);
-        x = (x_raw & 0x7FFF) * ((x_raw & 0x8000) ? 1 : -1); // mm
+        x = (x_raw & 0x7FFF) * ((x_raw & 0x8000) ? -1 : 1);
         uint16_t y_raw = buf[2] | (buf[3] << 8);
-        y = (y_raw & 0x7FFF) * ((y_raw & 0x8000) ? 1 : -1); // mm
+        y = (y_raw & 0x7FFF) * ((y_raw & 0x8000) ? 1 : -1);
         uint16_t speed_raw = buf[4] | (buf[5] << 8);
-        speed = (speed_raw & 0x7FFF) * ((speed_raw & 0x8000) ? 1 : -1); // cm/s
-        dist_res = buf[6] | (buf[7] << 8); // mm
-        ESP_LOGI(RADAR_TAG, "%s - X: %d mm, Y: %d mm, Speed: %d cm/s, Dist_Res: %d mm", 
-            target_name, x, y, speed, dist_res, "Distance Resolution");
+        speed = (speed_raw & 0x7FFF) * ((speed_raw & 0x8000) ? -1 : 1);
+        dist_res = buf[6] | (buf[7] << 8);
+        ESP_LOGI(RADAR_TAG, "Target %d - X: %d mm, Y: %d mm, Speed: %d cm/s, Dist_Res: %d mm", 
+            target_num, x, y, speed, dist_res);
     } else {
         is_updated = false;
     }
@@ -154,11 +154,11 @@ void parse_single_target(const uint8_t* buf, bool& is_updated, int16_t& x, int16
 
 void parse_targets(const uint8_t* buf) {
     parse_single_target(&buf[0], target1_updated, target1_x, target1_y, 
-                        target1_speed, target1_dist_res, "Target 1");
+                        target1_speed, target1_dist_res, 1);
     parse_single_target(&buf[8], target2_updated, target2_x, target2_y, 
-                        target2_speed, target2_dist_res, "Target 2");
+                        target2_speed, target2_dist_res, 2);
     parse_single_target(&buf[16], target3_updated, target3_x, target3_y, 
-                        target3_speed, target3_dist_res, "Target 3");
+                        target3_speed, target3_dist_res, 3);
 }
 
 void read_radar_data() {

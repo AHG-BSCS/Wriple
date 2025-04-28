@@ -22,7 +22,7 @@ ESP32_IP = '192.168.4.1' # Default IP address of the ESP32 AP
 PAYLOAD = 'Wiremap' # Signal Length is 89
 ESP32_PORT = 5001
 UDP_PACKET = IP(dst=ESP32_IP)/UDP(sport=5000, dport=ESP32_PORT)/Raw(load=PAYLOAD)
-TX_INTERVAL = 1
+TX_INTERVAL = 0.1
 MONITORING_PACKET_LIMIT = 300
 RECORDING_PACKET_LIMIT = 250
 
@@ -48,6 +48,8 @@ max_monitoring_packets = MONITORING_PACKET_LIMIT
 transmit_timestamp = []
 amplitude_queue = []
 phase_queue = []
+radar_x_coord = [0, 0, 0]
+radar_y_coord = [0, 0, 0]
 
 model = None
 prediction = None
@@ -270,9 +272,15 @@ def process_data(data, m):
         data_str = data.decode('utf-8').strip()
         csi_data = parse_csi_data(data_str)
 
-        print(f'Target 1 X:{csi_data[5]}, Y:{csi_data[6]}')
-        print(f'Target 2 X:{csi_data[9]}, Y:{csi_data[10]}')
-        print(f'Target 3 X:{csi_data[13]}, Y:{csi_data[14]}')
+        radar_x_coord.clear()
+        radar_x_coord.append(csi_data[5])
+        radar_x_coord.append(csi_data[9])
+        radar_x_coord.append(csi_data[13])
+
+        radar_y_coord.clear()
+        radar_y_coord.append(csi_data[6])
+        radar_y_coord.append(csi_data[10])
+        radar_y_coord.append(csi_data[14])
 
         if (recording):
             csi_data.insert(0, transmit_timestamp.pop(0))
@@ -455,7 +463,9 @@ def visualize_data():
         signal_coordinates = filter_amp_phase()
         return jsonify({
             "prediction": prediction,
-            "signal_coordinates": signal_coordinates
+            "signal_coordinates": signal_coordinates,
+            'radar_x': radar_x_coord, # -13856 ~ +13856
+            'radar_y': radar_y_coord  # 0 ~ 8000
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -503,13 +513,13 @@ def set_threshold(threshold):
 
 if __name__ == '__main__':
     # Ensure that the device is connectted to ESP32 AP since starting disconnected can cause packet sending error.
-    # while not check_connection(SSID):
-    #     print('Waiting to connect to ESP32 AP')
-    #     print('SSID:', SSID)
-    #     print('Passord:', PASSWORD, '\n')
-    #     time.sleep(5)
-    # else:
-    #     print(f'Connected to {SSID}. Starting the server...')
+    while not check_connection(SSID):
+        print('Waiting to connect to ESP32 AP')
+        print('SSID:', SSID)
+        print('Passord:', PASSWORD, '\n')
+        time.sleep(5)
+    else:
+        print(f'Connected to {SSID}. Starting the server...')
     
     load_model()
     set_columns()
