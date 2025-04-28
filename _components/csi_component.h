@@ -45,10 +45,10 @@ void _wifi_csi_callback(void *ctx, wifi_csi_info_t *data) {
         }
 
         xSemaphoreTake(mutex, portMAX_DELAY);
-        rd03d_read_multiple_target(); // Read the radar data
-
+        
         std::stringstream ss;
         wifi_csi_info_t d = data[0];
+        read_radar_data();
         char mac[20] = {0};
         sprintf(mac, "%02X:%02X:%02X:%02X:%02X:%02X", d.mac[0], d.mac[1], d.mac[2], d.mac[3], d.mac[4], d.mac[5]);
 
@@ -81,9 +81,6 @@ void _wifi_csi_callback(void *ctx, wifi_csi_info_t *data) {
         // Send the CSI data to the station
         sendto(sock, ss.str().c_str(), strlen(ss.str().c_str()), 0, (struct sockaddr *)&client_addr, sizeof(client_addr));
         total_packet_count++;
-
-        fflush(stdout);
-        vTaskDelay(0);
         xSemaphoreGive(mutex);
     }
 }
