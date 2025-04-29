@@ -20,10 +20,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const visualizeButton = document.getElementById('visualize');
   const packetcount = document.getElementById('packet-count');
   const prediction = document.getElementById('prediction');
-  const filesList = $('#files-list');
-  const activityList = $('#activity-list');
-  const classList = $('#class-list');
-  const thresholdList = $('#threshold-list');
+  const filesList = document.getElementById('files-list');
+  const activityList = document.getElementById('activity-list');
+  const classList = document.getElementById('class-list');
+  const thresholdList = document.getElementById('threshold-list');
   const pointsContainer = document.getElementById('points');
 
   let packetCountInterval;
@@ -308,15 +308,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function list_csv_files() {
     fetch('/list_csv_files')
-    .then(response => response.json())
-    .then(files => {
-      filesList.empty();
-      filesList.append(new Option('', 'no-selection'));
-      files.forEach(file => {
-          const option = new Option(file, file);
-          filesList.append(option);
-      });
-    });
+      .then(response => response.json())
+      .then(files => {
+        filesList.innerHTML = ''; // Clear existing options
+        const defaultOption = document.createElement('option');
+        defaultOption.value = 'no-selection';
+        defaultOption.textContent = '';
+        filesList.appendChild(defaultOption);
+
+        files.forEach(file => {
+          const option = document.createElement('option');
+          option.value = file;
+          option.textContent = file;
+          filesList.appendChild(option);
+        });
+      })
+      .catch(err => console.error("Error fetching CSV files:", err));
   }
   
   function button_timeout(button) {
@@ -432,8 +439,8 @@ document.addEventListener('DOMContentLoaded', () => {
   /* JQuery Elements */
   
   
-  filesList.on('change', function() {
-    const selectedFile = $(this).val();
+  filesList.addEventListener('change', function() {
+    const selectedFile = filesList.value;
     if (selectedFile !== 'no-selection') {
       fetch(`/visualize_csv_file/${selectedFile}`)
         .catch(error => alert(error));
@@ -444,40 +451,75 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  activityList.on('change', function() {
-    const selectedAct = $(this).val();
+  activityList.addEventListener('change', function() {
+    const selectedAct = activityList.value;
+    console.log(selectedAct)
     if (selectedAct) {
       fetch(`/set_activity/${selectedAct}`)
         .catch(error => alert(error));
     }
   });
 
-  classList.on('change', function() {
-    const selectedClass = $(this).val();
+  classList.addEventListener('change', function() {
+    const selectedClass = classList.value;
     if (selectedClass) {
       fetch(`/set_class/${selectedClass}`)
         .catch(error => alert(error));
         if (selectedClass === '0') {
-          activityList.empty();
-          activityList.append(new Option('', 'None'));
-          activityList.append(new Option('No Presence', 'No_Presence'));
-          activityList.append(new Option('No Movement', 'No_Movement'));
+          activityList.innerHTML = ''; // Clear existing options
+          const noneOption = document.createElement('option');
+          noneOption.value = 'None';
+          noneOption.textContent = '';
+          activityList.appendChild(noneOption);
+
+          const noPresenceOption = document.createElement('option');
+          noPresenceOption.value = 'No_Presence';
+          noPresenceOption.textContent = 'No Presence';
+          activityList.appendChild(noPresenceOption);
+
+          const noMovementOption = document.createElement('option');
+          noMovementOption.value = 'No_Movement';
+          noMovementOption.textContent = 'No Movement';
+          activityList.appendChild(noMovementOption);
         } else if (selectedClass === '1') {
-          activityList.empty();
-          activityList.append(new Option('', 'None'));
-          activityList.append(new Option('In Place', 'In_Place'));
-          activityList.append(new Option('Sit/Stand', 'Sit_Stand'));
-          activityList.append(new Option('Moving', 'Moving'));
-          activityList.append(new Option('Walking', 'Walking'));
-          activityList.append(new Option('Running', 'Running'));
+          activityList.innerHTML = ''; // Clear existing options
+          const noneOption = document.createElement('option');
+          noneOption.value = 'None';
+          noneOption.textContent = '';
+          activityList.appendChild(noneOption);
+
+          const inPlaceOption = document.createElement('option');
+          inPlaceOption.value = 'In_Place';
+          inPlaceOption.textContent = 'In Place';
+          activityList.appendChild(inPlaceOption);
+
+          const sitStandOption = document.createElement('option');
+          sitStandOption.value = 'Sit_Stand';
+          sitStandOption.textContent = 'Sit/Stand';
+          activityList.appendChild(sitStandOption);
+
+          const movingOption = document.createElement('option');
+          movingOption.value = 'Moving';
+          movingOption.textContent = 'Moving';
+          activityList.appendChild(movingOption);
+
+          const walkingOption = document.createElement('option');
+          walkingOption.value = 'Walking';
+          walkingOption.textContent = 'Walking';
+          activityList.appendChild(walkingOption);
+
+          const runningOption = document.createElement('option');
+          runningOption.value = 'Running';
+          runningOption.textContent = 'Running';
+          activityList.appendChild(runningOption);
         } else {
-          activityList.empty();
+          activityList.innerHTML = ''; // Clear existing options
         }
     }
   });
 
-  thresholdList.on('change', function() {
-    const selectedValue = $(this).val();
+  thresholdList.addEventListener('change', function() {
+    const selectedValue = thresholdList.value;
     if (selectedValue) {
       fetch(`/set_threshold/${selectedValue}`)
         .catch(error => alert(error));

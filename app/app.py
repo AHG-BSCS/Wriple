@@ -513,15 +513,15 @@ def set_threshold(threshold):
 
 if __name__ == '__main__':
     # Ensure that the device is connectted to ESP32 AP since starting disconnected can cause packet sending error.
-    while not check_connection(SSID):
-        print('Waiting to connect to ESP32 AP')
-        print('SSID:', SSID)
-        print('Passord:', PASSWORD, '\n')
-        time.sleep(5)
-    else:
-        print(f'Connected to {SSID}. Starting the server...')
+    # while not check_connection(SSID):
+    #     print('Waiting to connect to ESP32 AP')
+    #     print('SSID:', SSID)
+    #     print('Passord:', PASSWORD, '\n')
+    #     time.sleep(5)
+    # else:
+    #     print(f'Connected to {SSID}. Starting the server...')
     
     load_model()
     set_columns()
-    app.run(host='0.0.0.0', port=3000, debug=True)
+    app.run(debug=True)
     
