@@ -463,9 +463,9 @@ def visualize_data():
         signal_coordinates = filter_amp_phase()
         return jsonify({
             "prediction": prediction,
-            "signal_coordinates": signal_coordinates,
-            'radar_x': radar_x_coord, # -13856 ~ +13856
-            'radar_y': radar_y_coord  # 0 ~ 8000
+            "signalCoordinates": signal_coordinates,
+            'radarX': radar_x_coord, # -13856 ~ +13856
+            'radarY': radar_y_coord  # 0 ~ 8000
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 400

@@ -265,7 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else
           prediction.textContent = null
 
-        scatter = data.signal_coordinates.map(pos => ({ x: pos[0], y: pos[1], z: pos[2], id: "point-" + cnt++ }));
+        scatter = data.signalCoordinates.map(pos => ({ x: pos[0], y: pos[1], z: pos[2], id: "point-" + cnt++ }));
 
         for (let z = -j; z < j; z++) {
           for (let x = -j; x < j; x++) {
@@ -285,21 +285,17 @@ document.addEventListener('DOMContentLoaded', () => {
         processData(datas, 1000);
 
         pointsContainer.innerHTML = ''; // Clear previous points
-        // Convert the radar coordinates into pixel positions
-        const x1 = scale_x(data.radar_x[0]);
-        const y1 = scale_y(data.radar_y[0]);
-
-        const x2 = scale_x(data.radar_x[1]);
-        const y2 = scale_y(data.radar_y[1]);
-
-        const x3 = scale_x(data.radar_x[2]);
-        const y3 = scale_y(data.radar_y[2]);
         const centerX = pointsContainer.offsetWidth / 2;
         const topY = 0;
 
-        createPoint((centerX + x1), (topY + y1));
-        createPoint((centerX + x2), (topY + y2));
-        createPoint((centerX + x3), (topY + y3));
+        // Convert the radar coordinates into pixel positions
+        for (let i = 0; i < 3; i++) {
+          if (data.radarY[i] != '0') {
+            const x = scaleXToRadar(data.radarX[i]);
+            const y = scaleYToRadar(data.radarY[i]);
+            createPoint((centerX + x), (topY + y));
+          }
+        }
       })
       .catch(err => {
         if (lastMode === 0) {
@@ -311,12 +307,12 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   };
 
-  function scale_x(x) {
+  function scaleXToRadar(x) {
     x = parseInt(x)
     return Math.floor((x / 13856) * (800 / 2));
   }
 
-  function scale_y(y) {
+  function scaleYToRadar(y) {
     y = parseInt(y)
     return Math.floor((y / 8000) * 400);
   }
@@ -464,7 +460,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   activityList.addEventListener('change', function() {
     const selectedAct = activityList.value;
-    console.log(selectedAct)
     if (selectedAct) {
       fetch(`/set_activity/${selectedAct}`)
         .catch(error => alert(error));
