@@ -33,6 +33,21 @@ document.addEventListener('DOMContentLoaded', () => {
   var buttonInactiveColor = 'saddlebrown';
   var lastMode = -1;
 
+  const activityOptions = {
+    '0': [
+      { value: 'None', text: '' },
+      { value: 'No_Presence', text: 'No Presence' },
+      { value: 'No_Movement', text: 'No Movement' }
+    ],
+    '1': [
+      { value: 'None', text: '' },
+      { value: 'In_Place', text: 'In Place' },
+      { value: 'Sit_Stand', text: 'Sit/Stand' },
+      { value: 'Moving', text: 'Moving' },
+      { value: 'Walking', text: 'Walking' },
+      { value: 'Running', text: 'Running' }
+    ]
+  };
 
   /* Visualizer Functions */
 
@@ -435,10 +450,6 @@ document.addEventListener('DOMContentLoaded', () => {
     button_timeout(visualizeButton);
   });
 
-
-  /* JQuery Elements */
-  
-  
   filesList.addEventListener('change', function() {
     const selectedFile = filesList.value;
     if (selectedFile !== 'no-selection') {
@@ -465,56 +476,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (selectedClass) {
       fetch(`/set_class/${selectedClass}`)
         .catch(error => alert(error));
-        if (selectedClass === '0') {
-          activityList.innerHTML = ''; // Clear existing options
-          const noneOption = document.createElement('option');
-          noneOption.value = 'None';
-          noneOption.textContent = '';
-          activityList.appendChild(noneOption);
 
-          const noPresenceOption = document.createElement('option');
-          noPresenceOption.value = 'No_Presence';
-          noPresenceOption.textContent = 'No Presence';
-          activityList.appendChild(noPresenceOption);
-
-          const noMovementOption = document.createElement('option');
-          noMovementOption.value = 'No_Movement';
-          noMovementOption.textContent = 'No Movement';
-          activityList.appendChild(noMovementOption);
-        } else if (selectedClass === '1') {
-          activityList.innerHTML = ''; // Clear existing options
-          const noneOption = document.createElement('option');
-          noneOption.value = 'None';
-          noneOption.textContent = '';
-          activityList.appendChild(noneOption);
-
-          const inPlaceOption = document.createElement('option');
-          inPlaceOption.value = 'In_Place';
-          inPlaceOption.textContent = 'In Place';
-          activityList.appendChild(inPlaceOption);
-
-          const sitStandOption = document.createElement('option');
-          sitStandOption.value = 'Sit_Stand';
-          sitStandOption.textContent = 'Sit/Stand';
-          activityList.appendChild(sitStandOption);
-
-          const movingOption = document.createElement('option');
-          movingOption.value = 'Moving';
-          movingOption.textContent = 'Moving';
-          activityList.appendChild(movingOption);
-
-          const walkingOption = document.createElement('option');
-          walkingOption.value = 'Walking';
-          walkingOption.textContent = 'Walking';
-          activityList.appendChild(walkingOption);
-
-          const runningOption = document.createElement('option');
-          runningOption.value = 'Running';
-          runningOption.textContent = 'Running';
-          activityList.appendChild(runningOption);
-        } else {
-          activityList.innerHTML = ''; // Clear existing options
-        }
+      activityList.innerHTML = ''; // Clear existing options
+      const options = activityOptions[selectedClass] || [];
+      options.forEach(option => {
+        const optElement = document.createElement('option');
+        optElement.value = option.value;
+        optElement.textContent = option.text;
+        activityList.appendChild(optElement);
+      });
     }
   });
 
