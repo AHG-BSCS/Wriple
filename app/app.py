@@ -460,10 +460,10 @@ def stop_recording():
 @app.route('/visualize_data', methods=['POST'])
 def visualize_data():
     try:
-        signal_coordinates = filter_amp_phase()
+        # signal_coordinates = filter_amp_phase()
         return jsonify({
-            "prediction": prediction,
-            "signalCoordinates": signal_coordinates,
+            # "prediction": prediction,
+            # "signalCoordinates": signal_coordinates,
             'radarX': radar_x_coord, # -13856 ~ +13856
             'radarY': radar_y_coord  # 0 ~ 8000
         })

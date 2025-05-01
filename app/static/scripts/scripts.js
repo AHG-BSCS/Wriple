@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const datasetList = document.getElementById('dataset-list');
   // const thresholdList = document.getElementById('threshold-list');
 
-  // const radarContainer = document.getElementById('radar-container');
+  const radarContainer = document.getElementById('radar-container');
   const pointsContainer = document.getElementById('points');
 
   const presenceSelect = document.getElementById('presence-select');
@@ -292,45 +292,46 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(response => response.json())
       .then(data => {
         D3PlotBtn.style.backgroundColor = btnActiveColor;
-        xGrid = [];
-        scatter = [];
-        yLine = [];
-        let j = 10;
-        let cnt = 0;
+        // xGrid = [];
+        // scatter = [];
+        // yLine = [];
+        // let j = 10;
+        // let cnt = 0;
 
-        if (data.presence === 1)
-          presence.textContent = "Movement Detected"
-        else
-          presence.textContent = null
+        // if (data.presence === 1)
+        //   presence.textContent = "Movement Detected"
+        // else
+        //   presence.textContent = null
 
-        scatter = data.signalCoordinates.map(pos => ({ x: pos[0], y: pos[1], z: pos[2], id: "point-" + cnt++ }));
+        // scatter = data.signalCoordinates.map(pos => ({ x: pos[0], y: pos[1], z: pos[2], id: "point-" + cnt++ }));
 
-        for (let z = -j; z < j; z++) {
-          for (let x = -j; x < j; x++) {
-            xGrid.push({ x: x, y: -10, z: z});
-          }
-        }
+        // for (let z = -j; z < j; z++) {
+        //   for (let x = -j; x < j; x++) {
+        //     xGrid.push({ x: x, y: -10, z: z});
+        //   }
+        // }
     
-        range(-10, 0, 1).forEach((d) => {
-          yLine.push({ x: -j, y: -d, z: -j });
-        });
+        // range(-10, 0, 1).forEach((d) => {
+        //   yLine.push({ x: -j, y: -d, z: -j });
+        // });
     
-        const datas = [
-          grid3d(xGrid),
-          points3d(scatter),
-          yScale3d([yLine]),
-        ];
-        processData(datas, 1000);
+        // const datas = [
+        //   grid3d(xGrid),
+        //   points3d(scatter),
+        //   yScale3d([yLine]),
+        // ];
+        // processData(datas, 1000);
 
         pointsContainer.innerHTML = ''; // Clear previous points
+        const radarRect = radarContainer.getBoundingClientRect();
         const centerX = pointsContainer.offsetWidth / 2;
         const topY = 0;
 
         // Convert the radar coordinates into pixel positions
         for (let i = 0; i < 3; i++) {
           if (data.radarY[i] != '0') {
-            const x = scaleXToRadar(data.radarX[i]);
-            const y = scaleYToRadar(data.radarY[i]);
+            const x = scaleXToRadar(data.radarX[i], radarRect.width);
+            const y = scaleYToRadar(data.radarY[i], radarRect.height);
             createPoint((centerX + x), (topY + y));
           }
         }
@@ -345,14 +346,14 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   };
 
-  function scaleXToRadar(x) {
+  function scaleXToRadar(x, width) {
     x = parseInt(x)
-    return Math.floor((x / 13856) * (800 / 2));
+    return Math.floor((x / 13856) * (width / 2));
   }
 
-  function scaleYToRadar(y) {
+  function scaleYToRadar(y, height) {
     y = parseInt(y)
-    return Math.floor((y / 8000) * 400);
+    return Math.floor((y / 8000) * height);
   }
 
   function list_csv_files() {
@@ -479,9 +480,9 @@ document.addEventListener('DOMContentLoaded', () => {
         monitorVisualizeInterval = setInterval(visualize, 200);
       }
       else {
-        D3PlotBtn.style.backgroundColor = btnActiveColor;
         visualize();
       }
+      D3PlotBtn.style.backgroundColor = btnActiveColor;
       is3dPlotActive = true;
     }
     button_timeout(D3PlotBtn);
@@ -516,8 +517,7 @@ document.addEventListener('DOMContentLoaded', () => {
   collapseBtn.addEventListener('click', () => {
     const sidebar = document.getElementById('sidebar');
     const texts = document.querySelectorAll('.sidebar-text');
-    sidebar.classList.toggle('w-64');
-    sidebar.classList.toggle('w-16');
+    sidebar.classList.toggle('w-20');
 
     texts.forEach(t => {
       t.classList.toggle('hidden');
