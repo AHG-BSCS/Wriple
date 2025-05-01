@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wriple</title>
-    <!-- <link rel="stylesheet" href="static/styles/style.css"> -->
     <script type="module" src="static/scripts/scripts.js"></script>
     <script src="static/scripts/tailwind.js"></script>
-    <!-- <script src="https://cdn.tailwindcss.com"></script> -->
-    <!-- <script defer src="script.js"></script> -->
     <link rel="icon" type="image/x-icon" href="static/images/wriple-icon.png">
 </head>
 <body class="h-screen w-screen text-gray-800"></body>
@@ -22,6 +19,7 @@
       <!-- Sidebar -->
         <nav id="sidebar" class="bg-gray-400 w-52 transition-all duration-300 flex flex-col justify-between p-4">
             <div>
+                <!-- Wriple Icon -->
                 <div class="flex items-center gap-2 mb-4">
                     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 128 128">
                         <g transform="translate(0 ,128) scale(0.05,-0.05)" fill="#1F2937">
@@ -31,49 +29,51 @@
                         </g>
                     </svg>
                     <span class="text-2xl font-bold sidebar-text">Wriple</span>
-                    <button id="collapseBtn" class="ml-auto">
+                    <button id="collapse-btn" class="ml-auto">
                         <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#1f2937" viewBox="0 0 256 256">
                             <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm21.66,138.34a8,8,0,0,1-11.32,11.32l-40-40a8,8,0,0,1,0-11.32l40-40a8,8,0,0,1,11.32,11.32L115.31,128Z"></path>
                         </svg>
                     </button>
                 </div>
                 <hr class="border-gray-800 my-2">
+                <!-- Upper Sidebar -->
                 <ul class="space-y-4"></ul>
-                    <li class="flex items-center gap-2 cursor-pointer hover:bg-gray-300 p-2 rounded">
+                    <li id="dashboard-btn" class="flex items-center gap-2 cursor-pointer hover:bg-gray-300 p-2 rounded">
                         <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#1f2937" viewBox="0 0 256 256">
                             <path d="M232,64V176a24,24,0,0,1-24,24H48a24,24,0,0,1-24-24V64A24,24,0,0,1,48,40H208A24,24,0,0,1,232,64ZM160,216H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16Z"></path>
                         </svg>
                         <span class="font-bold sidebar-text">Dashboard</span>
                     </li>
-                    <li class="flex items-center gap-2 cursor-pointer hover:bg-gray-300 p-2 rounded">
+                    <li id="history-btn" class="flex items-center gap-2 cursor-pointer hover:bg-gray-300 p-2 rounded">
                         <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#1f2937" viewBox="0 0 256 256">
                             <path d="M168,112a56,56,0,1,1-56-56A56,56,0,0,1,168,112Zm61.66,117.66a8,8,0,0,1-11.32,0l-50.06-50.07a88,88,0,1,1,11.32-11.31l50.06,50.06A8,8,0,0,1,229.66,229.66ZM112,184a72,72,0,1,0-72-72A72.08,72.08,0,0,0,112,184Z"></path>
                         </svg>
                         <span class="font-bold sidebar-text">History</span>
                     </li>
-                    <li class="flex items-center gap-2 cursor-pointer hover:bg-gray-300 p-2 rounded">
+                    <li id="dataset-btn" class="flex items-center gap-2 cursor-pointer hover:bg-gray-300 p-2 rounded">
                         <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#1f2937" viewBox="0 0 256 256">
                             <path d="M128,24C74.17,24,32,48.6,32,80v96c0,31.4,42.17,56,96,56s96-24.6,96-56V80C224,48.6,181.83,24,128,24Zm80,104c0,9.62-7.88,19.43-21.61,26.92C170.93,163.35,150.19,168,128,168s-42.93-4.65-58.39-13.08C55.88,147.43,48,137.62,48,128V111.36c17.06,15,46.23,24.64,80,24.64s62.94-9.68,80-24.64Zm-21.61,74.92C170.93,211.35,150.19,216,128,216s-42.93-4.65-58.39-13.08C55.88,195.43,48,185.62,48,176V159.36c17.06,15,46.23,24.64,80,24.64s62.94-9.68,80-24.64V176C208,185.62,200.12,195.43,186.39,202.92Z"></path>
                         </svg>
-                        <span class="font-bold sidebar-text">Data</span>
+                        <span class="font-bold sidebar-text">Dataset</span>
                     </li>
                 </ul>
             </div>
+            <!-- Lower Sidebar -->
             <div class="space-y-4">
                 <ul>
-                    <li class="flex items-center gap-2 cursor-pointer hover:bg-gray-300 p-2 rounded">
+                    <li id="setting-btn" class="flex items-center gap-2 cursor-pointer hover:bg-gray-300 p-2 rounded">
                         <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#1f2937" viewBox="0 0 256 256">
                             <path d="M237.94,107.21a8,8,0,0,0-3.89-5.4l-29.83-17-.12-33.62a8,8,0,0,0-2.83-6.08,111.91,111.91,0,0,0-36.72-20.67,8,8,0,0,0-6.46.59L128,41.85,97.88,25a8,8,0,0,0-6.47-.6A111.92,111.92,0,0,0,54.73,45.15a8,8,0,0,0-2.83,6.07l-.15,33.65-29.83,17a8,8,0,0,0-3.89,5.4,106.47,106.47,0,0,0,0,41.56,8,8,0,0,0,3.89,5.4l29.83,17,.12,33.63a8,8,0,0,0,2.83,6.08,111.91,111.91,0,0,0,36.72,20.67,8,8,0,0,0,6.46-.59L128,214.15,158.12,231a7.91,7.91,0,0,0,3.9,1,8.09,8.09,0,0,0,2.57-.42,112.1,112.1,0,0,0,36.68-20.73,8,8,0,0,0,2.83-6.07l.15-33.65,29.83-17a8,8,0,0,0,3.89-5.4A106.47,106.47,0,0,0,237.94,107.21ZM128,168a40,40,0,1,1,40-40A40,40,0,0,1,128,168Z"></path>
                         </svg>
                         <span class="font-bold sidebar-text">Setting</span>
                     </li>
-                    <li class="flex items-center gap-2 cursor-pointer hover:bg-gray-300 p-2 rounded">
+                    <li id="info-btn" class="flex items-center gap-2 cursor-pointer hover:bg-gray-300 p-2 rounded">
                         <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#1f2937" viewBox="0 0 256 256">
                             <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm-4,48a12,12,0,1,1-12,12A12,12,0,0,1,124,72Zm12,112a16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40a8,8,0,0,1,0,16Z"></path>
                         </svg>
                         <span class="font-bold sidebar-text">Info</span>
                     </li>
-                    <li class="flex items-center gap-2 cursor-pointer hover:bg-gray-300 p-2 rounded">
+                    <li class="flex items-center gap-2 p-2 rounded">
                         <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#1f2937" viewBox="0 0 256 256">
                             <path d="M235.54,150.21a104.84,104.84,0,0,1-37,52.91A104,104,0,0,1,32,120,103.09,103.09,0,0,1,52.88,57.48a104.84,104.84,0,0,1,52.91-37,8,8,0,0,1,10,10,88.08,88.08,0,0,0,109.8,109.8,8,8,0,0,1,10,10Z"></path>
                         </svg>
@@ -81,7 +81,7 @@
                         <label class="ml-auto relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" class="sr-only peer">
                             <div class="w-8 h-6 rounded-full peer dark:bg-gray-800 peer-checked:bg-amber-900"></div>
-                            <div class="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform peer-checked:translate-x-2"></div>
+                            <div id="dark-mode-switch" class="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform peer-checked:translate-x-2"></div>
                         </label>
                     </li>
                 </ul>
@@ -92,46 +92,56 @@
   
         <div class="flex flex-col flex-1 h-full">
             
-            <!-- Header -->
+            <!-- Left Header -->
             <header class="bg-gray-800 text-white px-6 py-3 flex justify-between items-center">
                 <div class="space-x-6 flex items-center gap-2">
                     <div class="space-x-1">
+                        <span class="font-semibold">Presence:</span>
+                        <span id="presence" class="font-bold text-3xl">No</span>
+                    </div>
+                    <div class="space-x-1">
                         <span class="font-semibold">Target Detected:</span>
-                        <span class="font-bold text-3xl">0</span>
+                        <span id="target-number" class="font-bold text-3xl">0</span>
                     </div>
                     <div class="border-l border-gray-400 h-8"></div>
                     <div class="space-x-1">
                         <span class="font-semibold">Distance:</span>
-                        <span class="font-bold text-3xl">0</span>
+                        <span id="target-1-distance" class="font-bold text-3xl">0</span>
+                    </div>
+                    <div class="border-l border-gray-400 h-8"></div>
+                    <div class="space-x-1">
+                        <span class="font-semibold">Packets:</span>
+                        <span id="packets-number" class="font-bold text-3xl">0</span>
                     </div>
                 </div>
+                <!-- Right Header -->
                 <div class="flex items-center gap-4">
-                    <span class="hover:scale-110 transition">
+                    <span id="esp32-status" class="hover:scale-110 transition">
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="limegreen" viewBox="0 0 256 256">
                             <path d="M156,88H100a12,12,0,0,0-12,12v56a12,12,0,0,0,12,12h56a12,12,0,0,0,12-12V100A12,12,0,0,0,156,88Zm-12,56H112V112h32Zm88-4H220V116h12a12,12,0,0,0,0-24H220V56a20,20,0,0,0-20-20H164V24a12,12,0,0,0-24,0V36H116V24a12,12,0,0,0-24,0V36H56A20,20,0,0,0,36,56V92H24a12,12,0,0,0,0,24H36v24H24a12,12,0,0,0,0,24H36v36a20,20,0,0,0,20,20H92v12a12,12,0,0,0,24,0V220h24v12a12,12,0,0,0,24,0V220h36a20,20,0,0,0,20-20V164h12a12,12,0,0,0,0-24Zm-36,56H60V60H196Z"></path>
                         </svg>
                     </span>
-                    <span class="hover:scale-110 transition">
+                    <span id="ap-status" class="hover:scale-110 transition">
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="limegreen" viewBox="0 0 256 256">
                             <path d="M144,204a16,16,0,1,1-16-16A16,16,0,0,1,144,204ZM239.61,83.91a176,176,0,0,0-223.22,0,12,12,0,1,0,15.23,18.55,152,152,0,0,1,192.76,0,12,12,0,1,0,15.23-18.55Zm-32.16,35.73a128,128,0,0,0-158.9,0,12,12,0,0,0,14.9,18.81,104,104,0,0,1,129.1,0,12,12,0,0,0,14.9-18.81ZM175.07,155.3a80.05,80.05,0,0,0-94.14,0,12,12,0,0,0,14.14,19.4,56,56,0,0,1,65.86,0,12,12,0,1,0,14.14-19.4Z"></path>
                         </svg>
                     </span>
-                    <span class="hover:scale-110 transition">
+                    <span id="rd03d-status" class="hover:scale-110 transition">
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="limegreen" viewBox="0 0 256 256">
                             <path d="M240,116H219.22A92.21,92.21,0,0,0,140,36.78V16a12,12,0,0,0-24,0V36.78A92.21,92.21,0,0,0,36.78,116H16a12,12,0,0,0,0,24H36.78A92.21,92.21,0,0,0,116,219.22V240a12,12,0,0,0,24,0V219.22A92.21,92.21,0,0,0,219.22,140H240a12,12,0,0,0,0-24ZM128,196a68,68,0,1,1,68-68A68.07,68.07,0,0,1,128,196Zm0-112a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,84Zm0,64a20,20,0,1,1,20-20A20,20,0,0,1,128,148Z"></path>
                         </svg>
                     </span>
-                    <span class="hover:scale-110 transition">
+                    <span id="flask-status" class="hover:scale-110 transition">
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="limegreen" viewBox="0 0 256 256">
                             <path d="M84,76A12,12,0,0,1,96,64h64a12,12,0,0,1,0,24H96A12,12,0,0,1,84,76Zm12,52h64a12,12,0,0,0,0-24H96a12,12,0,0,0,0,24ZM212,40V216a20,20,0,0,1-20,20H64a20,20,0,0,1-20-20V40A20,20,0,0,1,64,20H192A20,20,0,0,1,212,40Zm-24,4H68V212H188ZM128,168a16,16,0,1,0,16,16A16,16,0,0,0,128,168Z"></path>
                         </svg>
                     </span>
-                    <span class="hover:scale-110 transition">
+                    <span id="connection-status" class="hover:scale-110 transition">
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="limegreen" viewBox="0 0 256 256">
                             <path d="M72.5,150.63,100.79,128,72.5,105.37a12,12,0,1,1,15-18.74l40,32a12,12,0,0,1,0,18.74l-40,32a12,12,0,0,1-15-18.74ZM144,172h32a12,12,0,0,0,0-24H144a12,12,0,0,0,0,24ZM236,56V200a20,20,0,0,1-20,20H40a20,20,0,0,1-20-20V56A20,20,0,0,1,40,36H216A20,20,0,0,1,236,56Zm-24,4H44V196H212Z"></path>
                         </svg>
                     </span>
-                    <span class="hover:scale-110 transition">
+                    <span id="model-status" class="hover:scale-110 transition">
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="limegreen" viewBox="0 0 256 256">
                             <path d="M128,20A108,108,0,1,0,236,128,108.12,108.12,0,0,0,128,20Zm84,107.86c-.56,1.41-5.7,7.11-22.88,12.33a157.26,157.26,0,0,1-17.57,4.15c.3-5.44.45-10.91.45-16.34,0-27.85-3.95-56.83-12.25-77.75A84.13,84.13,0,0,1,212,127.86ZM127.86,44c1.41.56,7.11,5.7,12.33,22.88,5,16.6,7.81,38.31,7.81,61.12,0,6.56-.24,13-.68,19.32-6.29.44-12.76.68-19.32.68-22.81,0-44.52-2.78-61.12-7.81C49.7,135,44.56,129.27,44,127.86A84.1,84.1,0,0,1,127.86,44ZM50.25,159.75C71.17,168.05,100.15,172,128,172c5.43,0,10.9-.15,16.34-.46a156.93,156.93,0,0,1-4.15,17.58C135,206.3,129.27,211.44,127.86,212A84.13,84.13,0,0,1,50.25,159.75Zm109.5,46c4.19-10.57,7.28-23.2,9.3-36.7,13.5-2,26.13-5.11,36.7-9.3A84.42,84.42,0,0,1,159.75,205.75Z"></path>
                         </svg>
@@ -142,119 +152,79 @@
             <div class="flex flex-1 overflow-hidden">
                 <!-- Main Section -->
                 <main class="flex-1 p-4 gap-4">
-                    <div class="bg-white rounded shadow flex items-center justify-center">
-                        <img src="static/images/radar-transparent.png" alt="Wriple Logo" class="h-full"/>
+                    <div id="radar-container" class="rounded shadow">
+                        <img src="static/images/radar-transparent.png" id="radar"/>
+                        <div id="points"></div>
                     </div>
-                    <div class="bg-white rounded shadow flex items-center justify-center">Data Visualization</div>
+                    <div id="visualizer-container" class="rounded shadow">
+                        <svg id="d3-plot"></svg>
+                    </div>
                 </main>
         
                 <!-- Aside Section -->
-                <aside class="w-70 bg-white border-l border-gray-400 p-4 space-y-4 overflow-y-auto">
+                <aside class="border-l border-gray-400 p-4 space-y-4">
                     <div>
                         <label class="block font-semibold mb-1">Class:</label>
                         <div class="flex gap-2">
-                            <button class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-amber-800">Presence</button>
-                            <button class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-amber-800">No Presence</button>
+                            <button id="presence-select" class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-amber-800">Presence</button>
+                            <button id="no-presence-select" class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-amber-800">No Presence</button>
                         </div>
                     </div>
                     <div>
                         <label class="block font-semibold mb-1">Target:</label>
                         <div class="flex gap-2">
-                            <button class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-amber-800">1</button>
-                            <button class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-amber-800">2</button>
-                            <button class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-amber-800">3</button>
+                            <button id="1-select" class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-amber-800">1</button>
+                            <button id="2-select" class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-amber-800">2</button>
+                            <button id="3-select" class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-amber-800">3</button>
                         </div>
                     </div>  
                     <div>
                         <label class="block font-semibold">Line of Sight (°):</label>
-                        <input type="text" class="w-full border rounded px-2 py-1 mt-1" />
-                    </div>
-                    <div>
-                        <label class="block font-semibold">Distance (m):</label>
-                        <input type="text" class="w-full border rounded px-2 py-1 mt-1" />
+                        <input type="text" id="los-input" class="w-full border rounded px-2 py-1 mt-1" />
                     </div>
                     <div>
                         <label class="block font-semibold">Angle (°):</label>
-                        <input type="text" class="w-full border rounded px-2 py-1 mt-1" />
+                        <input type="text" id="angle-input" class="w-full border rounded px-2 py-1 mt-1" />
+                    </div>
+                    <div>
+                        <label class="block font-semibold">Distance (m):</label>
+                        <input type="text" id="distance-input" class="w-full border rounded px-2 py-1 mt-1" />
                     </div>
                     <div>
                         <label class="block font-semibold">Dataset:</label>
-                        <select class="w-full border rounded px-2 py-1 mt-1">
-                            <option>Select CSV Dataset</option>
-                        </select>
+                        <select id="dataset-list" class="w-full border rounded px-2 py-1 mt-1"></select>
                     </div>
                 </aside>
             </div>
     
             <!-- Floating Actions -->
             <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-4 bg-gray-800 p-2 rounded-xl shadow-lg">
-                <button class="bg-gray-800 p-1 hover:scale-110 transition">
+                <button id="record-btn" class="bg-gray-800 p-1 hover:scale-110 transition relative group">
                     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#ffffff" viewBox="0 0 256 256">
                         <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm72-88a72,72,0,1,1-72-72A72.08,72.08,0,0,1,200,128Z"></path>
                     </svg>
+                    <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-gray-700 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                        Record Sensor Data
+                    </span>
                 </button>
-                <button class="bg-gray-800 p-1 hover:scale-110 transition">
+                <button id="radar-btn" class="bg-gray-800 p-1 hover:scale-110 transition relative group">
                     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#ffffff" viewBox="0 0 256 256">
                         <path d="M120,199.54v27.74a4,4,0,0,1-4.46,4,104.22,104.22,0,0,1-90.8-90.8,4,4,0,0,1,4-4.46H56.46A72.11,72.11,0,0,0,120,199.54ZM183.42,136H136v47.42A56.11,56.11,0,0,0,183.42,136ZM136,72.58V120h47.42A56.11,56.11,0,0,0,136,72.58ZM227.28,136H199.54A72.11,72.11,0,0,1,136,199.54v27.74a4,4,0,0,0,4.46,4,104.22,104.22,0,0,0,90.8-90.8A4,4,0,0,0,227.28,136Zm-27.74-16h27.74a4,4,0,0,0,4-4.46,104.22,104.22,0,0,0-90.8-90.8,4,4,0,0,0-4.46,4V56.46A72.11,72.11,0,0,1,199.54,120Zm-84-95.26a104.22,104.22,0,0,0-90.8,90.8,4,4,0,0,0,4,4.46H56.46A72.11,72.11,0,0,1,120,56.46V28.72A4,4,0,0,0,115.54,24.74ZM72.58,120H120V72.58A56.11,56.11,0,0,0,72.58,120ZM120,183.42V136H72.58A56.11,56.11,0,0,0,120,183.42Z"></path>
                     </svg>
+                    <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-gray-700 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                        Enable/Disable Radar
+                    </span>
                 </button>
-                <button class="bg-gray-800 p-1 hover:scale-110 transition">
+                <button id="3d-plot-btn" class="bg-gray-800 p-1 hover:scale-110 transition relative group">
                     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#ffffff" viewBox="0 0 256 256">
                         <path d="M237.66,141.66l-32,32A8,8,0,0,1,192,168V144H123.31l-40,40,18.35,18.34A8,8,0,0,1,96,216H48a8,8,0,0,1-8-8V160a8,8,0,0,1,13.66-5.66L72,172.69l40-40V64H88a8,8,0,0,1-5.66-13.66l32-32a8,8,0,0,1,11.32,0l32,32A8,8,0,0,1,152,64H128v64h64V104a8,8,0,0,1,13.66-5.66l32,32A8,8,0,0,1,237.66,141.66Z"></path>
                     </svg>
+                    <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-gray-700 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                        Enable/Disable 3D Plot
+                    </span>
                 </button>
             </div>
         </div>
     </div>
-
-    <!-- Old UI -->
-    <!-- <div class="card">
-        <div class="card-header">Wriple</div>
-        <div class="card-subtitle">Wi-Fi & Millimeter Wave Human Presense Detection System</div>
-        <div class="button-container">
-            <button id="record"></button>
-            <div class="tooltip">Record Wi-Fi Signal</div>
-        </div>
-        <div class="button-container">
-            <button id="monitor"></button>
-            <div class="tooltip">Monitor Wi-Fi Signal</div>
-        </div>
-        <div class="button-container">
-            <button id="visualize"></button>
-            <div class="tooltip">Visualize Wi-Fi Signal</div>
-        </div>
-        <div class="selection-container">
-            <label for="files-list">CSV Files:</label>
-            <select id="files-list" class="form-select"></select>
-            <label for="class-list">Class:</label>
-            <select id="class-list" class="form-select">
-                <option value="None"></option>
-                <option value="0">Motionless</option>
-                <option value="1">Active</option>
-            </select>
-            <label for="activity-list">Activity:</label>
-            <select id="activity-list" class="form-select"></select>
-            <label for="threshold-list">Sensitivity:</label>
-            <select id="threshold-list">
-                <option value="0.0">0.00</option>
-                <option value="0.5">0.50</option>
-                <option value="0.75">0.75</option>
-                <option value="1.0">1.00</option>
-                <option value="1.25">1.25</option>
-                <option value="1.75" selected>1.75</option>
-                <option value="2.0">2.00</option>
-                <option value="2.5">2.50</option>
-            </select>
-        </div>
-        <div class="radar-container">
-            <img id="radar">
-            <div id="points"></div>
-        </div>
-        <div class="visualizer-container">
-            <svg id="d3-plot"></svg>
-            <div id="prediction"></div>
-            <div id="packet-count"></div>
-        </div>
-    </div> -->
 </body>
 </html>
