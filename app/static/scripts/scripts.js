@@ -16,7 +16,7 @@ import {
 
 document.addEventListener('DOMContentLoaded', () => {
   // const sideNavBar = document.getElementById("sidebar")
-  // const collapseBtn = document.getElementById("collapse-btn")
+  const collapseBtn = document.getElementById("collapse-btn")
 
   const dashboardBtn = document.getElementById("dashboard-btn")
   // const historyBtn = document.getElementById("history-btn")
@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const presence = document.getElementById('presence');
   const targetNumber = document.getElementById("target-number")
   const target1Distance = document.getElementById("target-1-distance")
-  const packetsNumber = document.getElementById("packets-number")
+  const packetNumber = document.getElementById("packets-number")
 
   const esp32Status = document.getElementById("esp32-status")
   const apStatus = document.getElementById("ap-status")
@@ -38,9 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const modelStatus = document.getElementById("model-status")
 
   const datasetList = document.getElementById('dataset-list');
-  const activityList = document.getElementById('activity-list');
-  const classList = document.getElementById('class-list');
-  const thresholdList = document.getElementById('threshold-list');
+  // const thresholdList = document.getElementById('threshold-list');
 
   // const radarContainer = document.getElementById('radar-container');
   const pointsContainer = document.getElementById('points');
@@ -54,16 +52,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const angleInput = document.getElementById('angle-input');
   const distanceInput = document.getElementById('distance-input');
 
-  const recordBtn = document.getElementById('record');
+  // const recordBtn = document.getElementById('record');
+  const recordBtn = document.getElementById('record-btn');
+  const monitorBtn = document.getElementById('monitor-btn');
   const radarBtn = document.getElementById('radar-btn');
   const D3PlotBtn = document.getElementById('3d-plot-btn');
 
+  // Buttons States
+  let isRecording = false;
+  let isMonitoring = false;
+  let isRadarActive = false;
+  let is3dPlotActive = false;
 
   let packetCountInterval;
   let monitorVisualizeInterval;
   
-  var buttonActiveColor = '#323A3F';
-  var buttonInactiveColor = 'saddlebrown';
+  var btnDefaultColor = '#1F2937';
+  var btnActiveColor = '#78350F';
   var lastMode = -1;
 
   const activityOptions = {
@@ -218,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function dragged(event) {
-    D3PlotBtn.style.backgroundColor = buttonInactiveColor;
+    D3PlotBtn.style.backgroundColor = btnActiveColor;
     beta = (event.x - mx + mouseX) * (Math.PI / 230) * -1;
     alpha = (event.y - my + mouseY) * (Math.PI / 230) * -1;
 
@@ -246,7 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(data => {
         if (data.mode === 0) {
           lastMode = 0
-          packetsNumber.textContent = `${data.total_packet}/250`;
+          packetNumber.textContent = `${data.total_packet}/250`;
 
           if (data.presence === 1)
             presence.textContent = "Movement Detected"
@@ -255,7 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         else if (data.mode === 1) {
           lastMode = 1
-          packetsNumber.textContent = `${data.total_packet}`;
+          packetNumber.textContent = `${data.total_packet}`;
 
           if (data.presence === 1)
             presence.textContent = "Movement Detected"
@@ -267,11 +272,11 @@ document.addEventListener('DOMContentLoaded', () => {
           clearInterval(monitorVisualizeInterval);
 
           if (lastMode === 0) {
-            recordBtn.style.backgroundColor = buttonActiveColor;
+            recordBtn.style.backgroundColor = btnDefaultColor;
             recordBtn.style.backgroundImage = "url('static/images/record-start.png')";
-            monitorButton.disabled = false;
+            monitorBtn.disabled = false;
             D3PlotBtn.disabled = false;
-            packetsNumber.textContent = null
+            packetNumber.textContent = null
             presence.textContent = null
             list_csv_files();
             visualize();
@@ -286,7 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch('/visualize_data', { method: "POST" })
       .then(response => response.json())
       .then(data => {
-        D3PlotBtn.style.backgroundColor = buttonInactiveColor;
+        D3PlotBtn.style.backgroundColor = btnActiveColor;
         xGrid = [];
         scatter = [];
         yLine = [];
@@ -332,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
       })
       .catch(err => {
         if (lastMode === 0) {
-          D3PlotBtn.style.backgroundColor = buttonActiveColor;
+          D3PlotBtn.style.backgroundColor = btnDefaultColor;
           D3PlotBtn.disabled = false;
           svg.selectAll('*').remove();
         }
@@ -390,91 +395,94 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   recordBtn.addEventListener('click', () => {
-      if (recordBtn.style.backgroundColor === buttonInactiveColor) {
+      if (isRecording) {
         fetch('/stop_recording', { method: "POST" });
         list_csv_files();
         clearInterval(packetCountInterval)
 
-        monitorButton.disabled = false;
+        radarBtn.disabled = false;
+        radarBtn.style.backgroundColor = btnDefaultColor;
         D3PlotBtn.disabled = false;
-        recordBtn.style.backgroundColor = buttonActiveColor;
-        recordBtn.style.backgroundImage = "url('static/images/record-start.png')";
-        D3PlotBtn.style.backgroundColor = buttonActiveColor;
+        D3PlotBtn.style.backgroundColor = btnDefaultColor;
+        recordBtn.style.backgroundColor = btnDefaultColor;
+        isRecording = false;
       } else {
-        recordBtn.disabled = true;
         setTimeout(() => {
           fetch('/start_recording/recording')
           .then(response => response.json())
           .then(data => {
-            if (data.status === "error") {
-              throw new Error(data.message);
-            }
-            monitorButton.disabled = true;
+            if (data.status === "error") throw new Error(data.message);
+            
+            radarBtn.disabled = true;
             D3PlotBtn.disabled = true;
-            recordBtn.style.backgroundColor = buttonInactiveColor;
-            recordBtn.style.backgroundImage = "url('static/images/record-stop.png')";
+            recordBtn.style.backgroundColor = btnActiveColor;
             packetCountInterval = setInterval(setPacketCount, 250);
+            isRecording = true;
             lastMode = 0;
           })
           .catch(err => {
+            fetch('/stop_recording', { method: "POST" });
             alert('Activity or Class is missing!');
-            monitorButton.disabled = false;
+            list_csv_files();
+            clearInterval(packetCountInterval)
+
+            radarBtn.disabled = false;
+            radarBtn.style.backgroundColor = btnDefaultColor;
             D3PlotBtn.disabled = false;
-            recordBtn.style.backgroundColor = buttonActiveColor;
-            recordBtn.style.backgroundImage = "url('static/images/record-start.png')";
-            D3PlotBtn.style.backgroundColor = buttonActiveColor;
+            recordBtn.style.backgroundColor = btnDefaultColor;
+            D3PlotBtn.style.backgroundColor = btnDefaultColor;
           })
         }, 1000);
       }
-      recordBtn.disabled = false;
       button_timeout(recordBtn);
   });
 
-  monitorButton.addEventListener('click', () => {
-      if (monitorButton.style.backgroundColor === buttonInactiveColor) {
+  monitorBtn.addEventListener('click', () => {
+      if (isMonitoring) {
         fetch('/stop_recording', { method: "POST" });
         clearInterval(packetCountInterval)
         clearInterval(monitorVisualizeInterval)
 
-        recordBtn.disabled = false;
+        radarBtn.disabled = false;
+        radarBtn.style.backgroundColor = btnDefaultColor;
         D3PlotBtn.disabled = false;
-        monitorButton.style.backgroundColor = buttonActiveColor;
-        monitorButton.style.backgroundImage = "url('static/images/monitor-start.png')";
-        D3PlotBtn.style.backgroundColor = buttonActiveColor;
-        packetsNumber.textContent = null;
-        presence.textContent = null
+        D3PlotBtn.style.backgroundColor = btnDefaultColor;
+        monitorBtn.style.backgroundColor = btnDefaultColor;
+
+        packetNumber.textContent = "0";
+        presence.textContent = "No"
         svg.selectAll('*').remove();
+        isMonitoring = false;
       } else {
-        recordBtn.disabled = true;
-        monitorButton.style.backgroundColor = buttonInactiveColor;
-        monitorButton.style.backgroundImage = "url('static/images/monitor-stop.png')";
+        monitorBtn.style.backgroundColor = btnActiveColor;
         fetch('/start_recording/monitoring')
           .catch(error => alert(error));
         
-        packetCountInterval = setInterval(setPacketCount, 2000);
+        packetCountInterval = setInterval(setPacketCount, 250);
+        isMonitoring = true;
         lastMode = 1;
       }
-      if (D3PlotBtn.style.backgroundColor === buttonInactiveColor) {
-        monitorVisualizeInterval = setInterval(visualize, 500);
-      }
-      button_timeout(monitorButton);
+      button_timeout(monitorBtn);
   });
 
   D3PlotBtn.addEventListener('click', () => {
-    if (D3PlotBtn.style.backgroundColor === buttonInactiveColor) {
-      D3PlotBtn.style.backgroundColor = buttonActiveColor;
+    if (is3dPlotActive) {
+      D3PlotBtn.style.backgroundColor = btnDefaultColor;
       clearInterval(monitorVisualizeInterval);
+
+      packetNumber.textContent = "0";
+      presence.textContent = "No"
       svg.selectAll('*').remove();
-      packetsNumber.textContent = null;
-      presence.textContent = null
+      is3dPlotActive = false;
     } else {
       if (lastMode === 1) {
-        monitorVisualizeInterval = setInterval(visualize, 100);
+        monitorVisualizeInterval = setInterval(visualize, 200);
       }
       else {
-        D3PlotBtn.style.backgroundColor = buttonInactiveColor;
+        D3PlotBtn.style.backgroundColor = btnActiveColor;
         visualize();
       }
+      is3dPlotActive = true;
     }
     button_timeout(D3PlotBtn);
   });
@@ -486,52 +494,26 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(error => alert(error));
       setTimeout(() => {
         visualize();
-        D3PlotBtn.style.backgroundColor = buttonInactiveColor;
+        D3PlotBtn.style.backgroundColor = btnActiveColor;
       }, 50)
     }
   });
 
-  activityList.addEventListener('change', function() {
-    const selectedAct = activityList.value;
-    if (selectedAct) {
-      fetch(`/set_activity/${selectedAct}`)
-        .catch(error => alert(error));
-    }
-  });
-
-  classList.addEventListener('change', function() {
-    const selectedClass = classList.value;
-    if (selectedClass) {
-      fetch(`/set_class/${selectedClass}`)
-        .catch(error => alert(error));
-
-      activityList.innerHTML = ''; // Clear existing options
-      const options = activityOptions[selectedClass] || [];
-      options.forEach(option => {
-        const optElement = document.createElement('option');
-        optElement.value = option.value;
-        optElement.textContent = option.text;
-        activityList.appendChild(optElement);
-      });
-    }
-  });
-
-  thresholdList.addEventListener('change', function() {
-    const selectedValue = thresholdList.value;
-    if (selectedValue) {
-      fetch(`/set_threshold/${selectedValue}`)
-        .catch(error => alert(error));
+  // thresholdList.addEventListener('change', function() {
+  //   const selectedValue = thresholdList.value;
+  //   if (selectedValue) {
+  //     fetch(`/set_threshold/${selectedValue}`)
+  //       .catch(error => alert(error));
       
-    }
-    if (D3PlotBtn.style.backgroundColor === buttonInactiveColor) {
-      setTimeout(() => {
-        visualize();
-      }, 50)
-    }
-  });
+  //   }
+  //   if (D3PlotBtn.style.backgroundColor === btnActiveColor) {
+  //     setTimeout(() => {
+  //       visualize();
+  //     }, 50)
+  //   }
+  // });
 
-  // Collapse functionality
-  document.getElementById('collapseBtn').addEventListener('click', () => {
+  collapseBtn.addEventListener('click', () => {
     const sidebar = document.getElementById('sidebar');
     const texts = document.querySelectorAll('.sidebar-text');
     sidebar.classList.toggle('w-64');
@@ -540,15 +522,6 @@ document.addEventListener('DOMContentLoaded', () => {
     texts.forEach(t => {
       t.classList.toggle('hidden');
     });
-  });
-
-  // Dummy datasets
-  const datasetSelect = document.querySelector('select');
-  ['rescue1.csv', 'indoor_test.csv', 'motion_data.csv'].forEach(file => {
-    const opt = document.createElement('option');
-    opt.value = file;
-    opt.textContent = file;
-    datasetSelect.appendChild(opt);
   });
 
 
