@@ -4,58 +4,195 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wriple</title>
-    <link rel="stylesheet" href="static/styles/styles.css">
+    <!-- <link rel="stylesheet" href="static/styles/style.css"> -->
     <script type="module" src="static/scripts/scripts.js"></script>
+    <script src="static/scripts/tailwind.js"></script>
+    <!-- <script src="https://cdn.tailwindcss.com"></script> -->
+    <!-- <script defer src="script.js"></script> -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="static/images/wriple-icon.png">
 </head>
-<body>
-<div class="card">
-    <div class="card-header">Wriple</div>
-    <div class="card-subtitle">Wi-Fi & Millimeter Wave Human Presense Detection System</div>
-    <div class="button-container">
-        <button id="record"></button>
-        <div class="tooltip">Record Wi-Fi Signal</div>
+<body class="h-screen w-screen text-[#323A3F]"></body>
+
+    <div class="flex h-full">
+      <!-- Sidebar -->
+        <nav id="sidebar" class="bg-[#A0ACB1] w-52 transition-all duration-300 flex flex-col justify-between p-4">
+            <div>
+                <div class="flex items-center gap-2 mb-4">
+                    <img src="static/images/wriple-icon.png" alt="Wriple Icon" class="w-8 h-8">
+                    <span class="text-2xl font-bold sidebar-text">Wriple</span>
+                    <button id="collapseBtn" class="ml-auto text-sm px-1 py-1 rounded">
+                        <span class="material-icons">chevron_left</span>
+                    </button>
+                </div>
+                <hr class="border-[#323A3F] my-2">
+                <ul class="space-y-4"></ul>
+                    <li class="flex items-center gap-2 cursor-pointer hover:bg-gray-300 p-2 rounded">
+                        <span class="material-icons">dashboard</span>
+                        <span class="font-bold sidebar-text">Dashboard</span>
+                    </li>
+                    <li class="flex items-center gap-2 cursor-pointer hover:bg-gray-300 p-2 rounded">
+                        <span class="material-icons">history</span>
+                        <span class="font-bold sidebar-text">History</span>
+                    </li>
+                    <li class="flex items-center gap-2 cursor-pointer hover:bg-gray-300 p-2 rounded">
+                        <span class="material-icons">schedule</span>
+                        <span class="font-bold sidebar-text">Data</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="space-y-4">
+                <ul>
+                    <li class="flex items-center gap-2 cursor-pointer hover:bg-gray-300 p-2 rounded">
+                        <span class="material-icons">settings</span>
+                        <span class="font-bold sidebar-text">Setting</span>
+                    </li>
+                    <li class="flex items-center gap-2 cursor-pointer hover:bg-gray-300 p-2 rounded">
+                        <span class="material-icons">support_agent</span>
+                        <span class="font-bold sidebar-text">Support</span>
+                    </li>
+                    <li class="flex items-center gap-2 cursor-pointer hover:bg-gray-300 p-2 rounded">
+                        <span class="material-icons">dark_mode</span>
+                        <span class="font-bold sidebar-text">Dark Mode</span>
+                        <label class="ml-auto relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" class="sr-only peer">
+                            <div class="w-8 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#323A3F] rounded-full peer dark:bg-gray-700 peer-checked:bg-blue-600"></div>
+                            <div class="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform peer-checked:translate-x-2"></div>
+                        </label>
+                    </li>
+                </ul>
+                <hr class="border-[#323A3F] my-2">
+                <span class="sidebar-text text-xs text-center block">©2025 AHG Graphene</span>
+            </div>
+        </nav>
+  
+      <!-- Content Area -->
+        <div class="flex flex-col flex-1 h-full">
+            
+            <!-- Header -->
+            <header class="bg-[#323A3F] text-white px-6 py-4 flex justify-between items-center">
+                <div class="space-x-6 flex items-center gap-2">
+                    <div class="space-x-1">
+                        <span class="font-semibold">Target Detected:</span>
+                        <span class="font-bold text-3xl">0</span>
+                    </div>
+                    <div class="border-l border-gray-400 h-8"></div>
+                    <div class="space-x-1">
+                        <span class="font-semibold">Distance:</span>
+                        <span class="font-bold text-3xl">0</span>
+                    </div>
+                </div>
+                <div class="space-x-4">
+                    <span class="material-icons text-2xl hover:scale-110 transition">crop_free</span>
+                    <span class="material-icons text-2xl hover:scale-110 transition">wifi</span>
+                    <span class="material-icons text-2xl hover:scale-110 transition">radar</span>
+                    <span class="material-icons text-2xl hover:scale-110 transition">settings</span>
+                </div>
+            </header>
+    
+            <!-- Main and Aside -->
+            <div class="flex flex-1 overflow-hidden">
+                <!-- Main Section -->
+                <main class="flex-1 p-4 grid grid-rows-2 gap-4">
+                    <div class="bg-white rounded shadow flex items-center justify-center">Radar View</div>
+                    <div class="bg-white rounded shadow flex items-center justify-center">Data Visualization</div>
+                </main>
+        
+                <!-- Aside Section -->
+                <aside class="w-70 bg-white border-l border-gray-300 p-4 space-y-4 overflow-y-auto">
+                    <div>
+                        <label class="block font-semibold mb-1">Class:</label>
+                        <div class="flex gap-2">
+                            <button class="bg-[#323A3F] text-white px-3 py-1 rounded hover:bg-orange-400">Presence</button>
+                            <button class="bg-[#323A3F] text-white px-3 py-1 rounded hover:bg-gray-300">No Presence</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1">Target:</label>
+                        <div class="flex gap-2">
+                            <button class="bg-[#323A3F] text-white px-3 py-1 rounded">1</button>
+                            <button class="bg-[#323A3F] text-white px-3 py-1 rounded">2</button>
+                            <button class="bg-[#323A3F] text-white px-3 py-1 rounded">3</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-semibold">Line of Sight (°):</label>
+                        <input type="text" class="w-full border rounded px-2 py-1 mt-1" />
+                    </div>
+                    <div>
+                        <label class="block font-semibold">Distance (m):</label>
+                        <input type="text" class="w-full border rounded px-2 py-1 mt-1" />
+                    </div>
+                    <div>
+                        <label class="block font-semibold">Angle (°):</label>
+                        <input type="text" class="w-full border rounded px-2 py-1 mt-1" />
+                    </div>
+                    <div>
+                        <label class="block font-semibold">Dataset:</label>
+                        <select class="w-full border rounded px-2 py-1 mt-1">
+                            <option>Select CSV Dataset</option>
+                        </select>
+                    </div>
+                </aside>
+            </div>
+    
+            <!-- Floating Actions -->
+            <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-4 bg-[#323A3F] p-2 rounded-xl shadow-lg">
+                <button class="material-icons bg-white text-[#323A3F] p-2 rounded-full hover:scale-110 transition">play_arrow</button>
+                <button class="material-icons bg-white text-[#323A3F] p-2 rounded-full hover:scale-110 transition">pause</button>
+                <button class="material-icons bg-white text-[#323A3F] p-2 rounded-full hover:scale-110 transition">save</button>
+            </div>
+        </div>
     </div>
-    <div class="button-container">
-        <button id="monitor"></button>
-        <div class="tooltip">Monitor Wi-Fi Signal</div>
-    </div>
-    <div class="button-container">
-        <button id="visualize"></button>
-        <div class="tooltip">Visualize Wi-Fi Signal</div>
-    </div>
-    <div class="selection-container">
-        <label for="files-list">CSV Files:</label>
-        <select id="files-list" class="form-select"></select>
-        <label for="class-list">Class:</label>
-        <select id="class-list" class="form-select">
-            <option value="None"></option>
-            <option value="0">Motionless</option>
-            <option value="1">Active</option>
-        </select>
-        <label for="activity-list">Activity:</label>
-        <select id="activity-list" class="form-select"></select>
-        <label for="threshold-list">Sensitivity:</label>
-        <select id="threshold-list">
-            <option value="0.0">0.00</option>
-            <option value="0.5">0.50</option>
-            <option value="0.75">0.75</option>
-            <option value="1.0">1.00</option>
-            <option value="1.25">1.25</option>
-            <option value="1.75" selected>1.75</option>
-            <option value="2.0">2.00</option>
-            <option value="2.5">2.50</option>
-        </select>
-    </div>
-    <div class="radar-container">
-        <img id="radar">
-        <div id="points"></div>
-    </div>
-    <div class="visualizer-container">
-        <svg id="d3-plot"></svg>
-        <div id="prediction"></div>
-        <div id="packet-count"></div>
-    </div>
-</div>
+
+    <!-- Old UI -->
+    <!-- <div class="card">
+        <div class="card-header">Wriple</div>
+        <div class="card-subtitle">Wi-Fi & Millimeter Wave Human Presense Detection System</div>
+        <div class="button-container">
+            <button id="record"></button>
+            <div class="tooltip">Record Wi-Fi Signal</div>
+        </div>
+        <div class="button-container">
+            <button id="monitor"></button>
+            <div class="tooltip">Monitor Wi-Fi Signal</div>
+        </div>
+        <div class="button-container">
+            <button id="visualize"></button>
+            <div class="tooltip">Visualize Wi-Fi Signal</div>
+        </div>
+        <div class="selection-container">
+            <label for="files-list">CSV Files:</label>
+            <select id="files-list" class="form-select"></select>
+            <label for="class-list">Class:</label>
+            <select id="class-list" class="form-select">
+                <option value="None"></option>
+                <option value="0">Motionless</option>
+                <option value="1">Active</option>
+            </select>
+            <label for="activity-list">Activity:</label>
+            <select id="activity-list" class="form-select"></select>
+            <label for="threshold-list">Sensitivity:</label>
+            <select id="threshold-list">
+                <option value="0.0">0.00</option>
+                <option value="0.5">0.50</option>
+                <option value="0.75">0.75</option>
+                <option value="1.0">1.00</option>
+                <option value="1.25">1.25</option>
+                <option value="1.75" selected>1.75</option>
+                <option value="2.0">2.00</option>
+                <option value="2.5">2.50</option>
+            </select>
+        </div>
+        <div class="radar-container">
+            <img id="radar">
+            <div id="points"></div>
+        </div>
+        <div class="visualizer-container">
+            <svg id="d3-plot"></svg>
+            <div id="prediction"></div>
+            <div id="packet-count"></div>
+        </div>
+    </div> -->
 </body>
 </html>

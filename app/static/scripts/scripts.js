@@ -497,6 +497,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Collapse functionality
+  document.getElementById('collapseBtn').addEventListener('click', () => {
+    const sidebar = document.getElementById('sidebar');
+    const texts = document.querySelectorAll('.sidebar-text');
+    sidebar.classList.toggle('w-64');
+    sidebar.classList.toggle('w-16');
+
+    texts.forEach(t => {
+      t.classList.toggle('hidden');
+    });
+  });
+
+  // Dummy datasets
+  const datasetSelect = document.querySelector('select');
+  ['rescue1.csv', 'indoor_test.csv', 'motion_data.csv'].forEach(file => {
+    const opt = document.createElement('option');
+    opt.value = file;
+    opt.textContent = file;
+    datasetSelect.appendChild(opt);
+  });
+
 
   /* Initial Loading */
 
