@@ -421,9 +421,9 @@ document.addEventListener('DOMContentLoaded', () => {
     clearInterval(packetCountInterval)
     setInfoToDefault();
 
-    radarBtn.disabled = false;
+    radarBtn.disabled = true;
+    D3PlotBtn.disabled = true;
     radarBtn.style.backgroundColor = btnDefaultColor;
-    D3PlotBtn.disabled = false;
     D3PlotBtn.style.backgroundColor = btnDefaultColor;
     recordBtn.style.backgroundColor = btnDefaultColor;
   }
@@ -434,8 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(data => {
         if (data.status === "error") throw new Error(data.message);
         
-        radarBtn.disabled = true;
-        D3PlotBtn.disabled = true;
+        radarBtn.disabled = false;
         recordBtn.style.backgroundColor = btnActiveColor;
         packetCountInterval = setInterval(setPacketCount, 250);
         isRecording = true;
@@ -475,9 +474,10 @@ document.addEventListener('DOMContentLoaded', () => {
     clearInterval(monitorVisualizeInterval)
     setInfoToDefault();
 
-    radarBtn.disabled = false;
+    radarBtn.disabled = true;
+    D3PlotBtn.disabled = true;
+    console.log("Monitoring stopped")
     radarBtn.style.backgroundColor = btnDefaultColor;
-    D3PlotBtn.disabled = false;
     D3PlotBtn.style.backgroundColor = btnDefaultColor;
     monitorBtn.style.backgroundColor = btnDefaultColor;
 
@@ -492,6 +492,8 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(data => {
         if (data.status === "error") throw new Error(data.message);
         
+        D3PlotBtn.disabled = false;
+        radarBtn.disabled = false;
         monitorBtn.style.backgroundColor = btnActiveColor;
         packetCountInterval = setInterval(setPacketCount, 250);
         isMonitoring = true;
@@ -507,8 +509,18 @@ document.addEventListener('DOMContentLoaded', () => {
         startMonitoring();
         isMonitoring = true;
       }
-      button_timeout(monitorBtn);
   });
+
+  radarBtn.addEventListener('click', () => {
+    if (isRadarActive) {
+      radarBtn.style.backgroundColor = btnDefaultColor;
+      pointsContainer.innerHTML = ''; // Clear previous points
+      isRadarActive = false;
+    } else {
+      radarBtn.style.backgroundColor = btnActiveColor;
+      isRadarActive = true;
+    }
+});
 
   D3PlotBtn.addEventListener('click', () => {
     if (is3dPlotActive) {
@@ -529,7 +541,6 @@ document.addEventListener('DOMContentLoaded', () => {
       D3PlotBtn.style.backgroundColor = btnActiveColor;
       is3dPlotActive = true;
     }
-    button_timeout(D3PlotBtn);
   });
 
   datasetList.addEventListener('change', function() {
@@ -673,5 +684,7 @@ document.addEventListener('DOMContentLoaded', () => {
   list_csv_files();
   dashboardBtn.click();
   isMonitorActive = true;
-  dashboardBtn.style.backgroundColor = btnHoverColor;
+
+  D3PlotBtn.disabled = true;
+  radarBtn.disabled = true;
 });
