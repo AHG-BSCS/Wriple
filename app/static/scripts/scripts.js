@@ -25,10 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // const infoBtn = document.getElementById("info-btn")
   // const darkModeSwitch = document.getElementById("dark-mode-switch")
 
-  const presence = document.getElementById('presence');
-  const targetNumber = document.getElementById("target-number")
+  const presenceStatus = document.getElementById('presence-status');
+  const targetDetected = document.getElementById("target-detected")
   const target1Distance = document.getElementById("target-1-distance")
-  const packetNumber = document.getElementById("packets-number")
+  const packetCount = document.getElementById("packets-count")
 
   const esp32Status = document.getElementById("esp32-status")
   const apStatus = document.getElementById("ap-status")
@@ -63,6 +63,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let isMonitoring = false;
   let isRadarActive = false;
   let is3dPlotActive = false;
+
+  let targetCount = 0;
 
   let packetCountInterval;
   let monitorVisualizeInterval;
@@ -251,21 +253,11 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(data => {
         if (data.mode === 0) {
           lastMode = 0
-          packetNumber.textContent = `${data.total_packet}/250`;
-
-          if (data.presence === 1)
-            presence.textContent = "Movement Detected"
-          else
-            presence.textContent = null
+          packetCount.textContent = `${data.total_packet}/250`;
         }
         else if (data.mode === 1) {
           lastMode = 1
-          packetNumber.textContent = `${data.total_packet}`;
-
-          if (data.presence === 1)
-            presence.textContent = "Movement Detected"
-          else
-            presence.textContent = null
+          packetCount.textContent = `${data.total_packet}`;
         }
         else {
           clearInterval(packetCountInterval);
@@ -276,8 +268,8 @@ document.addEventListener('DOMContentLoaded', () => {
             recordBtn.style.backgroundImage = "url('static/images/record-start.png')";
             monitorBtn.disabled = false;
             D3PlotBtn.disabled = false;
-            packetNumber.textContent = null
-            presence.textContent = null
+            // packetCount.textContent = null
+            // presence.textContent = null
             list_csv_files();
             visualize();
           }
@@ -285,6 +277,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       })
       .catch(err => alert("Fetch Error: " + err));
+  }
+
+  function setInfoToDefault() {
+    presenceStatus.textContent = "No";
+    targetDetected.textContent = "0";
+    target1Distance.textContent = "0m";
+    packetCount.textContent = "0";
   }
 
   function visualize() {
@@ -325,16 +324,30 @@ document.addEventListener('DOMContentLoaded', () => {
         pointsContainer.innerHTML = ''; // Clear previous points
         const radarRect = radarContainer.getBoundingClientRect();
         const centerX = pointsContainer.offsetWidth / 2;
-        const topY = 0;
 
         // Convert the radar coordinates into pixel positions
         for (let i = 0; i < 3; i++) {
           if (data.radarY[i] != '0') {
             const x = scaleXToRadar(data.radarX[i], radarRect.width);
             const y = scaleYToRadar(data.radarY[i], radarRect.height);
-            createPoint((centerX + x), (topY + y));
+            createPoint((centerX + x), y);
+            targetCount += 1;
           }
         }
+
+        if (data.radarY[0] != '0') {
+            const x = parseInt(data.radarX[0]);
+            const y = parseInt(data.radarY[0]);
+            const t1Distance = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+            target1Distance.textContent = `${(t1Distance * 0.001).toFixed(2)}m`;
+        }
+        else target1Distance.textContent = "0m"
+        
+        if (targetCount > 0) presenceStatus.textContent = "Yes"
+        else presenceStatus.textContent = "No"
+        
+        targetDetected.textContent = `${targetCount}`
+        targetCount = 0;
       })
       .catch(err => {
         if (lastMode === 0) {
@@ -400,6 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fetch('/stop_recording', { method: "POST" });
         list_csv_files();
         clearInterval(packetCountInterval)
+        setInfoToDefault();
 
         radarBtn.disabled = false;
         radarBtn.style.backgroundColor = btnDefaultColor;
@@ -443,6 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fetch('/stop_recording', { method: "POST" });
         clearInterval(packetCountInterval)
         clearInterval(monitorVisualizeInterval)
+        setInfoToDefault();
 
         radarBtn.disabled = false;
         radarBtn.style.backgroundColor = btnDefaultColor;
@@ -450,8 +465,8 @@ document.addEventListener('DOMContentLoaded', () => {
         D3PlotBtn.style.backgroundColor = btnDefaultColor;
         monitorBtn.style.backgroundColor = btnDefaultColor;
 
-        packetNumber.textContent = "0";
-        presence.textContent = "No"
+        packetCount.textContent = "0";
+        presenceStatus.textContent = "No"
         svg.selectAll('*').remove();
         isMonitoring = false;
       } else {
@@ -471,8 +486,8 @@ document.addEventListener('DOMContentLoaded', () => {
       D3PlotBtn.style.backgroundColor = btnDefaultColor;
       clearInterval(monitorVisualizeInterval);
 
-      packetNumber.textContent = "0";
-      presence.textContent = "No"
+      packetCount.textContent = "0";
+      presenceStatus.textContent = "No"
       svg.selectAll('*').remove();
       is3dPlotActive = false;
     } else {
