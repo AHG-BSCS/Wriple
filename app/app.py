@@ -11,7 +11,7 @@ import time
 import threading
 from sklearn.preprocessing import MinMaxScaler
 from scapy.all import Raw, IP, UDP, send
-from flask import Flask, jsonify, send_from_directory
+from flask import Flask, jsonify, request, send_from_directory
 
 app = Flask(__name__)
 lock = threading.Lock()
@@ -50,11 +50,15 @@ amplitude_queue = []
 phase_queue = []
 radar_x_coord = [0, 0, 0]
 radar_y_coord = [0, 0, 0]
+rssi = 0
 
 model = None
 prediction = None
-activity = None
+target_count = None
 class_label = None
+line_of_sight = None
+angle = None
+distance_t1 = None
 std_threshold = 1.75
 
 def clean_and_filter_data(amplitudes, phases, amp_lower_threshold, amp_upper_threshold, 
@@ -267,10 +271,11 @@ def compute_time_of_flight():
     return csi_df
 
 def process_data(data, m):
-    global max_monitoring_packets
+    global max_monitoring_packets, rssi
     try:
         data_str = data.decode('utf-8').strip()
         csi_data = parse_csi_data(data_str)
+        rssi = csi_data[0]
 
         radar_x_coord.clear()
         radar_x_coord.append(csi_data[5])
@@ -284,8 +289,10 @@ def process_data(data, m):
 
         if (recording):
             csi_data.insert(0, transmit_timestamp.pop(0))
-            csi_data.insert(1, activity)
-            csi_data.insert(2, class_label)
+            csi_data.insert(1, class_label)
+            csi_data.insert(2, target_count)
+            csi_data.insert(3, angle)
+            csi_data.insert(4, distance_t1)
             max_monitoring_packets = RECORDING_PACKET_LIMIT
 
             # Write to the CSV file with a lock to ensure thread safety
@@ -387,11 +394,11 @@ def prepare_csv_file():
 def set_columns():
     global DATASET_COLUMNS, FEATURES_COLUMNS
 
-    DATASET_COLUMNS = ['Transmit_Timestamp', 'Activity', 'Movement', 'RSSI', 'Rate', 'MCS', 'Channel', 
-                       'Received_Timestamp', 'Target 1 X', 'Target 1 Y', 'Target 1 Speed',
-                       'Target 1 Resolution', 'Target 2 X', 'Target 2 Y', 'Target 2 Speed',
-                       'Target 2 Resolution', 'Target 3 X', 'Target 3 Y', 'Target 3 Speed',
-                       'Target 3 Resolution', 'Raw_CSI']
+    DATASET_COLUMNS = ['Transmit_Timestamp', 'Presence', 'Target_Count', 'Angle', 'Distance', 
+                       'RSSI', 'Rate', 'MCS', 'Channel', 'Received_Timestamp',
+                       'Target1_X', 'Target1_Y', 'Target1_Speed', 'Target1_Resolution', 
+                       'Target2_X', 'Target2_Y', 'Target2_Speed', 'Target2_Resolution', 
+                       'Target3_X', 'Target3_Y', 'Target3_Speed', 'Target3_Resolution', 'Raw_CSI']
 
     FEATURES_COLUMNS = [f'AM_Std{i + 1}' for i in range(SMOOTH_SUBCARRIER_COUNT)] + \
                        [f'PH_Std{i + 1}' for i in range(SMOOTH_SUBCARRIER_COUNT)] + \
@@ -423,8 +430,8 @@ def start_recording(mode):
 
     try:
         if mode == 'recording':
-            if activity is None or class_label is None:
-                raise Exception('Activity and Class is missing!')
+            if target_count is None or class_label is None or line_of_sight is None or angle is None or distance_t1 is None:
+                raise Exception('Missing or invalid data for recording.')
             
             recording = True
             prepare_csv_file()
@@ -465,7 +472,8 @@ def visualize_data():
             # "prediction": prediction,
             # "signalCoordinates": signal_coordinates,
             'radarX': radar_x_coord, # -13856 ~ +13856
-            'radarY': radar_y_coord  # 0 ~ 8000
+            'radarY': radar_y_coord, # 0 ~ 8000
+            'rssi': rssi
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -483,33 +491,34 @@ def visualize_csv_file(filename):
 
     if not os.path.exists(csv_file_path):
         return jsonify({"error": "File not found"}), 404
-    return 'CSV file set for visualization.'
-
-@app.route('/set_activity/<act>', methods=['GET'])
-def set_activity(act):
-    global activity
-    if act != 'None':
-        activity = act
     else:
-        activity = None
-    return f'set {act} as activity.'
+        return 'CSV file set for visualization.'
 
-@app.route('/set_class/<target_class>', methods=['GET'])
-def set_class(target_class):
-    global class_label
-    if target_class != 'None':
-        class_label = int(target_class)
-    else:
+@app.route('/set_recording_data', methods=['POST'])
+def set_recording_data():
+    global class_label, target_count, line_of_sight, angle, distance_t1
+    data = request.get_json()
+
+    try:
         class_label = None
-    return f'set {target_class} as target class.'
+        target_count = None
+        line_of_sight = None
+        angle = None
+        distance_t1 = None
 
-@app.route('/set_threshold/<threshold>', methods=['GET'])
-def set_threshold(threshold):
-    global std_threshold, max_monitoring_packets
-    std_threshold = float(threshold)
-    if not monitoring:
-        max_monitoring_packets = RECORDING_PACKET_LIMIT
-    return f'set {threshold} as threshold.'
+        class_label = int(data.get('presence', 0))
+        target_count = int(data.get('target', ''))
+        line_of_sight = float(data.get('los', 0.0))
+        angle = float(data.get('angle', 0.0))
+        distance_t1 = float(data.get('distance', 0.0))
+
+        # print(line_of_sight)
+        # print(angle)
+        # print(distance_t1)
+    except Exception as e:
+        return jsonify({"status": "error"})
+
+    return jsonify({"status": "success"})
 
 if __name__ == '__main__':
     # Ensure that the device is connectted to ESP32 AP since starting disconnected can cause packet sending error.

@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const targetDetected = document.getElementById("target-detected")
   const target1Distance = document.getElementById("target-1-distance")
   const packetCount = document.getElementById("packets-count")
+  const rssiValue = document.getElementById("rssi-value")
 
   const esp32Status = document.getElementById("esp32-status")
   const apStatus = document.getElementById("ap-status")
@@ -43,23 +44,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const modelStatus = document.getElementById("model-status")
 
   const datasetList = document.getElementById('dataset-list');
-  // const thresholdList = document.getElementById('threshold-list');
 
   const radarContainer = document.getElementById('radar-container');
   const pointsContainer = document.getElementById('points');
 
   const presenceGroup = document.querySelectorAll('.group-presence-btn');
+  let presenceClass;
   const targetGroup = document.querySelectorAll('.group-target-btn');
-  // const presenceSelect = document.getElementById('presence-select');
-  // const noPresenceSelect = document.getElementById('no-presence-select');
-  // const select1 = document.getElementById('1-select');
-  // const select2 = document.getElementById('2-select');
-  // const select3 = document.getElementById('3-select');
+  let targetClass;
   const losInput = document.getElementById('los-input');
   const angleInput = document.getElementById('angle-input');
   const distanceInput = document.getElementById('distance-input');
 
-  // const recordBtn = document.getElementById('record');
   const recordBtn = document.getElementById('record-btn');
   const monitorBtn = document.getElementById('monitor-btn');
   const radarBtn = document.getElementById('radar-btn');
@@ -70,8 +66,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let isMonitoring = false;
   let isRadarActive = false;
   let is3dPlotActive = false;
-
-  let targetCount = 0;
 
   let packetCountInterval;
   let monitorVisualizeInterval;
@@ -244,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(response => response.json())
       .then(data => {
         if (isMonitoring || isRecording) {
-          packetCount.textContent = `${data.total_packet}`;
+          packetCount.textContent = data.total_packet;
         }
         else {
           clearInterval(packetCountInterval);
@@ -303,6 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
         pointsContainer.innerHTML = ''; // Clear previous points
         const radarRect = radarContainer.getBoundingClientRect();
         const centerX = pointsContainer.offsetWidth / 2;
+        let targetCount = 0;
 
         // Convert the radar coordinates into pixel positions
         for (let i = 0; i < 3; i++) {
@@ -325,8 +320,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (targetCount > 0) presenceStatus.textContent = "Yes"
         else presenceStatus.textContent = "No"
         
-        targetDetected.textContent = `${targetCount}`
-        targetCount = 0;
+        targetDetected.textContent = targetCount
+        rssiValue.textContent = data.rssi;
       })
       .catch(err => {
         setInfoToDefault();
@@ -383,6 +378,24 @@ document.addEventListener('DOMContentLoaded', () => {
   /* Elements Event Listener */
 
 
+  function setRecordingData() {
+    // Set target count to 0 if no target
+    if (presenceClass == 0) targetClass = 0;
+    fetch('/set_recording_data', {
+        method: "POST",
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            presence: presenceClass,
+            target: targetClass,
+            los: losInput.value,
+            angle: angleInput.value,
+            distance: distanceInput.value
+        })
+    })
+  }
+
   function stopRecording() {
     fetch('/stop_recording', { method: "POST" });
     list_csv_files();
@@ -397,6 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function startRecording() {
+    setRecordingData();
     fetch('/start_recording/recording')
       .then(response => response.json())
       .then(data => {
@@ -409,7 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
       })
       .catch(err => {
         fetch('/stop_recording', { method: "POST" });
-        alert('Activity or Class is missing!');
+        alert('Missing or invalid data for recording.');
         list_csv_files();
         clearInterval(packetCountInterval)
 
@@ -512,20 +526,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 50)
     }
   });
-
-  // thresholdList.addEventListener('change', function() {
-  //   const selectedValue = thresholdList.value;
-  //   if (selectedValue) {
-  //     fetch(`/set_threshold/${selectedValue}`)
-  //       .catch(error => alert(error));
-      
-  //   }
-  //   if (D3PlotBtn.style.backgroundColor === btnActiveColor) {
-  //     setTimeout(() => {
-  //       visualize();
-  //     }, 50)
-  //   }
-  // });
 
   collapseBtn.addEventListener('click', () => {
     const sidebar = document.getElementById('sidebar');
@@ -645,7 +645,9 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // Set the active button
       button.classList.add('bg-amber-800');
-      fetch('/set_class/' + button.textContent, { method: "POST" })
+
+      if (button.textContent === "Presence") presenceClass = 1;
+      else presenceClass = 0;
     });
   });
 
@@ -656,7 +658,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // Set the active button
       button.classList.add('bg-amber-800');
-      fetch('/set_target_count/' + button.textContent, { method: "POST" })
+      targetClass = button.textContent;
     });
   });
 
