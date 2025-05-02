@@ -48,11 +48,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const radarContainer = document.getElementById('radar-container');
   const pointsContainer = document.getElementById('points');
 
-  const presenceSelect = document.getElementById('presence-select');
-  const noPresenceSelect = document.getElementById('no-presence-select');
-  const select1 = document.getElementById('1-select');
-  const select2 = document.getElementById('2-select');
-  const select3 = document.getElementById('3-select');
+  const presenceGroup = document.querySelectorAll('.group-presence-btn');
+  const targetGroup = document.querySelectorAll('.group-target-btn');
+  // const presenceSelect = document.getElementById('presence-select');
+  // const noPresenceSelect = document.getElementById('no-presence-select');
+  // const select1 = document.getElementById('1-select');
+  // const select2 = document.getElementById('2-select');
+  // const select3 = document.getElementById('3-select');
   const losInput = document.getElementById('los-input');
   const angleInput = document.getElementById('angle-input');
   const distanceInput = document.getElementById('distance-input');
@@ -327,6 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
         targetCount = 0;
       })
       .catch(err => {
+        setInfoToDefault();
         console.log("Missing data for visualization." + err);
       });
   };
@@ -635,7 +638,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* Initial Loading */
 
-  
+  presenceGroup.forEach(button => {
+    button.addEventListener('click', () => {
+      // Remove the active button
+      presenceGroup.forEach(btn => btn.classList.remove('bg-amber-800'));
+      
+      // Set the active button
+      button.classList.add('bg-amber-800');
+      fetch('/set_class/' + button.textContent, { method: "POST" })
+    });
+  });
+
+  targetGroup.forEach(button => {
+    button.addEventListener('click', () => {
+      // Remove the active button
+      targetGroup.forEach(btn => btn.classList.remove('bg-amber-800'));
+      
+      // Set the active button
+      button.classList.add('bg-amber-800');
+      fetch('/set_target_count/' + button.textContent, { method: "POST" })
+    });
+  });
+
   list_csv_files();
   dashboardBtn.click();
   isMonitorActive = true;
