@@ -78,23 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
   var btnActiveColor = '#78350F';
   var btnSelectedColor = '#D1D5DB';
   var btnUnselectedColor = '#94A3B7';
-  var lastMode = -1;
-
-  const activityOptions = {
-    '0': [
-      { value: 'None', text: '' },
-      { value: 'No_Presence', text: 'No Presence' },
-      { value: 'No_Movement', text: 'No Movement' }
-    ],
-    '1': [
-      { value: 'None', text: '' },
-      { value: 'In_Place', text: 'In Place' },
-      { value: 'Sit_Stand', text: 'Sit/Stand' },
-      { value: 'Moving', text: 'Moving' },
-      { value: 'Walking', text: 'Walking' },
-      { value: 'Running', text: 'Running' }
-    ]
-  };
 
   /* Visualizer Functions */
 
@@ -258,29 +241,16 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch('/recording_status', { method: "POST" })
       .then(response => response.json())
       .then(data => {
-        if (data.mode === 0) {
-          lastMode = 0
-          packetCount.textContent = `${data.total_packet}/250`;
-        }
-        else if (data.mode === 1) {
-          lastMode = 1
+        if (isMonitoring || isRecording) {
           packetCount.textContent = `${data.total_packet}`;
         }
         else {
           clearInterval(packetCountInterval);
           clearInterval(monitorVisualizeInterval);
-
-          if (lastMode === 0) {
-            recordBtn.style.backgroundColor = btnDefaultColor;
-            recordBtn.style.backgroundImage = "url('static/images/record-start.png')";
-            monitorBtn.disabled = false;
-            D3PlotBtn.disabled = false;
-            // packetCount.textContent = null
-            // presence.textContent = null
-            list_csv_files();
-            visualize();
-          }
-          lastMode = -1;
+          stopRecording();
+          setInfoToDefault();
+          isRecording = false;
+          isMonitoring = false;
         }
       })
       .catch(err => alert("Fetch Error: " + err));
@@ -305,9 +275,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // let cnt = 0;
 
         // if (data.presence === 1)
-        //   presence.textContent = "Movement Detected"
+        //   presence.textContent = "Yes"
         // else
-        //   presence.textContent = null
+        //   presence.textContent = "No"
 
         // scatter = data.signalCoordinates.map(pos => ({ x: pos[0], y: pos[1], z: pos[2], id: "point-" + cnt++ }));
 
@@ -357,12 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
         targetCount = 0;
       })
       .catch(err => {
-        if (lastMode === 0) {
-          D3PlotBtn.style.backgroundColor = btnDefaultColor;
-          D3PlotBtn.disabled = false;
-          svg.selectAll('*').remove();
-        }
-        console.log("No data to visualize." + err);
+        console.log("Missing data for visualization." + err);
       });
   };
 
@@ -438,7 +403,6 @@ document.addEventListener('DOMContentLoaded', () => {
         recordBtn.style.backgroundColor = btnActiveColor;
         packetCountInterval = setInterval(setPacketCount, 250);
         isRecording = true;
-        lastMode = 0;
       })
       .catch(err => {
         fetch('/stop_recording', { method: "POST" });
@@ -476,7 +440,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     radarBtn.disabled = true;
     D3PlotBtn.disabled = true;
-    console.log("Monitoring stopped")
     radarBtn.style.backgroundColor = btnDefaultColor;
     D3PlotBtn.style.backgroundColor = btnDefaultColor;
     monitorBtn.style.backgroundColor = btnDefaultColor;
@@ -497,7 +460,6 @@ document.addEventListener('DOMContentLoaded', () => {
         monitorBtn.style.backgroundColor = btnActiveColor;
         packetCountInterval = setInterval(setPacketCount, 250);
         isMonitoring = true;
-        lastMode = 1;
       })
   }
 
@@ -526,18 +488,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (is3dPlotActive) {
       D3PlotBtn.style.backgroundColor = btnDefaultColor;
       clearInterval(monitorVisualizeInterval);
-
-      packetCount.textContent = "0";
-      presenceStatus.textContent = "No"
+      setInfoToDefault();
       svg.selectAll('*').remove();
       is3dPlotActive = false;
     } else {
-      if (lastMode === 1) {
-        monitorVisualizeInterval = setInterval(visualize, 200);
-      }
-      else {
-        visualize();
-      }
+      monitorVisualizeInterval = setInterval(visualize, 200);
       D3PlotBtn.style.backgroundColor = btnActiveColor;
       is3dPlotActive = true;
     }
