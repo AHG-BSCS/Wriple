@@ -50,6 +50,8 @@ amplitude_queue = []
 phase_queue = []
 radar_x_coord = [0, 0, 0]
 radar_y_coord = [0, 0, 0]
+radar_speed = [0, 0, 0]
+radar_dist_res = [0, 0, 0]
 rssi = 0
 
 model = None
@@ -287,6 +289,16 @@ def process_data(data, m):
         radar_y_coord.append(csi_data[10])
         radar_y_coord.append(csi_data[14])
 
+        radar_speed.clear()
+        radar_speed.append(csi_data[7])
+        radar_speed.append(csi_data[11])
+        radar_speed.append(csi_data[15])
+
+        radar_dist_res.clear()
+        radar_dist_res.append(csi_data[8])
+        radar_dist_res.append(csi_data[12])
+        radar_dist_res.append(csi_data[16])
+
         if (recording):
             csi_data.insert(0, transmit_timestamp.pop(0))
             csi_data.insert(1, class_label)
@@ -473,6 +485,8 @@ def visualize_data():
             # "signalCoordinates": signal_coordinates,
             'radarX': radar_x_coord, # -13856 ~ +13856
             'radarY': radar_y_coord, # 0 ~ 8000
+            'radarSpeed': radar_speed,
+            'radarDistRes': radar_dist_res,
             'rssi': rssi
         })
     except Exception as e:

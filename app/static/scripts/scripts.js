@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const presenceStatus = document.getElementById('presence-status');
   const targetDetected = document.getElementById("target-detected")
-  const target1Distance = document.getElementById("target-1-distance")
+  const target1Dist = document.getElementById("target-1-distance")
   const packetCount = document.getElementById("packets-count")
   const rssiValue = document.getElementById("rssi-value")
 
@@ -55,6 +55,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const losInput = document.getElementById('los-input');
   const angleInput = document.getElementById('angle-input');
   const distanceInput = document.getElementById('distance-input');
+
+  const target1Angle = document.getElementById('target1-angle');
+  const target2Angle = document.getElementById('target2-angle');
+  const target3Angle = document.getElementById('target3-angle');
+  const target1Distance = document.getElementById('target1-distance');
+  const target2Distance = document.getElementById('target2-distance');
+  const target3Distance = document.getElementById('target3-distance');
+  const target1Speed = document.getElementById('target1-speed');
+  const target2Speed = document.getElementById('target2-speed');
+  const target3Speed = document.getElementById('target3-speed');
+  const target1DistRes = document.getElementById('target1-distance-res');
+  const target2DistRes = document.getElementById('target2-distance-res');
+  const target3DistRes = document.getElementById('target3-distance-res');
 
   const recordBtn = document.getElementById('record-btn');
   const monitorBtn = document.getElementById('monitor-btn');
@@ -255,8 +268,20 @@ document.addEventListener('DOMContentLoaded', () => {
   function setInfoToDefault() {
     presenceStatus.textContent = "No";
     targetDetected.textContent = "0";
-    target1Distance.textContent = "0m";
+    target1Dist.textContent = "0m";
     packetCount.textContent = "0";
+  }
+
+  function calculateDistance(x, y) {
+    x = parseInt(x)
+    y = parseInt(y)
+    return (Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2))) * 0.001;
+  }
+
+  function calculateAngle(x, y) {
+    x = parseInt(x)
+    y = parseInt(y)
+    return Math.atan(y / x) * (180 / Math.PI);
   }
 
   function visualize() {
@@ -310,18 +335,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (data.radarY[0] != '0') {
-            const x = parseInt(data.radarX[0]);
-            const y = parseInt(data.radarY[0]);
-            const t1Distance = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
-            target1Distance.textContent = `${(t1Distance * 0.001).toFixed(2)}m`;
+            target1Dist.textContent = calculateDistance(data.radarX[0], data.radarY[0]).toFixed(2) + "m";
         }
-        else target1Distance.textContent = "0m"
+        else target1Dist.textContent = "0m"
         
         if (targetCount > 0) presenceStatus.textContent = "Yes"
         else presenceStatus.textContent = "No"
         
         targetDetected.textContent = targetCount
         rssiValue.textContent = data.rssi;
+
+        if (isMonitoring) {
+          target1Angle.textContent = calculateAngle(data.radarX[0], data.radarY[0]).toFixed(2) + "°";
+          target2Angle.textContent = calculateAngle(data.radarX[1], data.radarY[1]).toFixed(2) + "°";
+          target3Angle.textContent = calculateAngle(data.radarX[2], data.radarY[2]).toFixed(2) + "°";
+          target1Distance.textContent = calculateDistance(data.radarX[0], data.radarY[0]).toFixed(2) + "m";
+          target2Distance.textContent = calculateDistance(data.radarX[1], data.radarY[1]).toFixed(2) + "m";
+          target3Distance.textContent = calculateDistance(data.radarX[2], data.radarY[2]).toFixed(2) + "m";
+          target1Speed.textContent = data.radarSpeed[0] + "cm/s";
+          target2Speed.textContent = data.radarSpeed[1] + "cm/s";
+          target3Speed.textContent = data.radarSpeed[2] + "cm/s";
+          target1DistRes.textContent = data.radarDistRes[0];
+          target2DistRes.textContent = data.radarDistRes[1];
+          target3DistRes.textContent = data.radarDistRes[2];
+        }
       })
       .catch(err => {
         setInfoToDefault();
@@ -407,6 +444,7 @@ document.addEventListener('DOMContentLoaded', () => {
     radarBtn.style.backgroundColor = btnDefaultColor;
     D3PlotBtn.style.backgroundColor = btnDefaultColor;
     recordBtn.style.backgroundColor = btnDefaultColor;
+    pointsContainer.innerHTML = '';
   }
 
   function startRecording() {
@@ -425,7 +463,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fetch('/stop_recording', { method: "POST" });
         alert('Missing or invalid data for recording.');
         list_csv_files();
-        clearInterval(packetCountInterval)
+        clearInterval(packetCountInterval);
 
         radarBtn.disabled = false;
         radarBtn.style.backgroundColor = btnDefaultColor;
@@ -464,6 +502,7 @@ document.addEventListener('DOMContentLoaded', () => {
     packetCount.textContent = "0";
     presenceStatus.textContent = "No"
     svg.selectAll('*').remove();
+    pointsContainer.innerHTML = '';
   }
 
   function startMonitoring() {
@@ -596,6 +635,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isMonitoring) {
       stopMonitoring();
       isMonitoring = false;
+      pointsContainer.innerHTML = '';
     }
 
     if (isRecording) {
@@ -631,6 +671,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (isMonitoring) {
       stopMonitoring();
+      pointsContainer.innerHTML = '';
       isMonitoring = false;
     }
   });
