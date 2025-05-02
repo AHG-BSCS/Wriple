@@ -19,11 +19,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const collapseBtn = document.getElementById("collapse-btn")
 
   const dashboardBtn = document.getElementById("dashboard-btn")
-  // const historyBtn = document.getElementById("history-btn")
+  const historyBtn = document.getElementById("history-btn")
   const datasetBtn = document.getElementById("dataset-btn")
   // const settingBtn = document.getElementById("setting-btn")
   // const infoBtn = document.getElementById("info-btn")
   // const darkModeSwitch = document.getElementById("dark-mode-switch")
+
+  // Sidebar Buttons States
+  let isMonitorActive = false;
+  let isHistoryActive = false;
+  let isDatasetActive = false;
 
   const presenceStatus = document.getElementById('presence-status');
   const targetDetected = document.getElementById("target-detected")
@@ -71,6 +76,8 @@ document.addEventListener('DOMContentLoaded', () => {
   
   var btnDefaultColor = '#1F2937';
   var btnActiveColor = '#78350F';
+  var btnSelectedColor = '#D1D5DB';
+  var btnUnselectedColor = '#94A3B7';
   var lastMode = -1;
 
   const activityOptions = {
@@ -531,7 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   collapseBtn.addEventListener('click', () => {
     const sidebar = document.getElementById('sidebar');
-    const texts = document.querySelectorAll('.sidebar-text');
+    const texts = document.querySelectorAll('.sidebar-collapse');
     sidebar.classList.toggle('w-20');
 
     texts.forEach(t => {
@@ -539,9 +546,90 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  dashboardBtn.addEventListener('click', () => {
+    if (!isMonitorActive) {
+      dashboardBtn.style.backgroundColor = btnSelectedColor;
+      historyBtn.style.backgroundColor = btnUnselectedColor;
+      datasetBtn.style.backgroundColor = btnUnselectedColor;
+      isMonitorActive = true;
+      isHistoryActive = false;
+      isDatasetActive = false;
+
+      const monitorDivs = document.querySelectorAll('.monitor-hidden');
+      monitorDivs.forEach(t => {
+        t.classList.add('hidden');
+      });
+
+      const historyDivs = document.querySelectorAll('.history-hidden');
+      historyDivs.forEach(t => {
+        t.classList.remove('hidden');
+      });
+
+      const datasetDivs = document.querySelectorAll('.dataset-hidden');
+      datasetDivs.forEach(t => {
+        t.classList.remove('hidden');
+      });
+    }
+  });
+
+  historyBtn.addEventListener('click', () => {
+    if (!isHistoryActive) {
+      dashboardBtn.style.backgroundColor = btnUnselectedColor;
+      historyBtn.style.backgroundColor = btnSelectedColor;
+      datasetBtn.style.backgroundColor = btnUnselectedColor;
+      isMonitorActive = false;
+      isHistoryActive = true;
+      isDatasetActive = false;
+
+      const monitorDivs = document.querySelectorAll('.monitor-hidden');
+      monitorDivs.forEach(t => {
+        t.classList.remove('hidden');
+      });
+
+      const historyDivs = document.querySelectorAll('.history-hidden');
+      historyDivs.forEach(t => {
+        t.classList.add('hidden');
+      });
+
+      const datasetDivs = document.querySelectorAll('.dataset-hidden');
+      datasetDivs.forEach(t => {
+        t.classList.remove('hidden');
+      });
+    }
+  });
+
+  datasetBtn.addEventListener('click', () => {
+    if (!isDatasetActive) {
+      dashboardBtn.style.backgroundColor = btnUnselectedColor;
+      historyBtn.style.backgroundColor = btnUnselectedColor;
+      datasetBtn.style.backgroundColor = btnSelectedColor;
+      isMonitorActive = false;
+      isHistoryActive = false;
+      isDatasetActive = true;
+
+      const monitorDivs = document.querySelectorAll('.monitor-hidden');
+      monitorDivs.forEach(t => {
+        t.classList.remove('hidden');
+      });
+
+      const historyDivs = document.querySelectorAll('.history-hidden');
+      historyDivs.forEach(t => {
+        t.classList.remove('hidden');
+      });
+
+      const datasetDivs = document.querySelectorAll('.dataset-hidden');
+      datasetDivs.forEach(t => {
+        t.classList.add('hidden');
+      });
+    }
+  });
+
 
   /* Initial Loading */
 
   
   list_csv_files();
+  dashboardBtn.click();
+  isMonitorActive = true;
+  dashboardBtn.style.backgroundColor = btnHoverColor;
 });
