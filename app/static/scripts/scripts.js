@@ -415,75 +415,97 @@ document.addEventListener('DOMContentLoaded', () => {
   /* Elements Event Listener */
 
 
-  recordBtn.addEventListener('click', () => {
-      if (isRecording) {
+  function stopRecording() {
+    fetch('/stop_recording', { method: "POST" });
+    list_csv_files();
+    clearInterval(packetCountInterval)
+    setInfoToDefault();
+
+    radarBtn.disabled = false;
+    radarBtn.style.backgroundColor = btnDefaultColor;
+    D3PlotBtn.disabled = false;
+    D3PlotBtn.style.backgroundColor = btnDefaultColor;
+    recordBtn.style.backgroundColor = btnDefaultColor;
+  }
+
+  function startRecording() {
+    fetch('/start_recording/recording')
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === "error") throw new Error(data.message);
+        
+        radarBtn.disabled = true;
+        D3PlotBtn.disabled = true;
+        recordBtn.style.backgroundColor = btnActiveColor;
+        packetCountInterval = setInterval(setPacketCount, 250);
+        isRecording = true;
+        lastMode = 0;
+      })
+      .catch(err => {
         fetch('/stop_recording', { method: "POST" });
+        alert('Activity or Class is missing!');
         list_csv_files();
         clearInterval(packetCountInterval)
-        setInfoToDefault();
 
         radarBtn.disabled = false;
         radarBtn.style.backgroundColor = btnDefaultColor;
         D3PlotBtn.disabled = false;
-        D3PlotBtn.style.backgroundColor = btnDefaultColor;
         recordBtn.style.backgroundColor = btnDefaultColor;
+        D3PlotBtn.style.backgroundColor = btnDefaultColor;
+      })
+  }
+
+  recordBtn.addEventListener('click', () => {
+      if (isRecording) {
+        stopRecording();
         isRecording = false;
       } else {
+        // Delay the recording
         setTimeout(() => {
-          fetch('/start_recording/recording')
-          .then(response => response.json())
-          .then(data => {
-            if (data.status === "error") throw new Error(data.message);
-            
-            radarBtn.disabled = true;
-            D3PlotBtn.disabled = true;
-            recordBtn.style.backgroundColor = btnActiveColor;
-            packetCountInterval = setInterval(setPacketCount, 250);
-            isRecording = true;
-            lastMode = 0;
-          })
-          .catch(err => {
-            fetch('/stop_recording', { method: "POST" });
-            alert('Activity or Class is missing!');
-            list_csv_files();
-            clearInterval(packetCountInterval)
-
-            radarBtn.disabled = false;
-            radarBtn.style.backgroundColor = btnDefaultColor;
-            D3PlotBtn.disabled = false;
-            recordBtn.style.backgroundColor = btnDefaultColor;
-            D3PlotBtn.style.backgroundColor = btnDefaultColor;
-          })
+          startRecording();
+          isRecording = true;
         }, 1000);
       }
       button_timeout(recordBtn);
   });
 
-  monitorBtn.addEventListener('click', () => {
-      if (isMonitoring) {
-        fetch('/stop_recording', { method: "POST" });
-        clearInterval(packetCountInterval)
-        clearInterval(monitorVisualizeInterval)
-        setInfoToDefault();
+  function stopMonitoring() {
+    fetch('/stop_recording', { method: "POST" });
+    clearInterval(packetCountInterval)
+    clearInterval(monitorVisualizeInterval)
+    setInfoToDefault();
 
-        radarBtn.disabled = false;
-        radarBtn.style.backgroundColor = btnDefaultColor;
-        D3PlotBtn.disabled = false;
-        D3PlotBtn.style.backgroundColor = btnDefaultColor;
-        monitorBtn.style.backgroundColor = btnDefaultColor;
+    radarBtn.disabled = false;
+    radarBtn.style.backgroundColor = btnDefaultColor;
+    D3PlotBtn.disabled = false;
+    D3PlotBtn.style.backgroundColor = btnDefaultColor;
+    monitorBtn.style.backgroundColor = btnDefaultColor;
 
-        packetCount.textContent = "0";
-        presenceStatus.textContent = "No"
-        svg.selectAll('*').remove();
-        isMonitoring = false;
-      } else {
-        monitorBtn.style.backgroundColor = btnActiveColor;
-        fetch('/start_recording/monitoring')
-          .catch(error => alert(error));
+    packetCount.textContent = "0";
+    presenceStatus.textContent = "No"
+    svg.selectAll('*').remove();
+  }
+
+  function startMonitoring() {
+    fetch('/start_recording/monitoring')
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === "error") throw new Error(data.message);
         
+        monitorBtn.style.backgroundColor = btnActiveColor;
         packetCountInterval = setInterval(setPacketCount, 250);
         isMonitoring = true;
         lastMode = 1;
+      })
+  }
+
+  monitorBtn.addEventListener('click', () => {
+      if (isMonitoring) {
+        stopMonitoring();
+        isMonitoring = false;
+      } else {
+        startMonitoring();
+        isMonitoring = true;
       }
       button_timeout(monitorBtn);
   });
@@ -570,6 +592,11 @@ document.addEventListener('DOMContentLoaded', () => {
         t.classList.remove('hidden');
       });
     }
+
+    if (isRecording) {
+      stopRecording();
+      isRecording = false;
+    }
   });
 
   historyBtn.addEventListener('click', () => {
@@ -596,6 +623,16 @@ document.addEventListener('DOMContentLoaded', () => {
         t.classList.remove('hidden');
       });
     }
+
+    if (isMonitoring) {
+      stopMonitoring();
+      isMonitoring = false;
+    }
+
+    if (isRecording) {
+      stopRecording();
+      isRecording = false;
+    }
   });
 
   datasetBtn.addEventListener('click', () => {
@@ -621,6 +658,11 @@ document.addEventListener('DOMContentLoaded', () => {
       datasetDivs.forEach(t => {
         t.classList.add('hidden');
       });
+    }
+
+    if (isMonitoring) {
+      stopMonitoring();
+      isMonitoring = false;
     }
   });
 
