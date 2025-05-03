@@ -19,7 +19,7 @@
     <!-- Hover Color = #D1D5DB -->
     <div class="flex h-full">
       <!-- Sidebar -->
-        <nav id="sidebar" class="bg-slate-400 w-52 transition-all duration-300 flex flex-col justify-between p-4">
+        <nav id="sidebar" class="bg-slate-400 w-52 transition-all duration-300 flex flex-col justify-between p-4 h-full">
             <div>
                 <!-- Wriple Icon -->
                 <div class="flex items-center gap-2">
@@ -33,11 +33,11 @@
                         </svg>
                         <span class="text-2xl font-bold sidebar-collapse">Wriple</span>
                     </div>
-                        <button id="collapse-btn" class="cursor-pointer hover:bg-gray-300 rounded">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#1f2937" viewBox="0 0 256 256">
-                                <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm21.66,138.34a8,8,0,0,1-11.32,11.32l-40-40a8,8,0,0,1,0-11.32l40-40a8,8,0,0,1,11.32,11.32L115.31,128Z"></path>
-                            </svg>
-                        </button>
+                    <button id="collapse-btn" class="cursor-pointer hover:bg-gray-300 rounded">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#1f2937" viewBox="0 0 256 256">
+                            <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm21.66,138.34a8,8,0,0,1-11.32,11.32l-40-40a8,8,0,0,1,0-11.32l40-40a8,8,0,0,1,11.32,11.32L115.31,128Z"></path>
+                        </svg>
+                    </button>
                 </div>
                 <hr class="border-gray-800 my-2">
                 <!-- Upper Sidebar -->
@@ -95,9 +95,9 @@
         </nav>
   
         <div class="flex flex-col flex-1 h-full">
-            <!-- Left Header -->
-            <header class="bg-gray-800 text-white px-6 py-3 flex justify-between items-center">
-                <div class="space-x-6 flex items-center gap-2">
+            <header class="bg-gray-800 text-white px-4 py-3 flex justify-between items-center">
+                <!-- Left Header -->
+                <div class="space-x-2 flex items-center gap-2">
                     <div class="space-x-1">
                         <label class="font-semibold">PRESENCE:</label>
                         <span id="presence-status" class="font-bold text-3xl">No</span>
@@ -162,7 +162,7 @@
                 <!-- Main Section -->
                 <main class="p-4 gap-4">    
                     <div id="radar-container" class="rounded shadow relative inline-block">
-                        <img src="static/images/radar-transparent.png"/>
+                        <img src="static/images/radar-bg.png"/>
                         <div id="points" class="absolute top-0 left-0 w-full h-full"></div>
                     </div>
                     <div id="visualizer-container" class="rounded shadow dataset-hidden">
@@ -271,7 +271,7 @@
             </div>
     
             <!-- Floating Actions -->
-            <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex bg-gray-800 rounded-2xl shadow-lg history-hidden">
+            <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex bg-gray-800 rounded-2xl shadow-lg history-hidden">
                 <button id="record-btn" class="bg-gray-800 p-2 hover:scale-110 transition relative group rounded-2xl monitor-hidden">
                     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#ffffff" viewBox="0 0 256 256">
                         <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm72-88a72,72,0,1,1-72-72A72.08,72.08,0,0,1,200,128Z"></path>

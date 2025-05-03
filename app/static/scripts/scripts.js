@@ -281,7 +281,14 @@ document.addEventListener('DOMContentLoaded', () => {
   function calculateAngle(x, y) {
     x = parseInt(x)
     y = parseInt(y)
-    return Math.atan(y / x) * (180 / Math.PI);
+    if (x == 0 && y == 0) return 0;
+    else if (x > 0 && y > 0) return Math.atan2(x, y) * (180 / Math.PI);
+    else if (x < 0 && y > 0) return Math.atan2(x, y) * (90 / Math.PI);
+    // else if (x == 0 && y > 0) return 90;
+    // else if (x == 0 && y < 0) return -90;
+    // else if (y == 0 && x > 0) return 0;
+    else return -1;
+    // return Math.atan(y / x) * (180 / Math.PI) + 90;
   }
 
   function visualize() {
@@ -329,7 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (data.radarY[i] != '0') {
             const x = scaleXToRadar(data.radarX[i], radarRect.width);
             const y = scaleYToRadar(data.radarY[i], radarRect.height);
-            createPoint((centerX + x), y);
+            createPoint((centerX + x), (radarRect.height - y));
             targetCount += 1;
           }
         }
