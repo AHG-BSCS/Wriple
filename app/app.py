@@ -458,14 +458,6 @@ def start_recording(mode):
     except Exception as e:
         return jsonify({'status': 'error'}), 400
 
-@app.route('/recording_status', methods=['POST'])
-def recording_status():
-    return jsonify({
-        'mode': 0 if recording else 1 if monitoring else -1,
-        'total_packet': total_packet_count,
-        'prediction': prediction
-    })
-
 @app.route('/stop_recording', methods=['POST'])
 def stop_recording():
     global recording, monitoring, total_packet_count
@@ -479,15 +471,25 @@ def stop_recording():
 @app.route('/visualize_data', methods=['POST'])
 def visualize_data():
     try:
-        # signal_coordinates = filter_amp_phase()
+        signal_coordinates = filter_amp_phase()
         return jsonify({
-            # "prediction": prediction,
-            # "signalCoordinates": signal_coordinates,
+            "prediction": prediction,
+            "signalCoordinates": signal_coordinates,
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route('/get_radar_data', methods=['POST'])
+def get_radar_data():
+    try:
+        return jsonify({
             'radarX': radar_x_coord, # -13856 ~ +13856
             'radarY': radar_y_coord, # 0 ~ 8000
             'radarSpeed': radar_speed,
             'radarDistRes': radar_dist_res,
-            'rssi': rssi
+            'totalPacket': total_packet_count,
+            'rssi': rssi,
+            'modeStatus': 0 if recording else 1 if monitoring else -1,
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 400

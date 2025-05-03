@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const pointsContainer = document.getElementById('points');
 
   const presenceGroup = document.querySelectorAll('.group-presence-btn');
-  let presenceClass;
+  let presenceClass = -1;
   const targetGroup = document.querySelectorAll('.group-target-btn');
   let targetClass;
   const losInput = document.getElementById('los-input');
@@ -80,8 +80,10 @@ document.addEventListener('DOMContentLoaded', () => {
   let isRadarActive = false;
   let is3dPlotActive = false;
 
-  let packetCountInterval;
   let monitorVisualizeInterval;
+  const d3PlotRefreshRate = 1000;
+  let radarVisualizerInterval;
+  const radarRefreshRate = 120;
   
   var btnDefaultColor = '#1F2937';
   var btnActiveColor = '#78350F';
@@ -246,30 +248,27 @@ document.addEventListener('DOMContentLoaded', () => {
   /* Element Functions */
 
 
-  function setPacketCount() {
-    fetch('/recording_status', { method: "POST" })
-      .then(response => response.json())
-      .then(data => {
-        if (isMonitoring || isRecording) {
-          packetCount.textContent = data.total_packet;
-        }
-        else {
-          clearInterval(packetCountInterval);
-          clearInterval(monitorVisualizeInterval);
-          stopRecording();
-          setInfoToDefault();
-          isRecording = false;
-          isMonitoring = false;
-        }
-      })
-      .catch(err => alert("Fetch Error: " + err));
-  }
-
-  function setInfoToDefault() {
+  function setHeaderTextToDefault() {
     presenceStatus.textContent = "No";
     targetDetected.textContent = "0";
     target1Dist.textContent = "0m";
     packetCount.textContent = "0";
+    rssiValue.textContent = "0";
+  }
+
+  function setAsideTextToDefault() {
+    target1Angle.textContent = "0°";
+    target2Angle.textContent = "0°";
+    target3Angle.textContent = "0°";
+    target1Distance.textContent = "0m";
+    target2Distance.textContent = "0m";
+    target3Distance.textContent = "0m";
+    target1Speed.textContent = "0cm/s";
+    target2Speed.textContent = "0cm/s";
+    target3Speed.textContent = "0cm/s";
+    target1DistRes.textContent = "0m";
+    target2DistRes.textContent = "0m";
+    target3DistRes.textContent = "0m";
   }
 
   function calculateDistance(x, y) {
@@ -296,60 +295,82 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(response => response.json())
       .then(data => {
         D3PlotBtn.style.backgroundColor = btnActiveColor;
-        // xGrid = [];
-        // scatter = [];
-        // yLine = [];
-        // let j = 10;
-        // let cnt = 0;
+        xGrid = [];
+        scatter = [];
+        yLine = [];
+        let j = 10;
+        let cnt = 0;
 
-        // if (data.presence === 1)
-        //   presence.textContent = "Yes"
-        // else
-        //   presence.textContent = "No"
+        if (data.presence === 1)
+          presence.textContent = "Yes"
+        else
+          presence.textContent = "No"
 
-        // scatter = data.signalCoordinates.map(pos => ({ x: pos[0], y: pos[1], z: pos[2], id: "point-" + cnt++ }));
+        scatter = data.signalCoordinates.map(pos => ({ x: pos[0], y: pos[1], z: pos[2], id: "point-" + cnt++ }));
 
-        // for (let z = -j; z < j; z++) {
-        //   for (let x = -j; x < j; x++) {
-        //     xGrid.push({ x: x, y: -10, z: z});
-        //   }
-        // }
-    
-        // range(-10, 0, 1).forEach((d) => {
-        //   yLine.push({ x: -j, y: -d, z: -j });
-        // });
-    
-        // const datas = [
-        //   grid3d(xGrid),
-        //   points3d(scatter),
-        //   yScale3d([yLine]),
-        // ];
-        // processData(datas, 1000);
-
-        pointsContainer.innerHTML = ''; // Clear previous points
-        const radarRect = radarContainer.getBoundingClientRect();
-        const centerX = pointsContainer.offsetWidth / 2;
-        let targetCount = 0;
-
-        // Convert the radar coordinates into pixel positions
-        for (let i = 0; i < 3; i++) {
-          if (data.radarY[i] != '0') {
-            const x = scaleXToRadar(data.radarX[i], radarRect.width);
-            const y = scaleYToRadar(data.radarY[i], radarRect.height);
-            createPoint((centerX + x), (radarRect.height - y));
-            targetCount += 1;
+        for (let z = -j; z < j; z++) {
+          for (let x = -j; x < j; x++) {
+            xGrid.push({ x: x, y: -10, z: z});
           }
         }
+    
+        range(-10, 0, 1).forEach((d) => {
+          yLine.push({ x: -j, y: -d, z: -j });
+        });
+    
+        const datas = [
+          grid3d(xGrid),
+          points3d(scatter),
+          yScale3d([yLine]),
+        ];
+        processData(datas, 1000);
+      })
+      .catch(err => {
+        setHeaderTextToDefault();
+        console.log("Missing data for 3D plot." + err);
+      });
+  };
 
+  function visualizeRadarData(data) {
+    const radarRect = radarContainer.getBoundingClientRect();
+    const centerX = pointsContainer.offsetWidth / 2;
+    pointsContainer.innerHTML = ''; // Clear previous points
+
+    for (let i = 0; i < 3; i++) {
+      if (data.radarY[i] != '0') {
+        const x = scaleXToRadar(data.radarX[i], radarRect.width);
+        const y = scaleYToRadar(data.radarY[i], radarRect.height);
+        createPoint((centerX + x), (radarRect.height - y));
+      }
+    }
+  }
+
+  function countTarget(data) {
+    let targetCount = 0;
+    for (let i = 0; i < 3; i++) {
+      if (data.radarY[i] != '0') targetCount += 1;
+    }
+    return targetCount;
+  }
+
+  function setRadarData() {
+    fetch('/get_radar_data', { method: "POST" })
+      .then(response => response.json())
+      .then(data => {
+        const targetCount = countTarget(data);
+
+        if (isRadarActive) visualizeRadarData(data);
+        if (targetCount > 0) presenceStatus.textContent = "Yes";
+        else presenceStatus.textContent = "No";
         if (data.radarY[0] != '0') {
             target1Dist.textContent = calculateDistance(data.radarX[0], data.radarY[0]).toFixed(2) + "m";
         }
-        else target1Dist.textContent = "0m"
-        
-        if (targetCount > 0) presenceStatus.textContent = "Yes"
-        else presenceStatus.textContent = "No"
-        
-        targetDetected.textContent = targetCount
+        else target1Dist.textContent = "0m";
+
+        if (data.modeStatus == -1) stopRecording();
+
+        targetDetected.textContent = targetCount;
+        packetCount.textContent = data.totalPacket;
         rssiValue.textContent = data.rssi;
 
         if (isMonitoring) {
@@ -366,12 +387,13 @@ document.addEventListener('DOMContentLoaded', () => {
           target2DistRes.textContent = data.radarDistRes[1];
           target3DistRes.textContent = data.radarDistRes[2];
         }
+
       })
       .catch(err => {
-        setInfoToDefault();
-        console.log("Missing data for visualization." + err);
+        setHeaderTextToDefault();
+        console.log("Missing data for radar." + err);
       });
-  };
+  }
 
   function scaleXToRadar(x, width) {
     x = parseInt(x)
@@ -425,7 +447,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function setRecordingData() {
     // Set target count to 0 if no target
     if (presenceClass == 0) targetClass = 0;
-    fetch('/set_recording_data', {
+    else if (presenceClass != -1) {
+      fetch('/set_recording_data', {
         method: "POST",
         headers: {
             'Content-Type': 'application/json'
@@ -437,15 +460,17 @@ document.addEventListener('DOMContentLoaded', () => {
             angle: angleInput.value,
             distance: distanceInput.value
         })
-    })
+      })
+    }
   }
 
   function stopRecording() {
     fetch('/stop_recording', { method: "POST" });
     list_csv_files();
-    clearInterval(packetCountInterval)
-    setInfoToDefault();
+    clearInterval(radarVisualizerInterval)
+    setHeaderTextToDefault();
 
+    isRecording = false;
     radarBtn.disabled = true;
     D3PlotBtn.disabled = true;
     radarBtn.style.backgroundColor = btnDefaultColor;
@@ -463,15 +488,16 @@ document.addEventListener('DOMContentLoaded', () => {
         
         radarBtn.disabled = false;
         recordBtn.style.backgroundColor = btnActiveColor;
-        packetCountInterval = setInterval(setPacketCount, 250);
+        radarVisualizerInterval = setInterval(setRadarData, radarRefreshRate);
         isRecording = true;
       })
       .catch(err => {
         fetch('/stop_recording', { method: "POST" });
         alert('Missing or invalid data for recording.');
         list_csv_files();
-        clearInterval(packetCountInterval);
+        clearInterval(radarVisualizerInterval);
 
+        isRecording = true;
         radarBtn.disabled = false;
         radarBtn.style.backgroundColor = btnDefaultColor;
         D3PlotBtn.disabled = false;
@@ -483,12 +509,10 @@ document.addEventListener('DOMContentLoaded', () => {
   recordBtn.addEventListener('click', () => {
       if (isRecording) {
         stopRecording();
-        isRecording = false;
       } else {
         // Delay the recording
         setTimeout(() => {
           startRecording();
-          isRecording = true;
         }, 1000);
       }
       button_timeout(recordBtn);
@@ -496,10 +520,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function stopMonitoring() {
     fetch('/stop_recording', { method: "POST" });
-    clearInterval(packetCountInterval)
+    clearInterval(radarVisualizerInterval)
     clearInterval(monitorVisualizeInterval)
-    setInfoToDefault();
+    setHeaderTextToDefault();
+    setAsideTextToDefault();
 
+    isMonitoring = false;
     radarBtn.disabled = true;
     D3PlotBtn.disabled = true;
     radarBtn.style.backgroundColor = btnDefaultColor;
@@ -521,25 +547,22 @@ document.addEventListener('DOMContentLoaded', () => {
         D3PlotBtn.disabled = false;
         radarBtn.disabled = false;
         monitorBtn.style.backgroundColor = btnActiveColor;
-        packetCountInterval = setInterval(setPacketCount, 250);
         isMonitoring = true;
+        radarVisualizerInterval = setInterval(setRadarData, radarRefreshRate);
       })
   }
 
   monitorBtn.addEventListener('click', () => {
-      if (isMonitoring) {
-        stopMonitoring();
-        isMonitoring = false;
-      } else {
-        startMonitoring();
-        isMonitoring = true;
-      }
+      if (isMonitoring) stopMonitoring();
+      else startMonitoring();
   });
 
   radarBtn.addEventListener('click', () => {
     if (isRadarActive) {
       radarBtn.style.backgroundColor = btnDefaultColor;
-      pointsContainer.innerHTML = ''; // Clear previous points
+      setHeaderTextToDefault();
+      setAsideTextToDefault();
+      pointsContainer.innerHTML = '';
       isRadarActive = false;
     } else {
       radarBtn.style.backgroundColor = btnActiveColor;
@@ -551,11 +574,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (is3dPlotActive) {
       D3PlotBtn.style.backgroundColor = btnDefaultColor;
       clearInterval(monitorVisualizeInterval);
-      setInfoToDefault();
+      setHeaderTextToDefault();
       svg.selectAll('*').remove();
       is3dPlotActive = false;
     } else {
-      monitorVisualizeInterval = setInterval(visualize, 200);
+      monitorVisualizeInterval = setInterval(visualize, d3PlotRefreshRate);
       D3PlotBtn.style.backgroundColor = btnActiveColor;
       is3dPlotActive = true;
     }
