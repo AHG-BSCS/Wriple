@@ -22,9 +22,9 @@ ESP32_IP = '192.168.4.1' # Default IP address of the ESP32 AP
 PAYLOAD = 'Wiremap' # Signal Length is 89
 ESP32_PORT = 5001
 UDP_PACKET = IP(dst=ESP32_IP)/UDP(sport=5000, dport=ESP32_PORT)/Raw(load=PAYLOAD)
-TX_INTERVAL = 0.1
-MONITORING_PACKET_LIMIT = 300
-RECORDING_PACKET_LIMIT = 100
+MONITORING_PACKET_LIMIT = 20
+RECORDING_PACKET_LIMIT = 240 # 12 seconds of data
+TX_INTERVAL = 1 / MONITORING_PACKET_LIMIT # 20 packets per second
 
 csv_file_path = None
 CSV_DIRECTORY = 'app/dataset/data_recorded'
@@ -303,7 +303,7 @@ def process_data(data, m):
             csi_data.insert(0, transmit_timestamp.pop(0))
             csi_data.insert(1, class_label)
             csi_data.insert(2, target_count)
-            csi_data.insert(3, angle)
+            csi_data.insert(3, angle - line_of_sight)
             csi_data.insert(4, distance_t1)
             max_monitoring_packets = RECORDING_PACKET_LIMIT
 
@@ -527,10 +527,6 @@ def set_recording_data():
         line_of_sight = float(data.get('los', 0.0))
         angle = float(data.get('angle', 0.0))
         distance_t1 = float(data.get('distance', 0.0))
-
-        # print(line_of_sight)
-        # print(angle)
-        # print(distance_t1)
     except Exception as e:
         return jsonify({"status": "error"})
 

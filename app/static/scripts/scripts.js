@@ -15,7 +15,6 @@ import {
 } from "./d3-3d-1.0.0/index.js";
 
 document.addEventListener('DOMContentLoaded', () => {
-  // const sideNavBar = document.getElementById("sidebar")
   const collapseBtn = document.getElementById("collapse-btn")
 
   const dashboardBtn = document.getElementById("dashboard-btn")
@@ -91,6 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
   var btnSelectedColor = '#D1D5DB';
   var btnUnselectedColor = '#94A3B7';
 
+  
   /* Visualizer Functions */
 
 
@@ -282,13 +282,9 @@ document.addEventListener('DOMContentLoaded', () => {
     x = parseInt(x)
     y = parseInt(y)
     if (x == 0 && y == 0) return 0;
-    else if (x > 0 && y > 0) return Math.atan2(x, y) * (180 / Math.PI);
-    else if (x < 0 && y > 0) return Math.atan2(x, y) * (90 / Math.PI);
-    // else if (x == 0 && y > 0) return 90;
-    // else if (x == 0 && y < 0) return -90;
-    // else if (y == 0 && x > 0) return 0;
+    else if (x > 0 && y > 0) return Math.atan2(x, y) * (120 / Math.PI);
+    else if (x < 0 && y > 0) return Math.atan2(x, y) * (120 / Math.PI);
     else return -1;
-    // return Math.atan(y / x) * (180 / Math.PI) + 90;
   }
 
   function visualize() {
@@ -330,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setHeaderTextToDefault();
         console.log("Missing data for 3D plot." + err);
       });
-  };
+  }
 
   function visualizeRadarData(data) {
     const radarRect = radarContainer.getBoundingClientRect();
@@ -591,7 +587,7 @@ document.addEventListener('DOMContentLoaded', () => {
         radarVisualizerInterval = setInterval(setRadarData, radarRefreshRate);
       }
     }
-});
+  });
 
   D3PlotBtn.addEventListener('click', () => {
     if (is3dPlotActive) {
@@ -610,12 +606,12 @@ document.addEventListener('DOMContentLoaded', () => {
   datasetList.addEventListener('change', function() {
     const selectedFile = datasetList.value;
     if (selectedFile !== 'no-selection') {
-      fetch(`/visualize_csv_file/${selectedFile}`)
-        .catch(error => alert(error));
-      setTimeout(() => {
-        visualize();
-        D3PlotBtn.style.backgroundColor = btnActiveColor;
-      }, 50)
+      // fetch(`/visualize_csv_file/${selectedFile}`)
+      //   .catch(error => alert(error));
+      // setTimeout(() => {
+      //   visualize();
+      //   D3PlotBtn.style.backgroundColor = btnActiveColor;
+      // }, 50)
     }
   });
 
