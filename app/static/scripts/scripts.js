@@ -472,6 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setHeaderTextToDefault();
 
     isRecording = false;
+    isRadarActive = false;
     radarBtn.style.backgroundColor = btnDefaultColor;
     recordBtn.style.backgroundColor = btnDefaultColor;
     pointsContainer.innerHTML = '';
@@ -489,8 +490,9 @@ document.addEventListener('DOMContentLoaded', () => {
         isRecording = true;
         
         if (!isRadarActive) {
-          radarVisualizerInterval = setInterval(setRadarData, radarRefreshRate);
           isRadarActive = true;
+          radarBtn.style.backgroundColor = btnActiveColor;
+          radarVisualizerInterval = setInterval(setRadarData, radarRefreshRate);
         }
       })
       .catch(err => {
@@ -527,10 +529,10 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch('/stop_recording', { method: "POST" });
     clearInterval(radarVisualizerInterval)
     clearInterval(monitorVisualizeInterval)
-    setHeaderTextToDefault();
-    setAsideTextToDefault();
 
     isMonitoring = false;
+    isRadarActive = false;
+    console.log(isRadarActive);
     radarBtn.disabled = true;
     D3PlotBtn.disabled = true;
     radarBtn.style.backgroundColor = btnDefaultColor;
@@ -541,6 +543,8 @@ document.addEventListener('DOMContentLoaded', () => {
     presenceStatus.textContent = "No"
     svg.selectAll('*').remove();
     pointsContainer.innerHTML = '';
+    setHeaderTextToDefault();
+    setAsideTextToDefault();
   }
 
   function startMonitoring() {
@@ -649,9 +653,10 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    if (isRecording) {
-      stopRecording();
-      isRecording = false;
+    if (isRecording) stopRecording();
+    if (isMonitoring) {
+      stopMonitoring();
+      radarBtn.disabled = true;
     }
   });
 
@@ -681,16 +686,8 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    if (isMonitoring) {
-      stopMonitoring();
-      isMonitoring = false;
-      pointsContainer.innerHTML = '';
-    }
-
-    if (isRecording) {
-      stopRecording();
-      isRecording = false;
-    }
+    if (isMonitoring) stopMonitoring();
+    if (isRecording) stopRecording();
   });
 
   datasetBtn.addEventListener('click', () => {
@@ -701,6 +698,7 @@ document.addEventListener('DOMContentLoaded', () => {
       isMonitorActive = false;
       isHistoryActive = false;
       isDatasetActive = true;
+      radarBtn.disabled = false;
 
       const monitorDivs = document.querySelectorAll('.monitor-hidden');
       monitorDivs.forEach(t => {
