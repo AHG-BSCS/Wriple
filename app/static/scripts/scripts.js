@@ -81,9 +81,10 @@ document.addEventListener('DOMContentLoaded', () => {
   let is3dPlotActive = false;
 
   let monitorVisualizeInterval;
-  const d3PlotRefreshRate = 1000;
   let radarVisualizerInterval;
+  const d3PlotRefreshRate = 1000;
   const radarRefreshRate = 120;
+  const recordingDelay = 1000;
   
   var btnDefaultColor = '#1F2937';
   var btnActiveColor = '#78350F';
@@ -357,37 +358,37 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch('/get_radar_data', { method: "POST" })
       .then(response => response.json())
       .then(data => {
-        const targetCount = countTarget(data);
+        if (data.modeStatus != -1) {
+          const targetCount = countTarget(data);
 
-        if (isRadarActive) visualizeRadarData(data);
-        if (targetCount > 0) presenceStatus.textContent = "Yes";
-        else presenceStatus.textContent = "No";
-        if (data.radarY[0] != '0') {
-            target1Dist.textContent = calculateDistance(data.radarX[0], data.radarY[0]).toFixed(2) + "m";
+          if (isRadarActive) visualizeRadarData(data);
+          if (targetCount > 0) presenceStatus.textContent = "Yes";
+          else presenceStatus.textContent = "No";
+          if (data.radarY[0] != '0') {
+              target1Dist.textContent = calculateDistance(data.radarX[0], data.radarY[0]).toFixed(2) + "m";
+          }
+          else target1Dist.textContent = "0m";
+
+          targetDetected.textContent = targetCount;
+          packetCount.textContent = data.totalPacket;
+          rssiValue.textContent = data.rssi;
+
+          if (isMonitoring) {
+            target1Angle.textContent = calculateAngle(data.radarX[0], data.radarY[0]).toFixed(2) + "°";
+            target2Angle.textContent = calculateAngle(data.radarX[1], data.radarY[1]).toFixed(2) + "°";
+            target3Angle.textContent = calculateAngle(data.radarX[2], data.radarY[2]).toFixed(2) + "°";
+            target1Distance.textContent = calculateDistance(data.radarX[0], data.radarY[0]).toFixed(2) + "m";
+            target2Distance.textContent = calculateDistance(data.radarX[1], data.radarY[1]).toFixed(2) + "m";
+            target3Distance.textContent = calculateDistance(data.radarX[2], data.radarY[2]).toFixed(2) + "m";
+            target1Speed.textContent = data.radarSpeed[0] + "cm/s";
+            target2Speed.textContent = data.radarSpeed[1] + "cm/s";
+            target3Speed.textContent = data.radarSpeed[2] + "cm/s";
+            target1DistRes.textContent = data.radarDistRes[0];
+            target2DistRes.textContent = data.radarDistRes[1];
+            target3DistRes.textContent = data.radarDistRes[2];
+          }
         }
-        else target1Dist.textContent = "0m";
-
-        if (data.modeStatus == -1) stopRecording();
-
-        targetDetected.textContent = targetCount;
-        packetCount.textContent = data.totalPacket;
-        rssiValue.textContent = data.rssi;
-
-        if (isMonitoring) {
-          target1Angle.textContent = calculateAngle(data.radarX[0], data.radarY[0]).toFixed(2) + "°";
-          target2Angle.textContent = calculateAngle(data.radarX[1], data.radarY[1]).toFixed(2) + "°";
-          target3Angle.textContent = calculateAngle(data.radarX[2], data.radarY[2]).toFixed(2) + "°";
-          target1Distance.textContent = calculateDistance(data.radarX[0], data.radarY[0]).toFixed(2) + "m";
-          target2Distance.textContent = calculateDistance(data.radarX[1], data.radarY[1]).toFixed(2) + "m";
-          target3Distance.textContent = calculateDistance(data.radarX[2], data.radarY[2]).toFixed(2) + "m";
-          target1Speed.textContent = data.radarSpeed[0] + "cm/s";
-          target2Speed.textContent = data.radarSpeed[1] + "cm/s";
-          target3Speed.textContent = data.radarSpeed[2] + "cm/s";
-          target1DistRes.textContent = data.radarDistRes[0];
-          target2DistRes.textContent = data.radarDistRes[1];
-          target3DistRes.textContent = data.radarDistRes[2];
-        }
-
+        else stopRecording();
       })
       .catch(err => {
         setHeaderTextToDefault();
@@ -471,10 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setHeaderTextToDefault();
 
     isRecording = false;
-    radarBtn.disabled = true;
-    D3PlotBtn.disabled = true;
     radarBtn.style.backgroundColor = btnDefaultColor;
-    D3PlotBtn.style.backgroundColor = btnDefaultColor;
     recordBtn.style.backgroundColor = btnDefaultColor;
     pointsContainer.innerHTML = '';
   }
@@ -486,10 +484,14 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(data => {
         if (data.status === "error") throw new Error(data.message);
         
-        radarBtn.disabled = false;
+        // radarBtn.disabled = false;
         recordBtn.style.backgroundColor = btnActiveColor;
-        radarVisualizerInterval = setInterval(setRadarData, radarRefreshRate);
         isRecording = true;
+        
+        if (!isRadarActive) {
+          radarVisualizerInterval = setInterval(setRadarData, radarRefreshRate);
+          isRadarActive = true;
+        }
       })
       .catch(err => {
         fetch('/stop_recording', { method: "POST" });
@@ -497,25 +499,28 @@ document.addEventListener('DOMContentLoaded', () => {
         list_csv_files();
         clearInterval(radarVisualizerInterval);
 
-        isRecording = true;
-        radarBtn.disabled = false;
+        isRecording = false;
+        pointsContainer.innerHTML = '';
         radarBtn.style.backgroundColor = btnDefaultColor;
-        D3PlotBtn.disabled = false;
         recordBtn.style.backgroundColor = btnDefaultColor;
-        D3PlotBtn.style.backgroundColor = btnDefaultColor;
       })
   }
 
   recordBtn.addEventListener('click', () => {
-      if (isRecording) {
-        stopRecording();
-      } else {
-        // Delay the recording
-        setTimeout(() => {
-          startRecording();
-        }, 1000);
+    if (isRecording) {
+      stopRecording();
+    } else {
+      if (isMonitoring) {
+        fetch('/stop_recording', { method: "POST" });
+        clearInterval(radarVisualizerInterval)
+        isRadarActive = false;
+        setHeaderTextToDefault();
       }
-      button_timeout(recordBtn);
+      setTimeout(() => {
+        startRecording();
+      }, recordingDelay); // Delay the recording
+    }
+    button_timeout(recordBtn);
   });
 
   function stopMonitoring() {
@@ -559,6 +564,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   radarBtn.addEventListener('click', () => {
     if (isRadarActive) {
+      if (isMonitoring) {
+        stopMonitoring();
+        setHeaderTextToDefault();
+        radarBtn.disabled = false;
+      }
       radarBtn.style.backgroundColor = btnDefaultColor;
       setHeaderTextToDefault();
       setAsideTextToDefault();
@@ -567,6 +577,13 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       radarBtn.style.backgroundColor = btnActiveColor;
       isRadarActive = true;
+      
+      // Start the radar when in Dataset Tab
+      if (isDatasetActive) {
+        fetch('/start_recording/monitoring');
+        isMonitoring = true;
+        radarVisualizerInterval = setInterval(setRadarData, radarRefreshRate);
+      }
     }
 });
 
@@ -614,6 +631,7 @@ document.addEventListener('DOMContentLoaded', () => {
       isMonitorActive = true;
       isHistoryActive = false;
       isDatasetActive = false;
+      radarBtn.disabled = true;
 
       const monitorDivs = document.querySelectorAll('.monitor-hidden');
       monitorDivs.forEach(t => {
@@ -645,6 +663,7 @@ document.addEventListener('DOMContentLoaded', () => {
       isMonitorActive = false;
       isHistoryActive = true;
       isDatasetActive = false;
+      radarBtn.disabled = true;
 
       const monitorDivs = document.querySelectorAll('.monitor-hidden');
       monitorDivs.forEach(t => {
@@ -703,6 +722,7 @@ document.addEventListener('DOMContentLoaded', () => {
       stopMonitoring();
       pointsContainer.innerHTML = '';
       isMonitoring = false;
+      radarBtn.disabled = false;
     }
   });
 
