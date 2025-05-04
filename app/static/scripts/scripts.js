@@ -485,7 +485,6 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(data => {
         if (data.status === "error") throw new Error(data.message);
         
-        // radarBtn.disabled = false;
         recordBtn.style.backgroundColor = btnActiveColor;
         isRecording = true;
         
@@ -543,8 +542,11 @@ document.addEventListener('DOMContentLoaded', () => {
     presenceStatus.textContent = "No"
     svg.selectAll('*').remove();
     pointsContainer.innerHTML = '';
-    setHeaderTextToDefault();
-    setAsideTextToDefault();
+
+    setTimeout(() => {
+      setHeaderTextToDefault();
+      setAsideTextToDefault();
+    }, 50); // Wait for events interval to finished
   }
 
   function startMonitoring() {
@@ -568,7 +570,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   radarBtn.addEventListener('click', () => {
     if (isRadarActive) {
-      if (isMonitoring) {
+      if (isMonitoring && isDatasetActive) {
         stopMonitoring();
         setHeaderTextToDefault();
         radarBtn.disabled = false;
