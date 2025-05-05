@@ -24,7 +24,7 @@ ESP32_PORT = 5001
 UDP_PACKET = IP(dst=ESP32_IP)/UDP(sport=5000, dport=ESP32_PORT)/Raw(load=PAYLOAD)
 MONITORING_PACKET_LIMIT = 20
 RECORDING_PACKET_LIMIT = 240 # 12 seconds of data
-TX_INTERVAL = 1 / MONITORING_PACKET_LIMIT # 20 packets per second
+TX_INTERVAL = 0.05
 
 csv_file_path = None
 CSV_DIRECTORY = 'app/dataset/data_recorded'
@@ -62,6 +62,12 @@ line_of_sight = None
 angle = None
 distance_t1 = None
 std_threshold = 1.75
+
+esp32_status = 1
+ap_status = None
+rd03d_status = 1
+port_status = 1
+model_status = None
 
 def clean_and_filter_data(amplitudes, phases, amp_lower_threshold, amp_upper_threshold, 
                           phase_lower_threshold, phase_upper_threshold):
@@ -382,6 +388,8 @@ def prepare_csv_file():
     global csv_file_path
     csv_dir = CSV_DIRECTORY
     files = os.listdir(csv_dir)
+
+    if DATASET_COLUMNS is None: set_columns()
     
     # Filter files that match the pattern CSI_DATA_XXX
     pattern = re.compile(r'^CSI_DATA_.*$')
@@ -417,19 +425,33 @@ def set_columns():
                        [f'PH_Per{i + 1}' for i in range(SMOOTH_SUBCARRIER_COUNT)] + \
                        [f'PH_Var{i + 1}' for i in range(SMOOTH_SUBCARRIER_COUNT)]
 
-def load_model():
+def check_model():
     global model
     model_path = 'app/model/wriple_v1.6.pkl'
     if os.path.exists(model_path):
         model = joblib.load(model_path)
-        print('Model loaded successfully')
+        return 1
     else:
-        print('Model file not found.')
+        return 0
 
-def check_connection(ssid):
+def check_connection():
     result = subprocess.run(['netsh', 'wlan', 'show', 'interfaces'], capture_output=True, text=True, shell=True)
-    return ssid in result.stdout
+    return SSID in result.stdout
 
+@app.route('/check_system_status', methods=['POST'])
+def check_system_status():
+    global ap_status, model_status
+    ap_status = 1 if check_connection() else 0
+
+    if model is None: model_status = check_model()
+
+    return jsonify({
+        'esp32': esp32_status,
+        'ap': ap_status,
+        'rd03d': rd03d_status,
+        'port': port_status,
+        'model': model_status
+    })
 
 @app.route('/')
 def serve_index():
@@ -533,16 +555,5 @@ def set_recording_data():
     return jsonify({"status": "success"})
 
 if __name__ == '__main__':
-    # Ensure that the device is connectted to ESP32 AP since starting disconnected can cause packet sending error.
-    # while not check_connection(SSID):
-    #     print('Waiting to connect to ESP32 AP')
-    #     print('SSID:', SSID)
-    #     print('Passord:', PASSWORD, '\n')
-    #     time.sleep(5)
-    # else:
-    #     print(f'Connected to {SSID}. Starting the server...')
-    
-    load_model()
-    set_columns()
     app.run(debug=True)
     

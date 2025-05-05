@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const apStatus = document.getElementById("ap-status")
   const rd03dStatus = document.getElementById("rd03d-status")
   const flaskStatus = document.getElementById("flask-status")
-  const connectionStatus = document.getElementById("connection-status")
+  const portStatus = document.getElementById("port-status")
   const modelStatus = document.getElementById("model-status")
 
   const datasetList = document.getElementById('dataset-list');
@@ -84,13 +84,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const d3PlotRefreshRate = 1000;
   const radarRefreshRate = 120;
   const recordingDelay = 1000;
+  const systemStatusInterval = 8000;
   
   var btnDefaultColor = '#1F2937';
   var btnActiveColor = '#78350F';
   var btnSelectedColor = '#D1D5DB';
   var btnUnselectedColor = '#94A3B7';
 
-  
+
   /* Visualizer Functions */
 
 
@@ -361,7 +362,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (targetCount > 0) presenceStatus.textContent = "Yes";
           else presenceStatus.textContent = "No";
           if (data.radarY[0] != '0') {
-              target1Dist.textContent = calculateDistance(data.radarX[0], data.radarY[0]).toFixed(2) + "m";
+            target1Dist.textContent = calculateDistance(data.radarX[0], data.radarY[0]).toFixed(2) + "m";
           }
           else target1Dist.textContent = "0m";
 
@@ -440,6 +441,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* Elements Event Listener */
 
+  function checkSystemStatus() {
+    fetch('/check_system_status', { method: "POST" })
+      .then(response => response.json())
+      .then(data => {
+        if (data.ap == "0") esp32Status.style.fill = "brown";
+        else esp32Status.style.fill = "limegreen";
+
+        if (data.ap == "0") apStatus.style.fill = "brown";
+        else apStatus.style.fill = "limegreen";
+
+        if (data.ap == "0") rd03dStatus.style.fill = "brown";
+        else rd03dStatus.style.fill = "limegreen";
+
+        if (data.port == "0") portStatus.style.fill = "brown";
+
+        if (data.model == "0") modelStatus.style.fill = "brown";
+        else modelStatus.style.fill = "limegreen";
+      })
+  }
 
   function setRecordingData() {
     // Set target count to 0 if no target
@@ -749,9 +769,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  list_csv_files();
   dashboardBtn.click();
   isMonitorActive = true;
+  list_csv_files();
+  checkSystemStatus();
+  setInterval(checkSystemStatus, systemStatusInterval);
 
   D3PlotBtn.disabled = true;
   radarBtn.disabled = true;
