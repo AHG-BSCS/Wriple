@@ -73,6 +73,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const radarBtn = document.getElementById('radar-btn');
   const D3PlotBtn = document.getElementById('3d-plot-btn');
 
+  const ampCanvas = document.getElementById('amplitude-heatmap');
+  const phaCanvas = document.getElementById('phase-heatmap');
+
   // Buttons States
   let isRecording = false;
   let isMonitoring = false;
@@ -81,15 +84,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let monitorVisualizeInterval;
   let radarVisualizerInterval;
+  let amplitudeHeatmapInterval;
   const d3PlotRefreshRate = 1000;
   const radarRefreshRate = 120;
   const recordingDelay = 1000;
+  const heatmapRefreshRate = 100;
   const systemStatusInterval = 8000;
   
   var btnDefaultColor = '#1F2937';
   var btnActiveColor = '#78350F';
   var btnSelectedColor = '#D1D5DB';
   var btnUnselectedColor = '#94A3B7';
+
+  const ampHeat = simpleheat(ampCanvas).radius(1, 0).max(50);
+  const phaHeat = simpleheat(phaCanvas).radius(1, 0).max(-125);
+  const SUBCARRIER_COUNT = 23;
+  const MAX_COLS = 120;
+  ampCanvas.height = SUBCARRIER_COUNT;
+  phaCanvas.height = SUBCARRIER_COUNT;
+
+  let ampBuffer = Array.from({ length: SUBCARRIER_COUNT }, () => []);
+  let phaBuffer = Array.from({ length: SUBCARRIER_COUNT }, () => []);
 
 
   /* Visualizer Functions */
@@ -542,12 +557,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function stopMonitoring() {
     fetch('/stop_recording', { method: "POST" });
-    clearInterval(radarVisualizerInterval)
-    clearInterval(monitorVisualizeInterval)
+    clearInterval(radarVisualizerInterval);
+    clearInterval(monitorVisualizeInterval);
+    clearInterval(amplitudeHeatmapInterval);
 
     isMonitoring = false;
     isRadarActive = false;
-    console.log(isRadarActive);
     radarBtn.disabled = true;
     D3PlotBtn.disabled = true;
     radarBtn.style.backgroundColor = btnDefaultColor;
@@ -576,6 +591,7 @@ document.addEventListener('DOMContentLoaded', () => {
         monitorBtn.style.backgroundColor = btnActiveColor;
         isMonitoring = true;
         radarVisualizerInterval = setInterval(setRadarData, radarRefreshRate);
+        amplitudeHeatmapInterval = setInterval(fetchHeatmapData, heatmapRefreshRate);
       })
   }
 
@@ -741,6 +757,47 @@ document.addEventListener('DOMContentLoaded', () => {
       radarBtn.disabled = false;
     }
   });
+
+  function fetchHeatmapData() {
+    fetch('/get_heatmap_data', { method: "POST" })
+      .then(res => res.json())
+      .then(data => {
+        const ampValues = data.amplitude.map(p => p[2]);
+        const phaValues = data.phase.map(p => p[2]);
+  
+        // Push new time column for amplitude
+        ampValues.forEach((val, i) => {
+          ampBuffer[i].push(val);
+          if (ampBuffer[i].length > MAX_COLS) ampBuffer[i].shift();
+        });
+  
+        // Push new time column for phase
+        phaValues.forEach((val, i) => {
+          phaBuffer[i].push(val);
+          if (phaBuffer[i].length > MAX_COLS) phaBuffer[i].shift();
+        });
+  
+        ampHeat.clear();
+        phaHeat.clear();
+        ampHeat.data(flattenBufferHorizontal(ampBuffer)).draw();
+        phaHeat.data(flattenBufferHorizontal(phaBuffer)).draw();
+      })
+      .catch(err => console.error("Heatmap fetch failed:", err));
+  }
+  
+  function flattenBufferHorizontal(buffer) {
+    const flat = [];
+    const height = buffer.length;
+    const width = buffer[0]?.length || 0;
+  
+    for (let x = 0; x < width; x++) {
+      for (let y = 0; y < height; y++) {
+        flat.push([x, y, buffer[y][x]]);
+      }
+    }
+  
+    return flat;
+  }
 
 
   /* Initial Loading */

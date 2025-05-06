@@ -554,6 +554,25 @@ def set_recording_data():
 
     return jsonify({"status": "success"})
 
+@app.route('/get_heatmap_data', methods=['POST'])
+def get_heatmap_data():
+    try:
+        if not amplitude_queue or not phase_queue:
+            return jsonify({"amplitude": [], "phase": []})
+
+        latest_amplitudes = amplitude_queue[-1]
+        latest_phases = phase_queue[-1]
+
+        width = len(latest_amplitudes)
+        amplitude_points = [[x, 0, float(latest_amplitudes[x])] for x in range(width)]
+        phase_points = [[x, 0, float(latest_phases[x])] for x in range(width)]
+
+        return jsonify({
+            "amplitude": amplitude_points,
+            "phase": phase_points
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
 if __name__ == '__main__':
     app.run(debug=True)
-    

@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="static/styles/styles.css">
     <script type="module" src="static/scripts/scripts.js"></script>
     <script src="static/scripts/tailwind.js"></script>
+    <script src="static/scripts/simpleheat.js"></script>
     <link rel="icon" type="image/x-icon" href="static/images/wriple-icon.png">
 </head>
 <body class="h-screen w-screen text-gray-800"></body>
@@ -160,10 +161,18 @@
     
             <div class="flex flex-1 overflow-hidden">
                 <!-- Main Section -->
-                <main class="p-4 gap-4">    
+                <main class="py-4 px-16 overflow-scroll">
                     <div id="radar-container" class="rounded shadow relative inline-block">
                         <img src="static/images/radar-bg.png"/>
                         <div id="points" class="absolute top-0 left-0 w-full h-full"></div>
+                    </div>
+                    <div>
+                        <label for="amplitude-heatmap" class="font-medium text-gray-800">Amplitude Heatmap</label>
+                        <canvas id="amplitude-heatmap" class="w-full h-40 rounded shadow"></canvas>
+                    </div>
+                    <div>
+                        <label for="phase-heatmap" class="font-medium text-gray-800">Phase Heatmap</label>
+                        <canvas id="phase-heatmap" class="w-full h-40 rounded shadow"></canvas>
                     </div>
                     <div id="visualizer-container" class="rounded shadow dataset-hidden">
                         <svg id="d3-plot"></svg>
