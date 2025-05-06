@@ -99,9 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const ampHeat = simpleheat(ampCanvas).radius(1, 0).max(50);
   const phaHeat = simpleheat(phaCanvas).radius(1, 0).max(-125);
   const SUBCARRIER_COUNT = 23;
-  const MAX_COLS = 120;
-  ampCanvas.height = SUBCARRIER_COUNT;
-  phaCanvas.height = SUBCARRIER_COUNT;
+  const MAX_COLS = 160;
 
   let ampBuffer = Array.from({ length: SUBCARRIER_COUNT }, () => []);
   let phaBuffer = Array.from({ length: SUBCARRIER_COUNT }, () => []);
@@ -799,6 +797,13 @@ document.addEventListener('DOMContentLoaded', () => {
     return flat;
   }
 
+  function fitHeatmapToCanvas() {
+    ampCanvas.height = SUBCARRIER_COUNT;
+    phaCanvas.height = SUBCARRIER_COUNT;
+    ampCanvas.width = MAX_COLS;
+    phaCanvas.width = MAX_COLS;
+  }
+
 
   /* Initial Loading */
 
@@ -831,6 +836,7 @@ document.addEventListener('DOMContentLoaded', () => {
   list_csv_files();
   checkSystemStatus();
   setInterval(checkSystemStatus, systemStatusInterval);
+  fitHeatmapToCanvas();
 
   D3PlotBtn.disabled = true;
   radarBtn.disabled = true;

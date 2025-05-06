@@ -166,16 +166,22 @@
                         <img src="static/images/radar-bg.png"/>
                         <div id="points" class="absolute top-0 left-0 w-full h-full"></div>
                     </div>
-                    <div>
-                        <label for="amplitude-heatmap" class="font-medium text-gray-800">Amplitude Heatmap</label>
-                        <canvas id="amplitude-heatmap" class="w-full h-40 rounded shadow"></canvas>
+                    <div class="flex justify-center items-center text-center my-4">
+                        <div>
+                            <label for="amplitude-heatmap" class="font-medium text-gray-800">Amplitude Heatmap</label>
+                            <canvas id="amplitude-heatmap" class="w-3/4 h-40 rounded shadow mx-auto"></canvas>
+                        </div>
                     </div>
-                    <div>
-                        <label for="phase-heatmap" class="font-medium text-gray-800">Phase Heatmap</label>
-                        <canvas id="phase-heatmap" class="w-full h-40 rounded shadow"></canvas>
+                    <div class="flex justify-center items-center text-center my-4">
+                        <div>
+                            <label for="phase-heatmap" class="font-medium text-gray-800">Phase Heatmap</label>
+                            <canvas id="phase-heatmap" class="w-3/4 h-40 rounded shadow mx-auto"></canvas>
+                        </div>
                     </div>
-                    <div id="visualizer-container" class="rounded shadow dataset-hidden">
-                        <svg id="d3-plot"></svg>
+                    <div class="flex justify-center items-center h-3/4 my-4">
+                        <div id="visualizer-container" class="w-3/4 h-full rounded shadow dataset-hidden">
+                            <svg id="d3-plot"></svg>
+                        </div>
                     </div>
                 </main>
         
