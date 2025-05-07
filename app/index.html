@@ -162,22 +162,32 @@
             <div class="flex flex-1 overflow-hidden">
                 <!-- Main Section -->
                 <main class="py-4 px-16 overflow-scroll">
+                    <!-- Radar -->
                     <div id="radar-container" class="rounded shadow relative inline-block">
                         <img src="static/images/radar-bg.png"/>
                         <div id="points" class="absolute top-0 left-0 w-full h-full"></div>
                     </div>
+                    <!-- Amplitude Heatmap -->
                     <div class="flex justify-center items-center text-center my-4">
                         <div>
                             <label for="amplitude-heatmap" class="font-medium text-gray-800">Amplitude Heatmap</label>
-                            <canvas id="amplitude-heatmap" class="w-3/4 h-40 rounded shadow mx-auto"></canvas>
+                            <canvas id="amplitude-heatmap" class="w-full h-100 rounded shadow mx-auto"></canvas>
+                            <!-- <label for="amplitude-max-slider" class="text-sm font-medium text-gray-800">Amplitude Max:</label> -->
+                            <input id="amplitude-max-slider" type="range" min="10" max="99" step="2" value="40" class="w-96 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-800"/>
+                            <span id="amplitude-max-value" class="text-sm text-gray-800">40</span>
                         </div>
                     </div>
+                    <!-- Phase Heatmap -->
                     <div class="flex justify-center items-center text-center my-4">
                         <div>
                             <label for="phase-heatmap" class="font-medium text-gray-800">Phase Heatmap</label>
-                            <canvas id="phase-heatmap" class="w-3/4 h-40 rounded shadow mx-auto"></canvas>
+                            <canvas id="phase-heatmap" class="w-full h-100 rounded shadow mx-auto"></canvas>
+                            <!-- <label for="phase-max-slider" class="text-sm font-medium text-gray-800">Phase Max:</label> -->
+                            <input id="phase-max-slider" type="range" min="-20" max="20" step="1" value="5" class="w-96 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-800"/>
+                            <span id="phase-max-value" class="text-sm text-gray-800">5</span>
                         </div>
                     </div>
+                    <!-- 3D Plot -->
                     <div class="flex justify-center items-center h-3/4 my-4">
                         <div id="visualizer-container" class="w-3/4 h-full rounded shadow dataset-hidden">
                             <svg id="d3-plot"></svg>

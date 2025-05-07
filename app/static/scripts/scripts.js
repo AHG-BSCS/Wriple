@@ -76,6 +76,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const ampCanvas = document.getElementById('amplitude-heatmap');
   const phaCanvas = document.getElementById('phase-heatmap');
 
+  const amplitudeMaxSlider = document.getElementById("amplitude-max-slider");
+  const amplitudeMaxValue = document.getElementById("amplitude-max-value");
+  const phaseMaxSlider = document.getElementById("phase-max-slider");
+  const phaseMaxValue = document.getElementById("phase-max-value");
+
   // Buttons States
   let isRecording = false;
   let isMonitoring = false;
@@ -96,9 +101,9 @@ document.addEventListener('DOMContentLoaded', () => {
   var btnSelectedColor = '#D1D5DB';
   var btnUnselectedColor = '#94A3B7';
 
-  const ampHeat = simpleheat(ampCanvas).radius(1, 0).max(50);
-  const phaHeat = simpleheat(phaCanvas).radius(1, 0).max(-125);
-  const SUBCARRIER_COUNT = 23;
+  const ampHeat = simpleheat(ampCanvas).radius(1, 0).max(40);
+  const phaHeat = simpleheat(phaCanvas).radius(1, 0).max(5);
+  const SUBCARRIER_COUNT = 150;
   const MAX_COLS = 160;
 
   let ampBuffer = Array.from({ length: SUBCARRIER_COUNT }, () => []);
@@ -774,7 +779,7 @@ document.addEventListener('DOMContentLoaded', () => {
           phaBuffer[i].push(val);
           if (phaBuffer[i].length > MAX_COLS) phaBuffer[i].shift();
         });
-  
+
         ampHeat.clear();
         phaHeat.clear();
         ampHeat.data(flattenBufferHorizontal(ampBuffer)).draw();
@@ -803,6 +808,18 @@ document.addEventListener('DOMContentLoaded', () => {
     ampCanvas.width = MAX_COLS;
     phaCanvas.width = MAX_COLS;
   }
+
+  amplitudeMaxSlider.addEventListener("input", (e) => {
+    const newMax = parseFloat(e.target.value);
+    amplitudeMaxValue.textContent = newMax;
+    ampHeat.max(newMax).draw();
+  });
+
+  phaseMaxSlider.addEventListener("input", (e) => {
+    const newMax = parseFloat(e.target.value);
+    phaseMaxValue.textContent = newMax;
+    phaHeat.max(newMax).draw();
+  });
 
 
   /* Initial Loading */

@@ -37,8 +37,11 @@ WINDOW_SIZE = 35
 # SUBCARRIER_COUNT = 57
 # SMOOTH_SUBCARRIER_COUNT = int(57 / (WINDOW_SIZE * 0.1))
 SMOOTH_SUBCARRIER_COUNT = 23 # TODO: The value was estimated based on missing columns. Find the correct calculation.
-START_SUBCARRIER = 132
-END_SUBCARRIER = 246
+# START_SUBCARRIER = 132
+# END_SUBCARRIER = 246
+START_SUBCARRIER = 0
+END_SUBCARRIER = 300
+PREPROCESS = True
 
 recording = False
 monitoring = False
@@ -133,18 +136,19 @@ def filter_amp_phase():
     csi_amplitude = pd.Series(amplitude_queue)
     csi_phase = pd.Series(phase_queue)
     
-    amps_features = [aggregate_amps_features(amplitude_queue[start:end]) for start, end in WINDOW_RANGE]
-    phases_features = [aggregate_phases_features(phase_queue[start:end]) for start, end in WINDOW_RANGE]
+    if model:
+        amps_features = [aggregate_amps_features(amplitude_queue[start:end]) for start, end in WINDOW_RANGE]
+        phases_features = [aggregate_phases_features(phase_queue[start:end]) for start, end in WINDOW_RANGE]
 
-    rows = []
+        rows = []
 
-    for amp_features, phase_features in zip(amps_features, phases_features):
-        row = np.concatenate([amp_features, phase_features])
-        rows.append(row)
+        for amp_features, phase_features in zip(amps_features, phases_features):
+            row = np.concatenate([amp_features, phase_features])
+            rows.append(row)
 
-    X_test = pd.DataFrame(rows, columns=FEATURES_COLUMNS)
-    predictions = model.predict(X_test)
-    prediction = 0 if 0 in predictions else 1
+        X_test = pd.DataFrame(rows, columns=FEATURES_COLUMNS)
+        predictions = model.predict(X_test)
+        prediction = 0 if 0 in predictions else 1
 
     # Transpose to make subcarriers as rows
     amps_transposed = list(map(list, zip(*csi_amplitude)))
@@ -210,12 +214,13 @@ def compute_csi_amplitude_phase(csi_data):
         amplitudes.append(amplitude)
         phases.append(phase)
     
-    # Use phase unwrapping to prevent discontinuities in phase
-    phases = np.unwrap(phases)
+    if PREPROCESS:
+        # Use phase unwrapping to prevent discontinuities in phase
+        phases = np.unwrap(phases)
 
-    # Compute moving average of the last 100 packets
-    amplitudes = np.convolve(amplitudes, np.ones(WINDOW_SIZE) / WINDOW_SIZE, mode='valid')
-    phases = np.convolve(phases, np.ones(WINDOW_SIZE) / WINDOW_SIZE, mode='valid')
+        # Compute moving average of the last 100 packets
+        amplitudes = np.convolve(amplitudes, np.ones(WINDOW_SIZE) / WINDOW_SIZE, mode='valid')
+        phases = np.convolve(phases, np.ones(WINDOW_SIZE) / WINDOW_SIZE, mode='valid')
     
     while len(amplitude_queue) >= max_monitoring_packets:
         amplitude_queue.pop(0)
@@ -427,7 +432,7 @@ def set_columns():
 
 def check_model():
     global model
-    model_path = 'app/model/wriple_v1.6.pkl'
+    model_path = 'app/model/no_model.pkl'
     if os.path.exists(model_path):
         model = joblib.load(model_path)
         return 1
@@ -562,6 +567,7 @@ def get_heatmap_data():
 
         latest_amplitudes = amplitude_queue[-1]
         latest_phases = phase_queue[-1]
+        print(len(latest_amplitudes))
 
         width = len(latest_amplitudes)
         amplitude_points = [[x, 0, float(latest_amplitudes[x])] for x in range(width)]
