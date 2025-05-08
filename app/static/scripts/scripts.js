@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
   var btnUnselectedColor = '#94A3B7';
 
   const ampHeat = simpleheat(ampCanvas).radius(1, 0).max(40);
-  const phaHeat = simpleheat(phaCanvas).radius(1, 0).max(5);
+  const phaHeat = simpleheat(phaCanvas).radius(1, 0).max(10);
   const SUBCARRIER_COUNT = 115;
   const MAX_COLS = 160;
 
@@ -800,10 +800,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function fitHeatmapToCanvas() {
-    ampCanvas.height = SUBCARRIER_COUNT;
-    phaCanvas.height = SUBCARRIER_COUNT;
-    ampCanvas.width = MAX_COLS;
-    phaCanvas.width = MAX_COLS;
+    ampCanvas.height = SUBCARRIER_COUNT - 1;
+    phaCanvas.height = SUBCARRIER_COUNT - 1;
+    ampCanvas.width = MAX_COLS - 1;
+    phaCanvas.width = MAX_COLS - 1;
   }
 
   amplitudeMaxSlider.addEventListener("input", (e) => {

@@ -1,3 +1,9 @@
+:root {
+    --primary-color: #1F2937;
+    --secondary-color: #773512;
+    --background-color: #94A3B7;
+}
+
 .point {
     width: 18px;
     height: 18px;
@@ -5,4 +11,25 @@
     border-radius: 50%;
     position: absolute;
     transform: translate(-50%, -50%);
+}
+
+#amplitude-max-slider {
+    writing-mode: vertical-lr;
+    direction: rtl;
+    vertical-align: middle;
+}
+
+#phase-max-slider {
+    writing-mode: vertical-lr;
+    direction: rtl;
+    vertical-align: middle;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 15px;
+    height: 15px;
+    background: var(--primary-color);
+    border-radius: 8px;
+    cursor: pointer;
 }

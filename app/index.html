@@ -94,7 +94,7 @@
                 <span class="sidebar-collapse text-xs text-center block">©2025 AHG Graphene</span>
             </div>
         </nav>
-  
+
         <div class="flex flex-col flex-1 h-full">
             <header class="bg-gray-800 text-white px-4 py-3 flex justify-between items-center">
                 <!-- Left Header -->
@@ -158,7 +158,7 @@
                     </span>
                 </div>
             </header>
-    
+
             <div class="flex flex-1 overflow-hidden">
                 <!-- Main Section -->
                 <main class="py-4 px-16 overflow-scroll">
@@ -168,33 +168,33 @@
                         <div id="points" class="absolute top-0 left-0 w-full h-full"></div>
                     </div>
                     <!-- Amplitude Heatmap -->
-                    <div class="flex justify-center items-center text-center my-4">
-                        <div>
-                            <label for="amplitude-heatmap" class="font-medium text-gray-800">Amplitude Heatmap</label>
-                            <canvas id="amplitude-heatmap" class="w-full h-100 rounded shadow mx-auto"></canvas>
-                            <!-- <label for="amplitude-max-slider" class="text-sm font-medium text-gray-800">Amplitude Max:</label> -->
-                            <input id="amplitude-max-slider" type="range" min="10" max="99" step="2" value="40" class="w-96 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-800"/>
-                            <span id="amplitude-max-value" class="text-sm text-gray-800">40</span>
+                    <div class="flex justify-center mt-4">
+                        <div class="flex flex-col items-center mr-4">
+                            <span id="amplitude-max-value" class="font-semibold text-gray-800">40</span>
+                            <input id="amplitude-max-slider" type="range" min="10" max="99" step="1" value="40" class="w-4 h-44 bg-slate-400 rounded-lg appearance-none"/>
+                        </div>
+                        <div class="w-2/4">
+                            <canvas id="amplitude-heatmap" class="w-full h-52 rounded-t shadow"></canvas>
                         </div>
                     </div>
                     <!-- Phase Heatmap -->
-                    <div class="flex justify-center items-center text-center my-4">
-                        <div>
-                            <label for="phase-heatmap" class="font-medium text-gray-800">Phase Heatmap</label>
-                            <canvas id="phase-heatmap" class="w-full h-100 rounded shadow mx-auto"></canvas>
-                            <!-- <label for="phase-max-slider" class="text-sm font-medium text-gray-800">Phase Max:</label> -->
-                            <input id="phase-max-slider" type="range" min="-20" max="20" step="1" value="5" class="w-96 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-800"/>
-                            <span id="phase-max-value" class="text-sm text-gray-800">5</span>
+                    <div class="flex justify-center mb-4">
+                        <div class="flex flex-col items-center mr-4">
+                            <span id="phase-max-value" class="font-semibold text-gray-800">10</span>
+                            <input id="phase-max-slider" type="range" min="-30" max="30" step="1" value="10" class="w-4 h-44 bg-slate-400 rounded-lg appearance-none"/>
+                        </div>
+                        <div class="w-2/4">
+                            <canvas id="phase-heatmap" class="w-full h-52 rounded-b shadow"></canvas>
                         </div>
                     </div>
                     <!-- 3D Plot -->
-                    <div class="flex justify-center items-center h-3/4 my-4">
+                    <div class="flex justify-center items-center h-3/4 my-6">
                         <div id="visualizer-container" class="w-3/4 h-full rounded shadow dataset-hidden">
                             <svg id="d3-plot"></svg>
                         </div>
                     </div>
                 </main>
-        
+
                 <!-- Aside Section -->
                 <aside class="w-80">
                     <!-- Dataset -->
@@ -294,7 +294,7 @@
                     </div>
                 </aside>
             </div>
-    
+
             <!-- Floating Actions -->
             <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex bg-gray-800 rounded-2xl shadow-lg history-hidden">
                 <button id="record-btn" class="bg-gray-800 p-2 hover:scale-110 transition relative group rounded-2xl monitor-hidden">
@@ -302,7 +302,7 @@
                         <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm72-88a72,72,0,1,1-72-72A72.08,72.08,0,0,1,200,128Z"></path>
                     </svg>
                     <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-gray-700 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                        Record
+                        Recorder Mode
                     </span>
                 </button>
                 <button id="monitor-btn" class="bg-gray-800 p-2 hover:scale-110 transition relative group rounded-2xl dataset-hidden">
@@ -310,15 +310,15 @@
                         <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm72-88a72,72,0,1,1-72-72A72.08,72.08,0,0,1,200,128Z"></path>
                     </svg>
                     <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-gray-700 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                        Monitor
+                        Monitor Mode
                     </span>
                 </button>
-                <button id="radar-btn" class="bg-gray-800 p-2 hover:scale-110 transition relative group rounded-2xl">
+                <button id="radar-btn" class="bg-gray-800 p-2 hover:scale-110 transition relative group rounded-2xl cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#ffffff" viewBox="0 0 256 256">
                         <path d="M120,199.54v27.74a4,4,0,0,1-4.46,4,104.22,104.22,0,0,1-90.8-90.8,4,4,0,0,1,4-4.46H56.46A72.11,72.11,0,0,0,120,199.54ZM183.42,136H136v47.42A56.11,56.11,0,0,0,183.42,136ZM136,72.58V120h47.42A56.11,56.11,0,0,0,136,72.58ZM227.28,136H199.54A72.11,72.11,0,0,1,136,199.54v27.74a4,4,0,0,0,4.46,4,104.22,104.22,0,0,0,90.8-90.8A4,4,0,0,0,227.28,136Zm-27.74-16h27.74a4,4,0,0,0,4-4.46,104.22,104.22,0,0,0-90.8-90.8,4,4,0,0,0-4.46,4V56.46A72.11,72.11,0,0,1,199.54,120Zm-84-95.26a104.22,104.22,0,0,0-90.8,90.8,4,4,0,0,0,4,4.46H56.46A72.11,72.11,0,0,1,120,56.46V28.72A4,4,0,0,0,115.54,24.74ZM72.58,120H120V72.58A56.11,56.11,0,0,0,72.58,120ZM120,183.42V136H72.58A56.11,56.11,0,0,0,120,183.42Z"></path>
                     </svg>
                     <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-gray-700 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                        Radar
+                        Target Radar
                     </span>
                 </button>
                 <button id="amplitude-heatmap-btn" class="bg-gray-800 p-2 hover:scale-110 transition relative group rounded-2xl dataset-hidden">
@@ -338,7 +338,7 @@
                         RSSI Histogram
                     </span>
                 </button>
-                <button id="3d-plot-btn" class="bg-gray-800 p-2 hover:scale-110 transition relative group rounded-2xl dataset-hidden">
+                <button id="3d-plot-btn" class="bg-gray-800 p-2 hover:scale-110 transition relative group rounded-2xl cursor-pointer dataset-hidden">
                     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#f5f5f5" viewBox="0 0 256 256" data-darkreader-inline-fill="" style="--darkreader-inline-fill: var(--darkreader-background-f5f5f5, #1e2021);"><path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM188,72a12,12,0,1,1-12,12A12,12,0,0,1,188,72Zm0,56a12,12,0,1,1-12,12A12,12,0,0,1,188,128Zm-40-16a12,12,0,1,1-12,12A12,12,0,0,1,148,112ZM124,72a12,12,0,1,1-12,12A12,12,0,0,1,124,72Zm-24,56a12,12,0,1,1-12,12A12,12,0,0,1,100,128Zm100,64H56a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0V176H200a8,8,0,0,1,0,16Z"></path></svg>
                     <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-gray-700 rounded opacity-0 group-hover:opacity-100 transition-opacity">
                         3D Plot
