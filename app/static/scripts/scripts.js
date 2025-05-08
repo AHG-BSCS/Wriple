@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const esp32Status = document.getElementById("esp32-status")
   const apStatus = document.getElementById("ap-status")
-  const rd03dStatus = document.getElementById("rd03d-status")
+  const rd03dStatus = document.getElementById("radar-status")
   const flaskStatus = document.getElementById("flask-status")
   const portStatus = document.getElementById("port-status")
   const modelStatus = document.getElementById("model-status")
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const ampHeat = simpleheat(ampCanvas).radius(1, 0).max(40);
   const phaHeat = simpleheat(phaCanvas).radius(1, 0).max(5);
-  const SUBCARRIER_COUNT = 150;
+  const SUBCARRIER_COUNT = 115;
   const MAX_COLS = 160;
 
   let ampBuffer = Array.from({ length: SUBCARRIER_COUNT }, () => []);
@@ -300,10 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function calculateAngle(x, y) {
     x = parseInt(x)
     y = parseInt(y)
-    if (x == 0 && y == 0) return 0;
-    else if (x > 0 && y > 0) return Math.atan2(x, y) * (120 / Math.PI);
-    else if (x < 0 && y > 0) return Math.atan2(x, y) * (120 / Math.PI);
-    else return -1;
+    return Math.atan2(x, y) * (180 / Math.PI);
   }
 
   function visualize() {
