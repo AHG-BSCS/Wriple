@@ -559,23 +559,34 @@ def set_recording_data():
 
     return jsonify({"status": "success"})
 
-@app.route('/get_heatmap_data', methods=['POST'])
-def get_heatmap_data():
+@app.route('/fetch_amplitude_data', methods=['POST'])
+def fetch_amplitude_data():
     try:
-        if not amplitude_queue or not phase_queue:
-            return jsonify({"amplitude": [], "phase": []})
+        if not amplitude_queue:
+            return jsonify({"latestAmplitude": []})
 
         latest_amplitudes = amplitude_queue[-1]
-        latest_phases = phase_queue[-1]
-        print(len(latest_amplitudes))
-
-        width = len(latest_amplitudes)
-        amplitude_points = [[x, 0, float(latest_amplitudes[x])] for x in range(width)]
-        phase_points = [[x, 0, float(latest_phases[x])] for x in range(width)]
+        subcarriers = len(latest_amplitudes)
+        amplitude_points = [[x, 0, float(latest_amplitudes[x])] for x in range(subcarriers)]
 
         return jsonify({
-            "amplitude": amplitude_points,
-            "phase": phase_points
+            "latestAmplitude": amplitude_points
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route('/fetch_phase_data', methods=['POST'])
+def fetch_phase_data():
+    try:
+        if not phase_queue:
+            return jsonify({"latestPhase": []})
+
+        latest_phases = phase_queue[-1]
+        subcarriers = len(latest_phases)
+        phase_points = [[x, 0, float(latest_phases[x])] for x in range(subcarriers)]
+
+        return jsonify({
+            "latestPhase": phase_points
         })
     except Exception as e:
         return jsonify({"error": str(e)})

@@ -68,13 +68,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const target2DistRes = document.getElementById('target2-distance-res');
   const target3DistRes = document.getElementById('target3-distance-res');
 
-  const recordBtn = document.getElementById('record-btn');
-  const monitorBtn = document.getElementById('monitor-btn');
-  const radarBtn = document.getElementById('radar-btn');
-  const D3PlotBtn = document.getElementById('3d-plot-btn');
+  const recordModeBtn = document.getElementById('record-mode-btn');
+  const monitorModeBtn = document.getElementById('monitor-mode-btn');
+  const targetRadarBtn = document.getElementById('target-radar-btn');
+  const amplitudeHeatmapBtn = document.getElementById('amplitude-heatmap-btn');
+  const phaseHeatmapBtn = document.getElementById('phase-heatmap-btn');
+  // const rssiHistogramBtn = document.getElementById('rssi-histogram-btn');
+  const d3PlotBtn = document.getElementById('3d-plot-btn');
 
-  const ampCanvas = document.getElementById('amplitude-heatmap');
-  const phaCanvas = document.getElementById('phase-heatmap');
+  const amplitudeCanvas = document.getElementById('amplitude-heatmap');
+  const phaseCanvas = document.getElementById('phase-heatmap');
 
   const amplitudeMaxSlider = document.getElementById("amplitude-max-slider");
   const amplitudeMaxValue = document.getElementById("amplitude-max-value");
@@ -84,12 +87,17 @@ document.addEventListener('DOMContentLoaded', () => {
   // Buttons States
   let isRecording = false;
   let isMonitoring = false;
-  let isRadarActive = false;
-  let is3dPlotActive = false;
+  let isAmpitudeHeatmapVisible = false;
+  let isPhaseHeatmapVisible = false;
+  // let isRssiHistogramVisible = false;
+  let isRadarVisible = false;
+  let is3dPlotVisible = false;
 
   let monitorVisualizeInterval;
   let radarVisualizerInterval;
   let amplitudeHeatmapInterval;
+  let phaseHeatmapInterval;
+  // let rssiHistogramInterval;
   const d3PlotRefreshRate = 1000;
   const radarRefreshRate = 120;
   const recordingDelay = 1000;
@@ -101,13 +109,13 @@ document.addEventListener('DOMContentLoaded', () => {
   var btnSelectedColor = '#D1D5DB';
   var btnUnselectedColor = '#94A3B7';
 
-  const ampHeat = simpleheat(ampCanvas).radius(1, 0).max(40);
-  const phaHeat = simpleheat(phaCanvas).radius(1, 0).max(10);
+  const amplitudeHeatmap = simpleheat(amplitudeCanvas);
+  const phaseHeatmap = simpleheat(phaseCanvas);
   const SUBCARRIER_COUNT = 115;
   const MAX_COLS = 160;
 
-  let ampBuffer = Array.from({ length: SUBCARRIER_COUNT }, () => []);
-  let phaBuffer = Array.from({ length: SUBCARRIER_COUNT }, () => []);
+  let amplitudeBuffer = Array.from({ length: SUBCARRIER_COUNT }, () => []);
+  let phaseBuffer = Array.from({ length: SUBCARRIER_COUNT }, () => []);
 
 
   /* Visualizer Functions */
@@ -246,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function dragged(event) {
-    D3PlotBtn.style.backgroundColor = btnActiveColor;
+    d3PlotBtn.style.backgroundColor = btnActiveColor;
     beta = (event.x - mx + mouseX) * (Math.PI / 230) * -1;
     alpha = (event.y - my + mouseY) * (Math.PI / 230) * -1;
 
@@ -307,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch('/visualize_data', { method: "POST" })
       .then(response => response.json())
       .then(data => {
-        D3PlotBtn.style.backgroundColor = btnActiveColor;
+        d3PlotBtn.style.backgroundColor = btnActiveColor;
         xGrid = [];
         scatter = [];
         yLine = [];
@@ -373,7 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (data.modeStatus != -1) {
           const targetCount = countTarget(data);
 
-          if (isRadarActive) visualizeRadarData(data);
+          if (isRadarVisible) visualizeRadarData(data);
           if (targetCount > 0) presenceStatus.textContent = "Yes";
           else presenceStatus.textContent = "No";
           if (data.radarY[0] != '0') {
@@ -503,9 +511,9 @@ document.addEventListener('DOMContentLoaded', () => {
     setHeaderTextToDefault();
 
     isRecording = false;
-    isRadarActive = false;
-    radarBtn.style.backgroundColor = btnDefaultColor;
-    recordBtn.style.backgroundColor = btnDefaultColor;
+    isRadarVisible = false;
+    targetRadarBtn.style.backgroundColor = btnDefaultColor;
+    recordModeBtn.style.backgroundColor = btnDefaultColor;
     pointsContainer.innerHTML = '';
   }
 
@@ -516,12 +524,12 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(data => {
         if (data.status === "error") throw new Error(data.message);
         
-        recordBtn.style.backgroundColor = btnActiveColor;
+        recordModeBtn.style.backgroundColor = btnActiveColor;
         isRecording = true;
         
-        if (!isRadarActive) {
-          isRadarActive = true;
-          radarBtn.style.backgroundColor = btnActiveColor;
+        if (!isRadarVisible) {
+          isRadarVisible = true;
+          targetRadarBtn.style.backgroundColor = btnActiveColor;
           radarVisualizerInterval = setInterval(setRadarData, radarRefreshRate);
         }
       })
@@ -533,41 +541,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
         isRecording = false;
         pointsContainer.innerHTML = '';
-        radarBtn.style.backgroundColor = btnDefaultColor;
-        recordBtn.style.backgroundColor = btnDefaultColor;
+        targetRadarBtn.style.backgroundColor = btnDefaultColor;
+        recordModeBtn.style.backgroundColor = btnDefaultColor;
       })
   }
 
-  recordBtn.addEventListener('click', () => {
+  recordModeBtn.addEventListener('click', () => {
     if (isRecording) {
       stopRecording();
     } else {
       if (isMonitoring) {
         fetch('/stop_recording', { method: "POST" });
         clearInterval(radarVisualizerInterval)
-        isRadarActive = false;
+        isRadarVisible = false;
         setHeaderTextToDefault();
       }
       setTimeout(() => {
         startRecording();
       }, recordingDelay); // Delay the recording
     }
-    button_timeout(recordBtn);
+    button_timeout(recordModeBtn);
   });
 
   function stopMonitoring() {
     fetch('/stop_recording', { method: "POST" });
     clearInterval(radarVisualizerInterval);
     clearInterval(monitorVisualizeInterval);
-    clearInterval(amplitudeHeatmapInterval);
 
     isMonitoring = false;
-    isRadarActive = false;
-    radarBtn.disabled = true;
-    D3PlotBtn.disabled = true;
-    radarBtn.style.backgroundColor = btnDefaultColor;
-    D3PlotBtn.style.backgroundColor = btnDefaultColor;
-    monitorBtn.style.backgroundColor = btnDefaultColor;
+    isRadarVisible = false;
+    targetRadarBtn.disabled = true;
+    d3PlotBtn.disabled = true;
+    targetRadarBtn.style.backgroundColor = btnDefaultColor;
+    d3PlotBtn.style.backgroundColor = btnDefaultColor;
+    monitorModeBtn.style.backgroundColor = btnDefaultColor;
 
     packetCount.textContent = "0";
     presenceStatus.textContent = "No"
@@ -586,35 +593,34 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(data => {
         if (data.status === "error") throw new Error(data.message);
         
-        D3PlotBtn.disabled = false;
-        radarBtn.disabled = false;
-        monitorBtn.style.backgroundColor = btnActiveColor;
+        d3PlotBtn.disabled = false;
+        targetRadarBtn.disabled = false;
+        monitorModeBtn.style.backgroundColor = btnActiveColor;
         isMonitoring = true;
         radarVisualizerInterval = setInterval(setRadarData, radarRefreshRate);
-        amplitudeHeatmapInterval = setInterval(fetchHeatmapData, heatmapRefreshRate);
       })
   }
 
-  monitorBtn.addEventListener('click', () => {
+  monitorModeBtn.addEventListener('click', () => {
       if (isMonitoring) stopMonitoring();
       else startMonitoring();
   });
 
-  radarBtn.addEventListener('click', () => {
-    if (isRadarActive) {
+  targetRadarBtn.addEventListener('click', () => {
+    if (isRadarVisible) {
       if (isMonitoring && isDatasetActive) {
         stopMonitoring();
         setHeaderTextToDefault();
-        radarBtn.disabled = false;
+        targetRadarBtn.disabled = false;
       }
-      radarBtn.style.backgroundColor = btnDefaultColor;
+      targetRadarBtn.style.backgroundColor = btnDefaultColor;
       setHeaderTextToDefault();
       setAsideTextToDefault();
       pointsContainer.innerHTML = '';
-      isRadarActive = false;
+      isRadarVisible = false;
     } else {
-      radarBtn.style.backgroundColor = btnActiveColor;
-      isRadarActive = true;
+      targetRadarBtn.style.backgroundColor = btnActiveColor;
+      isRadarVisible = true;
       
       // Start the radar when in Dataset Tab
       if (isDatasetActive) {
@@ -625,17 +631,57 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  D3PlotBtn.addEventListener('click', () => {
-    if (is3dPlotActive) {
-      D3PlotBtn.style.backgroundColor = btnDefaultColor;
+  function startAmplitudeHeatmap() {
+    amplitudeHeatmapBtn.style.backgroundColor = btnActiveColor;
+    isAmpitudeHeatmapVisible = true;
+    amplitudeHeatmapInterval = setInterval(fetchAmplitudeData, heatmapRefreshRate);
+  }
+
+  function stopAmplitudeHeatmap() {
+    amplitudeHeatmapBtn.style.backgroundColor = btnDefaultColor;
+    clearInterval(amplitudeHeatmapInterval);
+    setTimeout(() => {}, heatmapRefreshRate);
+    amplitudeBuffer = Array.from({ length: SUBCARRIER_COUNT }, () => []);
+    amplitudeHeatmap.clear().draw();
+    isAmpitudeHeatmapVisible = false;
+  }
+
+  amplitudeHeatmapBtn.addEventListener('click', () => {
+    if (isAmpitudeHeatmapVisible) stopAmplitudeHeatmap();
+    else startAmplitudeHeatmap();
+  });
+
+  function startPhaseHeatmap() {
+    phaseHeatmapBtn.style.backgroundColor = btnActiveColor;
+    isPhaseHeatmapVisible = true;
+    phaseHeatmapInterval = setInterval(fetchPhaseData, heatmapRefreshRate);
+  }
+
+  function stopPhaseHeatmap() {
+    phaseHeatmapBtn.style.backgroundColor = btnDefaultColor;
+    clearInterval(phaseHeatmapInterval);
+    setTimeout(() => {}, heatmapRefreshRate);
+    phaseBuffer = Array.from({ length: SUBCARRIER_COUNT }, () => []);
+    phaseHeatmap.clear().draw();
+    isPhaseHeatmapVisible = false;
+  }
+
+  phaseHeatmapBtn.addEventListener('click', () => {
+    if (isPhaseHeatmapVisible) stopPhaseHeatmap();
+    else startPhaseHeatmap();
+  });
+
+  d3PlotBtn.addEventListener('click', () => {
+    if (is3dPlotVisible) {
+      d3PlotBtn.style.backgroundColor = btnDefaultColor;
       clearInterval(monitorVisualizeInterval);
       setHeaderTextToDefault();
       svg.selectAll('*').remove();
-      is3dPlotActive = false;
+      is3dPlotVisible = false;
     } else {
       monitorVisualizeInterval = setInterval(visualize, d3PlotRefreshRate);
-      D3PlotBtn.style.backgroundColor = btnActiveColor;
-      is3dPlotActive = true;
+      d3PlotBtn.style.backgroundColor = btnActiveColor;
+      is3dPlotVisible = true;
     }
   });
 
@@ -669,7 +715,7 @@ document.addEventListener('DOMContentLoaded', () => {
       isMonitorActive = true;
       isHistoryActive = false;
       isDatasetActive = false;
-      radarBtn.disabled = true;
+      targetRadarBtn.disabled = true;
 
       const monitorDivs = document.querySelectorAll('.monitor-hidden');
       monitorDivs.forEach(t => {
@@ -690,7 +736,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isRecording) stopRecording();
     if (isMonitoring) {
       stopMonitoring();
-      radarBtn.disabled = true;
+      targetRadarBtn.disabled = true;
     }
   });
 
@@ -702,7 +748,7 @@ document.addEventListener('DOMContentLoaded', () => {
       isMonitorActive = false;
       isHistoryActive = true;
       isDatasetActive = false;
-      radarBtn.disabled = true;
+      targetRadarBtn.disabled = true;
 
       const monitorDivs = document.querySelectorAll('.monitor-hidden');
       monitorDivs.forEach(t => {
@@ -732,7 +778,7 @@ document.addEventListener('DOMContentLoaded', () => {
       isMonitorActive = false;
       isHistoryActive = false;
       isDatasetActive = true;
-      radarBtn.disabled = false;
+      targetRadarBtn.disabled = false;
 
       const monitorDivs = document.querySelectorAll('.monitor-hidden');
       monitorDivs.forEach(t => {
@@ -754,35 +800,42 @@ document.addEventListener('DOMContentLoaded', () => {
       stopMonitoring();
       pointsContainer.innerHTML = '';
       isMonitoring = false;
-      radarBtn.disabled = false;
+      targetRadarBtn.disabled = false;
     }
   });
 
-  function fetchHeatmapData() {
-    fetch('/get_heatmap_data', { method: "POST" })
+  function fetchAmplitudeData() {
+    fetch('/fetch_amplitude_data', { method: "POST" })
       .then(res => res.json())
       .then(data => {
-        const ampValues = data.amplitude.map(p => p[2]);
-        const phaValues = data.phase.map(p => p[2]);
+        const amplitudePoints = data.latestAmplitude.map(p => p[2]);
   
         // Push new time column for amplitude
-        ampValues.forEach((val, i) => {
-          ampBuffer[i].push(val);
-          if (ampBuffer[i].length > MAX_COLS) ampBuffer[i].shift();
+        amplitudePoints.forEach((val, i) => {
+          amplitudeBuffer[i].push(val);
+          if (amplitudeBuffer[i].length > MAX_COLS) amplitudeBuffer[i].shift();
         });
   
+        amplitudeHeatmap.data(flattenBufferHorizontal(amplitudeBuffer)).draw();
+      })
+      .catch(err => console.error("Amplitude heatmap fetch failed:", err));
+  }
+
+  function fetchPhaseData() {
+    fetch('/fetch_phase_data', { method: "POST" })
+      .then(res => res.json())
+      .then(data => {
+        const phasePoints = data.latestPhase.map(p => p[2]);
+  
         // Push new time column for phase
-        phaValues.forEach((val, i) => {
-          phaBuffer[i].push(val);
-          if (phaBuffer[i].length > MAX_COLS) phaBuffer[i].shift();
+        phasePoints.forEach((val, i) => {
+          phaseBuffer[i].push(val);
+          if (phaseBuffer[i].length > MAX_COLS) phaseBuffer[i].shift();
         });
 
-        ampHeat.clear();
-        phaHeat.clear();
-        ampHeat.data(flattenBufferHorizontal(ampBuffer)).draw();
-        phaHeat.data(flattenBufferHorizontal(phaBuffer)).draw();
+        phaseHeatmap.data(flattenBufferHorizontal(phaseBuffer)).draw();
       })
-      .catch(err => console.error("Heatmap fetch failed:", err));
+      .catch(err => console.error("Phase heatmap fetch failed:", err));
   }
   
   function flattenBufferHorizontal(buffer) {
@@ -799,23 +852,29 @@ document.addEventListener('DOMContentLoaded', () => {
     return flat;
   }
 
-  function fitHeatmapToCanvas() {
-    ampCanvas.height = SUBCARRIER_COUNT - 1;
-    phaCanvas.height = SUBCARRIER_COUNT - 1;
-    ampCanvas.width = MAX_COLS - 1;
-    phaCanvas.width = MAX_COLS - 1;
+  function configureHeatmaps() {
+    amplitudeHeatmap.radius(1, 0);
+    amplitudeHeatmap.max(40);
+    phaseHeatmap.radius(1, 0);
+    phaseHeatmap.max(10);
+
+    // Crop the heatmaps to canvas
+    amplitudeCanvas.height = SUBCARRIER_COUNT - 1;
+    amplitudeCanvas.width = MAX_COLS - 1;
+    phaseCanvas.height = SUBCARRIER_COUNT - 1;
+    phaseCanvas.width = MAX_COLS - 1;
   }
 
   amplitudeMaxSlider.addEventListener("input", (e) => {
     const newMax = parseFloat(e.target.value);
     amplitudeMaxValue.textContent = newMax;
-    ampHeat.max(newMax).draw();
+    amplitudeHeatmap.max(newMax).draw();
   });
 
   phaseMaxSlider.addEventListener("input", (e) => {
     const newMax = parseFloat(e.target.value);
     phaseMaxValue.textContent = newMax;
-    phaHeat.max(newMax).draw();
+    phaseHeatmap.max(newMax).draw();
   });
 
 
@@ -850,8 +909,8 @@ document.addEventListener('DOMContentLoaded', () => {
   list_csv_files();
   checkSystemStatus();
   setInterval(checkSystemStatus, systemStatusInterval);
-  fitHeatmapToCanvas();
+  configureHeatmaps();
 
-  D3PlotBtn.disabled = true;
-  radarBtn.disabled = true;
+  d3PlotBtn.disabled = true;
+  targetRadarBtn.disabled = true;
 });
