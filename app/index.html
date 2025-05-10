@@ -168,7 +168,7 @@
                         <div id="points" class="absolute top-0 left-0 w-full h-full"></div>
                     </div>
                     <!-- Amplitude Heatmap -->
-                    <div class="flex justify-center mt-4">
+                    <div class="flex justify-center mt-4 dataset-hidden">
                         <div class="flex flex-col items-center mr-4">
                             <span id="amplitude-max-value" class="font-semibold text-gray-800">40</span>
                             <input id="amplitude-max-slider" type="range" min="10" max="99" step="1" value="40" class="w-4 h-44 bg-slate-400 rounded-lg appearance-none"/>
@@ -178,7 +178,7 @@
                         </div>
                     </div>
                     <!-- Phase Heatmap -->
-                    <div class="flex justify-center mb-4">
+                    <div class="flex justify-center mb-4 dataset-hidden">
                         <div class="flex flex-col items-center mr-4">
                             <span id="phase-max-value" class="font-semibold text-gray-800">10</span>
                             <input id="phase-max-slider" type="range" min="-30" max="30" step="1" value="10" class="w-4 h-44 bg-slate-400 rounded-lg appearance-none"/>
@@ -188,8 +188,8 @@
                         </div>
                     </div>
                     <!-- 3D Plot -->
-                    <div class="flex justify-center items-center h-3/4 my-6">
-                        <div id="visualizer-container" class="w-3/4 h-full rounded shadow dataset-hidden">
+                    <div class="flex justify-center items-center h-3/4 my-6 dataset-hidden">
+                        <div id="visualizer-container" class="w-3/4 h-full rounded shadow">
                             <svg id="d3-plot"></svg>
                         </div>
                     </div>

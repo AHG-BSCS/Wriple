@@ -27,18 +27,14 @@ RECORDING_PACKET_LIMIT = 240 # 12 seconds of data
 TX_INTERVAL = 0.05
 
 csv_file_path = None
-CSV_DIRECTORY = 'app/dataset/data_recorded'
-DATASET_COLUMNS = []
-FEATURES_COLUMNS = []
+CSV_DIRECTORY = 'app/dataset/recorded'
+DATASET_COLUMNS = None
+FEATURES_COLUMNS = None
 
 MM_SCALER = MinMaxScaler((-10, 10))
 WINDOW_RANGE = [(0, 10), (10, -1)]
 WINDOW_SIZE = 35
-# SUBCARRIER_COUNT = 57
-# SMOOTH_SUBCARRIER_COUNT = int(57 / (WINDOW_SIZE * 0.1))
 SMOOTH_SUBCARRIER_COUNT = 23 # TODO: The value was estimated based on missing columns. Find the correct calculation.
-# START_SUBCARRIER = 132
-# END_SUBCARRIER = 246
 START_SUBCARRIER = 70
 END_SUBCARRIER = 368
 PREPROCESS = True
@@ -192,11 +188,6 @@ def filter_amp_phase():
     return signal_coordinates
 
 def compute_csi_amplitude_phase(csi_data):
-    '''
-    Compute amplitude and phase from raw CSI data.
-    param csi_data: List of raw CSI values (alternating I and Q components).
-    return: Two lists - amplitudes and phases for each subcarrier.
-    '''
     amplitudes = []
     phases = []
     
@@ -247,41 +238,6 @@ def parse_csi_data(data_str):
 
     # Use -1 to exclude the unformatted Raw CSI data
     return parts[:-1] + [csi_data]
-
-def compute_time_of_flight():
-    '''
-    Compute time of flight for each CSI data row.
-    This is currectly not accurate and needs to be improved.
-    '''
-    tx_delay = TX_INTERVAL * 1_000_000
-    tof_list = []
-    csi_df = pd.read_csv(csv_file_path)
-
-    for i in range(1, len(csi_df)):
-        previous_row = csi_df.iloc[i - 1]
-        current_row = csi_df.iloc[i]
-
-        prev_tx_time = previous_row['Transmit_Timestamp']
-        curr_tx_time = current_row['Transmit_Timestamp']
-        prev_rx_time = previous_row['Received_Timestamp']
-        curr_rx_time = current_row['Received_Timestamp']
-
-        # Calculate the difference in microseconds
-        tx_offset = curr_tx_time - prev_tx_time
-        rx_offset = curr_rx_time - prev_rx_time
-
-        # Subtract the time in takes to transmit to the time of receiving
-        adjust_rx_time = curr_rx_time - tx_offset
-
-        # Calculate the difference in received times
-        tof = prev_rx_time - adjust_rx_time
-        tof_seconds = tof / 1_000_000
-        tof_list.append(tof_seconds)
-
-    # Note: The first row will not have a ToF value
-    csi_df['Time_of_Flight'] = [float('nan')] + tof_list
-    csi_df.to_csv(csv_file_path, index=False)
-    return csi_df
 
 def process_data(data, m):
     global max_monitoring_packets, rssi

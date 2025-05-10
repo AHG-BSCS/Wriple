@@ -487,21 +487,19 @@ document.addEventListener('DOMContentLoaded', () => {
   function setRecordingData() {
     // Set target count to 0 if no target
     if (presenceClass == 0) targetClass = 0;
-    else if (presenceClass != -1) {
-      fetch('/set_recording_data', {
-        method: "POST",
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            presence: presenceClass,
-            target: targetClass,
-            los: losInput.value,
-            angle: angleInput.value,
-            distance: distanceInput.value
-        })
+    fetch('/set_recording_data', {
+      method: "POST",
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+          presence: presenceClass,
+          target: targetClass,
+          los: losInput.value,
+          angle: angleInput.value,
+          distance: distanceInput.value
       })
-    }
+    })
   }
 
   function stopRecording() {
