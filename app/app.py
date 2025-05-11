@@ -9,8 +9,7 @@ import socket
 import subprocess
 import time
 import threading
-# from sklearn.decomposition import PCA
-from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.preprocessing import MinMaxScaler
 from scapy.all import Raw, IP, UDP, send
 from flask import Flask, jsonify, request, send_from_directory
 
@@ -32,10 +31,6 @@ CSV_DIRECTORY = 'app/dataset/recorded'
 DATASET_COLUMNS = None
 X_TEST_COLUMNS = None
 
-MM_SCALER = MinMaxScaler((-10, 10))
-STD_SCALER = StandardScaler()
-pca = None
-
 WINDOW_RANGE = [(0, 10), (10, -1)]
 SUBCARRIER_COUNT = 306
 SMOOTH = True
@@ -54,7 +49,9 @@ radar_speed = [0, 0, 0]
 radar_dist_res = [0, 0, 0]
 rssi = 0
 
-model = None
+MM_SCALER = MinMaxScaler((-10, 10))
+DIM_RED_MODEL = None
+PRESENCE_MODEL = None
 presence_pred = 0
 target_count = None
 class_label = None
@@ -165,16 +162,12 @@ def filter_amp_phase():
 def predict_presence():
     global presence_pred
     signal_queue_length = len(amplitude_queue)
-    if model and signal_queue_length > 5:
-        rows = []
+    if PRESENCE_MODEL and signal_queue_length > 5:
         frame_set = [(i, i + 5) for i in range(0, signal_queue_length, 2)]
         amplitude_features = [np.percentile(amplitude_queue[start:end], 25, axis=0) for start, end in frame_set]
 
-        X_test = pd.DataFrame(amplitude_features, columns=X_TEST_COLUMNS)
-        X_test = STD_SCALER.fit_transform(X_test)
-        X_pca = pca.transform(X_test)
-
-        y_pred = model.predict(X_pca)
+        X_pca = DIM_RED_MODEL.transform(amplitude_features)
+        y_pred = PRESENCE_MODEL.predict(X_pca)
         presence_pred = 0 if 0 in y_pred else 1
 
 def compute_csi_amplitude_phase(csi_data):
@@ -360,13 +353,15 @@ def set_columns():
     X_TEST_COLUMNS = [f'Amp_25%_S{i+1}' for i in range(SUBCARRIER_COUNT)]
 
 def check_model():
-    global model, pca
-    model_path = 'app/model/wriple_v2_(presence).pkl'
-    if os.path.exists(model_path):
-        model = joblib.load(model_path)
-        pca = joblib.load('app/model/wriple_v2_(pca).pkl')
-        return 1
-    else:
+    global DIM_RED_MODEL, PRESENCE_MODEL 
+    try:
+        if os.path.exists('app/model/wriple_v2_(presence).pkl'):
+            DIM_RED_MODEL = joblib.load('app/model/wriple_v2_(pca).pkl')
+            PRESENCE_MODEL = joblib.load('app/model/wriple_v2_(presence).pkl')
+            return 1
+        else:
+            return 0
+    except FileNotFoundError:
         return 0
 
 def check_connection():
@@ -378,7 +373,7 @@ def check_system_status():
     global ap_status, model_status
     ap_status = 1 if check_connection() else 0
 
-    if model is None: model_status = check_model()
+    if PRESENCE_MODEL is None: model_status = check_model()
 
     return jsonify({
         'esp32': esp32_status,
