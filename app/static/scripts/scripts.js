@@ -73,11 +73,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const targetRadarBtn = document.getElementById('target-radar-btn');
   const amplitudeHeatmapBtn = document.getElementById('amplitude-heatmap-btn');
   const phaseHeatmapBtn = document.getElementById('phase-heatmap-btn');
-  // const rssiHistogramBtn = document.getElementById('rssi-histogram-btn');
+  const rssiChartBtn = document.getElementById('rssi-histogram-btn');
   const d3PlotBtn = document.getElementById('3d-plot-btn');
 
   const amplitudeCanvas = document.getElementById('amplitude-heatmap');
   const phaseCanvas = document.getElementById('phase-heatmap');
+  const rssiCanvasCtx = document.getElementById('rssi-chart').getContext('2d');
+  let rssiChart;
 
   const amplitudeMaxSlider = document.getElementById("amplitude-max-slider");
   const amplitudeMaxValue = document.getElementById("amplitude-max-value");
@@ -89,9 +91,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let isMonitoring = false;
   let isAmpitudeHeatmapVisible = false;
   let isPhaseHeatmapVisible = false;
-  // let isRssiHistogramVisible = false;
+  let isRSSIChartVisible = false;
   let isRadarVisible = false;
-  let is3dPlotVisible = false;
+  let is3DPlotVisible = false;
 
   let monitorVisualizeInterval;
   let radarVisualizerInterval;
@@ -99,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let phaseHeatmapInterval;
   // let rssiHistogramInterval;
   const d3PlotRefreshRate = 1000;
-  const radarRefreshRate = 120;
+  const radarRefreshRate = 100;
   const recordingDelay = 1000;
   const heatmapRefreshRate = 100;
   const systemStatusInterval = 8000;
@@ -114,12 +116,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const SUBCARRIER_COUNT = 115;
   const MAX_COLS = 160;
 
+  const MAX_RSSI_POINTS = 160; // 30 seconds of data at 1Hz
+  const RSSI_TICK_INTERVAL = 50; // seconds
+
   let amplitudeBuffer = Array.from({ length: SUBCARRIER_COUNT }, () => []);
   let phaseBuffer = Array.from({ length: SUBCARRIER_COUNT }, () => []);
-
+  let tick = 0;
+  
 
   /* Visualizer Functions */
-
+  
 
   const origin = { x: 400, y: 200 };
   const scale = 20;
@@ -369,6 +375,18 @@ document.addEventListener('DOMContentLoaded', () => {
     return targetCount;
   }
 
+  function visualizeRSSI(rssi) {
+    if (rssiChart.data.labels.length >= MAX_RSSI_POINTS) {
+      rssiChart.data.labels.shift();
+      rssiChart.data.datasets[0].data.shift();
+    }
+    
+    rssiChart.data.labels.push(tick / 10);
+    rssiChart.data.datasets[0].data.push(rssi);
+    rssiChart.update();
+    tick++;
+  }
+
   function setRadarData() {
     fetch('/get_radar_data', { method: "POST" })
       .then(response => response.json())
@@ -377,6 +395,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const targetCount = countTarget(data);
 
           if (isRadarVisible) visualizeRadarData(data);
+          if (isRSSIChartVisible) visualizeRSSI(data.rssi);
           if (data.presence == 1) presenceStatus.textContent = "Yes";
           else presenceStatus.textContent = "No";
           if (data.radarY[0] != '0') {
@@ -665,16 +684,16 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   d3PlotBtn.addEventListener('click', () => {
-    if (is3dPlotVisible) {
+    if (is3DPlotVisible) {
       d3PlotBtn.style.backgroundColor = btnDefaultColor;
       clearInterval(monitorVisualizeInterval);
       setHeaderTextToDefault();
       svg.selectAll('*').remove();
-      is3dPlotVisible = false;
+      is3DPlotVisible = false;
     } else {
       monitorVisualizeInterval = setInterval(visualize, d3PlotRefreshRate);
       d3PlotBtn.style.backgroundColor = btnActiveColor;
-      is3dPlotVisible = true;
+      is3DPlotVisible = true;
     }
   });
 
@@ -870,8 +889,68 @@ document.addEventListener('DOMContentLoaded', () => {
     phaseHeatmap.max(newMax).draw();
   });
 
+  function initializeRSSIChart() {
+    rssiChart = new Chart(rssiCanvasCtx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'RSSI (dBm)',
+          data: [],
+          borderColor: 'rgb(31, 41, 55)',
+          backgroundColor: 'rgba(148, 163, 183, 0.1)',
+          tension: 0.3,
+          pointRadius: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        animation: true,
+        scales: {
+          x: {
+            title: { display: true, text: 'Time (s)' },
+            ticks: {
+              callback: function (val, index) {
+                // Show label every 5 seconds
+                return index % RSSI_TICK_INTERVAL === 0 ? this.getLabelForValue(val) : '';
+              }
+            }
+          },
+          y: {
+            title: { display: true, text: 'RSSI (dBm)' },
+            suggestedMin: -80,
+            suggestedMax: -20
+          }
+        },
+        plugins: {
+          legend: {
+            display: false
+          }
+        }
+      }
+    });
+  }
+
+  rssiChartBtn.addEventListener('click', () => {
+    if (isRSSIChartVisible) {
+      isRSSIChartVisible = false;
+      rssiChartBtn.style.backgroundColor = btnDefaultColor;
+
+      rssiCanvasCtx.clearRect(0, 0, rssiCanvasCtx.canvas.width, rssiCanvasCtx.canvas.height);
+      rssiChart.data.labels = [];
+      rssiChart.data.datasets[0].data = [];
+      tick = 0;
+    } else {
+      rssiChartBtn.style.backgroundColor = btnActiveColor;
+      if (rssiChart === undefined) initializeRSSIChart();
+      rssiChart.update();
+      isRSSIChartVisible = true;
+    }
+  });
+
 
   /* Initial Loading */
+
 
   presenceGroup.forEach(button => {
     button.addEventListener('click', () => {
