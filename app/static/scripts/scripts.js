@@ -322,11 +322,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let j = 10;
         let cnt = 0;
 
-        if (data.presence === 1)
-          presence.textContent = "Yes"
-        else
-          presence.textContent = "No"
-
         scatter = data.signalCoordinates.map(pos => ({ x: pos[0], y: pos[1], z: pos[2], id: "point-" + cnt++ }));
 
         for (let z = -j; z < j; z++) {
@@ -382,7 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const targetCount = countTarget(data);
 
           if (isRadarVisible) visualizeRadarData(data);
-          if (targetCount > 0) presenceStatus.textContent = "Yes";
+          if (data.presence == 1) presenceStatus.textContent = "Yes";
           else presenceStatus.textContent = "No";
           if (data.radarY[0] != '0') {
             target1Dist.textContent = calculateDistance(data.radarX[0], data.radarY[0]).toFixed(2) + "m";

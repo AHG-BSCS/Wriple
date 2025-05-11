@@ -9,7 +9,8 @@ import socket
 import subprocess
 import time
 import threading
-from sklearn.preprocessing import MinMaxScaler
+# from sklearn.decomposition import PCA
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from scapy.all import Raw, IP, UDP, send
 from flask import Flask, jsonify, request, send_from_directory
 
@@ -29,20 +30,20 @@ TX_INTERVAL = 0.05
 csv_file_path = None
 CSV_DIRECTORY = 'app/dataset/recorded'
 DATASET_COLUMNS = None
-FEATURES_COLUMNS = None
+X_TEST_COLUMNS = None
 
 MM_SCALER = MinMaxScaler((-10, 10))
+STD_SCALER = StandardScaler()
+pca = None
+
 WINDOW_RANGE = [(0, 10), (10, -1)]
-WINDOW_SIZE = 35
-SMOOTH_SUBCARRIER_COUNT = 23 # TODO: The value was estimated based on missing columns. Find the correct calculation.
-START_SUBCARRIER = 70
-END_SUBCARRIER = 368
-PREPROCESS = True
+SUBCARRIER_COUNT = 306
+SMOOTH = True
 
 recording = False
 monitoring = False
 total_packet_count = 0
-max_monitoring_packets = MONITORING_PACKET_LIMIT
+max_monitoring_packets = 20
 
 transmit_timestamp = []
 amplitude_queue = []
@@ -54,7 +55,7 @@ radar_dist_res = [0, 0, 0]
 rssi = 0
 
 model = None
-prediction = None
+presence_pred = 0
 target_count = None
 class_label = None
 line_of_sight = None
@@ -86,18 +87,6 @@ def clean_and_filter_data(amplitudes, phases, amp_lower_threshold, amp_upper_thr
 
     return cleaned_amplitudes, cleaned_phases
 
-def aggregate_amps_features(data):
-    features = []
-    features.extend(np.std(data, axis=0))
-    return np.array(features)
-
-def aggregate_phases_features(data):
-    features = []
-    features.extend(np.std(data, axis=0))
-    features.extend(np.percentile(data, 75, axis=0))
-    features.extend(np.var(data, axis=0))
-    return np.array(features)
-
 def get_subcarrier_threshold(data_transposed):
     lower_threshold, upper_threshold = [], []
 
@@ -111,17 +100,15 @@ def get_subcarrier_threshold(data_transposed):
     return lower_threshold, upper_threshold
 
 def filter_amp_phase():
-    global max_monitoring_packets, prediction
+    global max_monitoring_packets, presence_pred
     signal_coordinates = []
 
     # Load the data if file was selected for visualization
     if max_monitoring_packets == RECORDING_PACKET_LIMIT:
         try:
             csi_df = pd.read_csv(csv_file_path)
-            raw_csi = csi_df['Raw_CSI'].apply(eval)
-
-            for csi_data in raw_csi:
-                compute_csi_amplitude_phase(csi_data[START_SUBCARRIER:END_SUBCARRIER])
+            csi_df['Raw_CSI'] = csi_df['Raw_CSI'].apply(eval)
+            csi_df['Raw_CSI'].apply(compute_csi_amplitude_phase)
         except Exception as e:
             print("Error: 'Amplitude' or 'Phase' column not found in the file.", e)
             return
@@ -132,19 +119,7 @@ def filter_amp_phase():
     csi_amplitude = pd.Series(amplitude_queue)
     csi_phase = pd.Series(phase_queue)
     
-    if model:
-        amps_features = [aggregate_amps_features(amplitude_queue[start:end]) for start, end in WINDOW_RANGE]
-        phases_features = [aggregate_phases_features(phase_queue[start:end]) for start, end in WINDOW_RANGE]
-
-        rows = []
-
-        for amp_features, phase_features in zip(amps_features, phases_features):
-            row = np.concatenate([amp_features, phase_features])
-            rows.append(row)
-
-        X_test = pd.DataFrame(rows, columns=FEATURES_COLUMNS)
-        predictions = model.predict(X_test)
-        prediction = 0 if 0 in predictions else 1
+    predict_presence(csi_df)
 
     # Transpose to make subcarriers as rows
     amps_transposed = list(map(list, zip(*csi_amplitude)))
@@ -187,32 +162,33 @@ def filter_amp_phase():
     
     return signal_coordinates
 
+def predict_presence():
+    global presence_pred
+    signal_queue_length = len(amplitude_queue)
+    if model and signal_queue_length > 5:
+        rows = []
+        frame_set = [(i, i + 5) for i in range(0, signal_queue_length, 2)]
+        amplitude_features = [np.percentile(amplitude_queue[start:end], 25, axis=0) for start, end in frame_set]
+
+        X_test = pd.DataFrame(amplitude_features, columns=X_TEST_COLUMNS)
+        X_test = STD_SCALER.fit_transform(X_test)
+        X_pca = pca.transform(X_test)
+
+        y_pred = model.predict(X_pca)
+        presence_pred = 0 if 0 in y_pred else 1
+
 def compute_csi_amplitude_phase(csi_data):
     amplitudes = []
     phases = []
     
-    # Ensure the data length is even (pairs of I and Q)
-    if len(csi_data) % 2 != 0:
-        raise ValueError('CSI data length must be even (pairs of I and Q values).')
-    
+    if len(csi_data) % 2 != 0: raise ValueError('CSI data length must be even (I/Q pairs).')
     for i in range(0, len(csi_data), 2):
         I = csi_data[i]
         Q = csi_data[i + 1]
-        
-        amplitude = math.sqrt(I**2 + Q**2)
-        phase = math.atan2(Q, I)
-        
-        amplitudes.append(amplitude)
-        phases.append(phase)
+        amplitudes.append(math.sqrt(I**2 + Q**2))
+        phases.append(math.atan2(Q, I))
     
-    if PREPROCESS:
-        # Use phase unwrapping to prevent discontinuities in phase
-        phases = np.unwrap(phases)
-
-        # Compute moving average of the last 100 packets
-        amplitudes = np.convolve(amplitudes, np.ones(WINDOW_SIZE) / WINDOW_SIZE, mode='valid')
-        phases = np.convolve(phases, np.ones(WINDOW_SIZE) / WINDOW_SIZE, mode='valid')
-    
+    # Remove old signals if the queue exceeds the limit
     while len(amplitude_queue) >= max_monitoring_packets:
         amplitude_queue.pop(0)
         phase_queue.pop(0)
@@ -226,18 +202,18 @@ def parse_csi_data(data_str):
     csi_data_end = data_str.find(']')
 
     # Extract CSI data as a string of integers
-    csi_data = data_str[csi_data_start + 1:csi_data_end].strip().split(' ')
-    csi_data = list(filter(None, csi_data))  # Remove empty strings
+    raw_csi = data_str[csi_data_start + 1:csi_data_end].strip().split(' ')
+    raw_csi = list(filter(None, raw_csi))  # TODO: Evaluate if needed: Remove empty strings
     
     try:
-        csi_data = [int(x) for x in csi_data]
+        raw_csi = [int(x) for x in raw_csi]
         if monitoring:
-            compute_csi_amplitude_phase(csi_data[START_SUBCARRIER:END_SUBCARRIER])
+            compute_csi_amplitude_phase(raw_csi)
     except ValueError:
-        csi_data = []
+        raw_csi = []
 
     # Use -1 to exclude the unformatted Raw CSI data
-    return parts[:-1] + [csi_data]
+    return parts[:-1] + [raw_csi]
 
 def process_data(data, m):
     global max_monitoring_packets, rssi
@@ -373,7 +349,7 @@ def prepare_csv_file():
         pass
 
 def set_columns():
-    global DATASET_COLUMNS, FEATURES_COLUMNS
+    global DATASET_COLUMNS, X_TEST_COLUMNS
 
     DATASET_COLUMNS = ['Transmit_Timestamp', 'Presence', 'Target_Count', 'Angle', 'Distance', 
                        'RSSI', 'Rate', 'MCS', 'Channel', 'Received_Timestamp',
@@ -381,16 +357,14 @@ def set_columns():
                        'Target2_X', 'Target2_Y', 'Target2_Speed', 'Target2_Resolution', 
                        'Target3_X', 'Target3_Y', 'Target3_Speed', 'Target3_Resolution', 'Raw_CSI']
 
-    FEATURES_COLUMNS = [f'AM_Std{i + 1}' for i in range(SMOOTH_SUBCARRIER_COUNT)] + \
-                       [f'PH_Std{i + 1}' for i in range(SMOOTH_SUBCARRIER_COUNT)] + \
-                       [f'PH_Per{i + 1}' for i in range(SMOOTH_SUBCARRIER_COUNT)] + \
-                       [f'PH_Var{i + 1}' for i in range(SMOOTH_SUBCARRIER_COUNT)]
+    X_TEST_COLUMNS = [f'Amp_25%_S{i+1}' for i in range(SUBCARRIER_COUNT)]
 
 def check_model():
-    global model
-    model_path = 'app/model/no_model.pkl'
+    global model, pca
+    model_path = 'app/model/wriple_v2_(presence).pkl'
     if os.path.exists(model_path):
         model = joblib.load(model_path)
+        pca = joblib.load('app/model/wriple_v2_(pca).pkl')
         return 1
     else:
         return 0
@@ -420,8 +394,7 @@ def serve_index():
 
 @app.route('/start_recording/<mode>', methods=['GET'])
 def start_recording(mode):
-    global recording, monitoring, prediction
-    prediction = None
+    global recording, monitoring
 
     try:
         if mode == 'recording':
@@ -456,16 +429,17 @@ def visualize_data():
     try:
         signal_coordinates = filter_amp_phase()
         return jsonify({
-            "prediction": prediction,
-            "signalCoordinates": signal_coordinates,
+            "signalCoordinates": signal_coordinates
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
 @app.route('/get_radar_data', methods=['POST'])
 def get_radar_data():
+    predict_presence()
     try:
         return jsonify({
+            'presence': presence_pred,
             'radarX': radar_x_coord, # -13856 ~ +13856
             'radarY': radar_y_coord, # 0 ~ 8000
             'radarSpeed': radar_speed,
@@ -548,4 +522,5 @@ def fetch_phase_data():
         return jsonify({"error": str(e)})
 
 if __name__ == '__main__':
+    set_columns()
     app.run(debug=True)
