@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let isRadarVisible = false;
   let is3DPlotVisible = false;
 
-  let monitorVisualizeInterval;
+  let d3PlotVisualizerInterval;
   let radarVisualizerInterval;
   let amplitudeHeatmapInterval;
   let phaseHeatmapInterval;
@@ -140,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let alpha = 0;
   let mx, my, mouseX = 0, mouseY = 0;
   
-  const svg = select("svg")
+  const svg = select("#d3-plot")
     .call(
       drag()
         .on("drag", dragged)
@@ -317,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return Math.atan2(x, y) * (180 / Math.PI);
   }
 
-  function visualize() {
+  function visualize3DPlot() {
     fetch('/visualize_data', { method: "POST" })
       .then(response => response.json())
       .then(data => {
@@ -348,7 +348,6 @@ document.addEventListener('DOMContentLoaded', () => {
         processData(datas, 1000);
       })
       .catch(err => {
-        setHeaderTextToDefault();
         console.log("Missing data for 3D plot." + err);
       });
   }
@@ -593,7 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function stopMonitoring() {
     fetch('/stop_recording', { method: "POST" });
     clearInterval(radarVisualizerInterval);
-    clearInterval(monitorVisualizeInterval);
+    clearInterval(d3PlotVisualizerInterval);
 
     isMonitoring = false;
     isRadarVisible = false;
@@ -701,12 +700,12 @@ document.addEventListener('DOMContentLoaded', () => {
   d3PlotBtn.addEventListener('click', () => {
     if (is3DPlotVisible) {
       d3PlotBtn.style.backgroundColor = btnDefaultColor;
-      clearInterval(monitorVisualizeInterval);
+      clearInterval(d3PlotVisualizerInterval);
       setHeaderTextToDefault();
       svg.selectAll('*').remove();
       is3DPlotVisible = false;
     } else {
-      monitorVisualizeInterval = setInterval(visualize, d3PlotRefreshRate);
+      d3PlotVisualizerInterval = setInterval(visualize3DPlot, d3PlotRefreshRate);
       d3PlotBtn.style.backgroundColor = btnActiveColor;
       is3DPlotVisible = true;
     }

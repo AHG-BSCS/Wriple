@@ -103,23 +103,22 @@ def filter_amp_phase():
     signal_coordinates = []
 
     # Load the data if file was selected for visualization
-    if max_monitoring_packets == RECORDING_PACKET_LIMIT:
-        try:
-            csi_df = pd.read_csv(csv_file_path)
-            csi_df['Raw_CSI'] = csi_df['Raw_CSI'].apply(eval)
-            csi_df['Raw_CSI'].apply(compute_csi_amplitude_phase)
-        except Exception as e:
-            print("Error: 'Amplitude' or 'Phase' column not found in the file.", e)
-            return
+    # if max_monitoring_packets == RECORDING_PACKET_LIMIT:
+    #     try:
+    #         csi_df = pd.read_csv(csv_file_path)
+    #         csi_df['Raw_CSI'] = csi_df['Raw_CSI'].apply(eval)
+    #         csi_df['Raw_CSI'].apply(compute_csi_amplitude_phase)
+    #     except Exception as e:
+    #         print("Error: 'Amplitude' or 'Phase' column not found in the file.", e)
+    #         return
     
-    if len(amplitude_queue) < RECORDING_PACKET_LIMIT:
-        return
+    # Why?
+    # if len(amplitude_queue) < RECORDING_PACKET_LIMIT:
+    #     return
 
     csi_amplitude = pd.Series(amplitude_queue)
     csi_phase = pd.Series(phase_queue)
     
-    predict_presence(csi_df)
-
     # Transpose to make subcarriers as rows
     amps_transposed = list(map(list, zip(*csi_amplitude)))
     phases_transposed = list(map(list, zip(*csi_phase)))
