@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let phaseHeatmapInterval;
   // let rssiHistogramInterval;
   const d3PlotRefreshRate = 1000;
-  const radarRefreshRate = 100;
+  const radarRefreshRate = 200;
   const recordingDelay = 1000;
   const heatmapRefreshRate = 100;
   const systemStatusInterval = 8000;
@@ -432,12 +432,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function scaleXToRadar(x, width) {
     x = parseInt(x)
-    return Math.floor((x / 13856) * (width / 2));
+    return Math.floor((x / 6000) * (width / 2));
   }
 
   function scaleYToRadar(y, height) {
     y = parseInt(y)
-    return Math.floor((y / 8000) * height);
+    return Math.floor((y / 6000) * height);
   }
 
   function list_csv_files() {

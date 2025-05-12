@@ -9,6 +9,7 @@ import socket
 import subprocess
 import time
 import threading
+from scipy.signal import hilbert
 from sklearn.preprocessing import MinMaxScaler
 from scapy.all import Raw, IP, UDP, send
 from flask import Flask, jsonify, request, send_from_directory
@@ -50,6 +51,7 @@ radar_dist_res = [0, 0, 0]
 rssi = 0
 
 MM_SCALER = MinMaxScaler((-10, 10))
+# SCALER_MODEL = None
 DIM_RED_MODEL = None
 PRESENCE_MODEL = None
 presence_pred = 0
@@ -159,16 +161,28 @@ def filter_amp_phase():
     
     return signal_coordinates
 
+def hilbert_features(data):
+    analytic_signal = hilbert(data)
+    signal_envelope = np.abs(analytic_signal)
+    return signal_envelope.tolist()
+
 def predict_presence():
     global presence_pred
-    signal_queue_length = len(amplitude_queue)
-    if PRESENCE_MODEL and signal_queue_length > 5:
-        frame_set = [(i, i + 5) for i in range(0, signal_queue_length, 2)]
-        amplitude_features = [np.percentile(amplitude_queue[start:end], 25, axis=0) for start, end in frame_set]
-
-        X_pca = DIM_RED_MODEL.transform(amplitude_features)
+    if PRESENCE_MODEL:
+        X_pca = DIM_RED_MODEL.transform(amplitude_queue[:5])
         y_pred = PRESENCE_MODEL.predict(X_pca)
         presence_pred = 0 if 0 in y_pred else 1
+        # presence_pred = 1 if 1 in y_pred else 0
+
+        # FOR PREDICTION USING FRAMES
+        # frame_set = [(i, i + 5) for i in range(0, signal_queue_length, 2)]
+        # amplitude_features = [np.percentile(amplitude_queue[start:end], 25, axis=0) for start, end in frame_set]
+
+        # FOR ConvLSTM
+        # scaled_amp = SCALER_MODEL.transform(amplitude_queue[-10:])
+        # reshaped_amp = scaled_amp.reshape(1, 10, 18, 17, 1)
+        # prediction = PRESENCE_MODEL.predict(reshaped_amp)
+        # presence_pred = 0 if prediction[0][0] >= 0.5 else 1
 
 def compute_csi_amplitude_phase(csi_data):
     amplitudes = []
@@ -353,11 +367,14 @@ def set_columns():
     X_TEST_COLUMNS = [f'Amp_25%_S{i+1}' for i in range(SUBCARRIER_COUNT)]
 
 def check_model():
-    global DIM_RED_MODEL, PRESENCE_MODEL 
+    global SCALER_MODEL, DIM_RED_MODEL, PRESENCE_MODEL
     try:
-        if os.path.exists('app/model/wriple_v2_(presence).pkl'):
+        if os.path.exists('app/model/wriple_v2_(logreg).pkl'):
+            # SCALER_MODEL = joblib.load('app/model/scaler.pkl')
             DIM_RED_MODEL = joblib.load('app/model/wriple_v2_(pca).pkl')
-            PRESENCE_MODEL = joblib.load('app/model/wriple_v2_(presence).pkl')
+            # PRESENCE_MODEL = load_model('app/model/convlstm_model.keras')
+            PRESENCE_MODEL = joblib.load('app/model/wriple_v2_(logreg).pkl')
+            # PRESENCE_MODEL = joblib.load('app/model/wriple_v2_(presence).pkl')
             return 1
         else:
             return 0
@@ -435,8 +452,8 @@ def get_radar_data():
     try:
         return jsonify({
             'presence': presence_pred,
-            'radarX': radar_x_coord, # -13856 ~ +13856
-            'radarY': radar_y_coord, # 0 ~ 8000
+            'radarX': radar_x_coord, # -6000 ~ +6000
+            'radarY': radar_y_coord, # 0 ~ 6000
             'radarSpeed': radar_speed,
             'radarDistRes': radar_dist_res,
             'totalPacket': total_packet_count,
