@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const amplitudeHeatmap = simpleheat(amplitudeCanvas);
   const phaseHeatmap = simpleheat(phaseCanvas);
-  const SUBCARRIER_COUNT = 115;
+  const SUBCARRIER_COUNT = 21;
   const MAX_COLS = 160;
 
   const MAX_RSSI_POINTS = 160; // 30 seconds of data at 1Hz
@@ -400,7 +400,6 @@ document.addEventListener('DOMContentLoaded', () => {
           // Stop displaying radar data if no targets are detected by the model
           else if (data.presence == 1) {
             presenceStatus.textContent = "Yes";
-            if (isRSSIChartVisible) visualizeRSSI(data.rssi);
             if (isRadarVisible) visualizeRadarData(data);
             if (data.radarY[0] != '0') {
               target1Dist.textContent = calculateDistance(data.radarX[0], data.radarY[0]).toFixed(2) + "m";
@@ -432,7 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
 
           // This data must be updated
-          
+          if (isRSSIChartVisible) visualizeRSSI(data.rssi);
           packetCount.textContent = data.totalPacket;
           rssiValue.textContent = data.rssi;
         }

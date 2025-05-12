@@ -507,7 +507,7 @@ def fetch_amplitude_data():
         if not amplitude_queue:
             return jsonify({"latestAmplitude": []})
 
-        latest_amplitudes = amplitude_queue[-1]
+        latest_amplitudes = amplitude_queue[-1][127:148]
         subcarriers = len(latest_amplitudes)
         amplitude_points = [[x, 0, float(latest_amplitudes[x])] for x in range(subcarriers)]
 
@@ -523,7 +523,7 @@ def fetch_phase_data():
         if not phase_queue:
             return jsonify({"latestPhase": []})
 
-        latest_phases = phase_queue[-1]
+        latest_phases = phase_queue[-1][6:27]
         subcarriers = len(latest_phases)
         phase_points = [[x, 0, float(latest_phases[x])] for x in range(subcarriers)]
 
