@@ -76,6 +76,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const rssiChartBtn = document.getElementById('rssi-histogram-btn');
   const d3PlotBtn = document.getElementById('3d-plot-btn');
 
+  const amplitudeHeatmapContainer = document.getElementById('amplitude-heatmap-container');
+  const phaseHeatmapContainer = document.getElementById('phase-heatmap-container');
+  const rssiChartContainer = document.getElementById('rssi-chart-container');
+  const d3PlotContainer = document.getElementById('3d-plot-container');
+
   const amplitudeCanvas = document.getElementById('amplitude-heatmap');
   const phaseCanvas = document.getElementById('phase-heatmap');
   const rssiCanvasCtx = document.getElementById('rssi-chart').getContext('2d');
@@ -659,12 +664,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function startAmplitudeHeatmap() {
     amplitudeHeatmapBtn.style.backgroundColor = btnActiveColor;
+    amplitudeHeatmapContainer.classList.remove('hidden');
     isAmpitudeHeatmapVisible = true;
     amplitudeHeatmapInterval = setInterval(fetchAmplitudeData, heatmapRefreshRate);
   }
 
   function stopAmplitudeHeatmap() {
     amplitudeHeatmapBtn.style.backgroundColor = btnDefaultColor;
+    amplitudeHeatmapContainer.classList.add('hidden');
     clearInterval(amplitudeHeatmapInterval);
     setTimeout(() => {}, heatmapRefreshRate);
     amplitudeBuffer = Array.from({ length: SUBCARRIER_COUNT }, () => []);
@@ -679,12 +686,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function startPhaseHeatmap() {
     phaseHeatmapBtn.style.backgroundColor = btnActiveColor;
+    phaseHeatmapContainer.classList.remove('hidden');
     isPhaseHeatmapVisible = true;
     phaseHeatmapInterval = setInterval(fetchPhaseData, heatmapRefreshRate);
   }
 
   function stopPhaseHeatmap() {
     phaseHeatmapBtn.style.backgroundColor = btnDefaultColor;
+    phaseHeatmapContainer.classList.add('hidden');
     clearInterval(phaseHeatmapInterval);
     setTimeout(() => {}, heatmapRefreshRate);
     phaseBuffer = Array.from({ length: SUBCARRIER_COUNT }, () => []);
@@ -700,13 +709,15 @@ document.addEventListener('DOMContentLoaded', () => {
   d3PlotBtn.addEventListener('click', () => {
     if (is3DPlotVisible) {
       d3PlotBtn.style.backgroundColor = btnDefaultColor;
+      d3PlotContainer.classList.add('hidden');
       clearInterval(d3PlotVisualizerInterval);
       setHeaderTextToDefault();
       svg.selectAll('*').remove();
       is3DPlotVisible = false;
     } else {
-      d3PlotVisualizerInterval = setInterval(visualize3DPlot, d3PlotRefreshRate);
       d3PlotBtn.style.backgroundColor = btnActiveColor;
+      d3PlotContainer.classList.remove('hidden');
+      d3PlotVisualizerInterval = setInterval(visualize3DPlot, d3PlotRefreshRate);
       is3DPlotVisible = true;
     }
   });
@@ -757,6 +768,7 @@ document.addEventListener('DOMContentLoaded', () => {
       datasetDivs.forEach(t => {
         t.classList.remove('hidden');
       });
+      hideVisualizers();
     }
 
     if (isRecording) stopRecording();
@@ -878,7 +890,14 @@ document.addEventListener('DOMContentLoaded', () => {
     return flat;
   }
 
-  function tempConfigVisualizers() {
+  function hideVisualizers() {
+    amplitudeHeatmapContainer.classList.add('hidden');
+    phaseHeatmapContainer.classList.add('hidden');
+    rssiChartContainer.classList.add('hidden');
+    d3PlotContainer.classList.add('hidden');
+  }
+
+  function tempConfigUI() {
     amplitudeHeatmap.radius(1, 0);
     amplitudeHeatmap.max(40);
     phaseHeatmap.radius(1, 0);
@@ -889,8 +908,18 @@ document.addEventListener('DOMContentLoaded', () => {
     amplitudeCanvas.width = MAX_COLS - 1;
     phaseCanvas.height = SUBCARRIER_COUNT - 1;
     phaseCanvas.width = MAX_COLS - 1;
+    
+    // Prevent RSSI line chart from exceeding the layout size
     rssiCanvasCtx.canvas.width = 680;
     rssiCanvasCtx.canvas.height = 200;
+    
+    // // Disable visualizer buttons
+    d3PlotBtn.disabled = true;
+    targetRadarBtn.disabled = true;
+
+    // Load the initial tab
+    dashboardBtn.click();
+    isMonitorActive = true;
   }
 
   amplitudeMaxSlider.addEventListener("input", (e) => {
@@ -951,8 +980,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   rssiChartBtn.addEventListener('click', () => {
     if (isRSSIChartVisible) {
-      isRSSIChartVisible = false;
       rssiChartBtn.style.backgroundColor = btnDefaultColor;
+      rssiChartContainer.classList.add('hidden');
+      isRSSIChartVisible = false;
 
       rssiCanvasCtx.clearRect(0, 0, rssiCanvasCtx.canvas.width, rssiCanvasCtx.canvas.height);
       rssiChart.data.labels = [];
@@ -960,6 +990,7 @@ document.addEventListener('DOMContentLoaded', () => {
       tick = 0;
     } else {
       rssiChartBtn.style.backgroundColor = btnActiveColor;
+      rssiChartContainer.classList.remove('hidden');
       if (rssiChart === undefined) initializeRSSIChart();
       rssiChart.update();
       isRSSIChartVisible = true;
@@ -993,14 +1024,10 @@ document.addEventListener('DOMContentLoaded', () => {
       targetClass = button.textContent;
     });
   });
-
-  dashboardBtn.click();
-  isMonitorActive = true;
+  
   list_csv_files();
   checkSystemStatus();
   setInterval(checkSystemStatus, systemStatusInterval);
-  tempConfigVisualizers();
-
-  d3PlotBtn.disabled = true;
-  targetRadarBtn.disabled = true;
+  tempConfigUI();
+  hideVisualizers();
 });
