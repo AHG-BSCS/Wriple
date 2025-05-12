@@ -864,7 +864,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return flat;
   }
 
-  function configureHeatmaps() {
+  function tempConfigVisualizers() {
     amplitudeHeatmap.radius(1, 0);
     amplitudeHeatmap.max(40);
     phaseHeatmap.radius(1, 0);
@@ -875,6 +875,8 @@ document.addEventListener('DOMContentLoaded', () => {
     amplitudeCanvas.width = MAX_COLS - 1;
     phaseCanvas.height = SUBCARRIER_COUNT - 1;
     phaseCanvas.width = MAX_COLS - 1;
+    rssiCanvasCtx.canvas.width = 700;
+    rssiCanvasCtx.canvas.height = 200;
   }
 
   amplitudeMaxSlider.addEventListener("input", (e) => {
@@ -890,6 +892,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   function initializeRSSIChart() {
+    rssiCanvasCtx.canvas.width = 700;
+    rssiCanvasCtx.canvas.height = 200;
     rssiChart = new Chart(rssiCanvasCtx, {
       type: 'line',
       data: {
@@ -981,7 +985,7 @@ document.addEventListener('DOMContentLoaded', () => {
   list_csv_files();
   checkSystemStatus();
   setInterval(checkSystemStatus, systemStatusInterval);
-  configureHeatmaps();
+  tempConfigVisualizers();
 
   d3PlotBtn.disabled = true;
   targetRadarBtn.disabled = true;

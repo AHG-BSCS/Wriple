@@ -163,6 +163,10 @@
             <div class="flex flex-1 overflow-hidden">
                 <!-- Main Section -->
                 <main class="py-4 px-16 overflow-scroll">
+                    <!-- Line Chart -->
+                    <div class="w-fit h-fit m-auto my-6 dataset-hidden">
+                        <canvas id="rssi-chart" class="rounded shadow"></canvas>
+                    </div>
                     <!-- Radar -->
                     <div id="radar-container" class="rounded shadow relative inline-block">
                         <img src="static/images/radar-bg.png"/>
@@ -188,10 +192,7 @@
                             <canvas id="phase-heatmap" class="w-full h-52 rounded-b shadow"></canvas>
                         </div>
                     </div>
-                    <!-- Line Chart -->
-                    <div class="w-fit m-auto my-6 dataset-hidden">
-                        <canvas id="rssi-chart" width="1200" height="300" class="rounded shadow"></canvas>
-                    </div>
+                    
                     <!-- 3D Plot -->
                     <div class="flex justify-center items-center h-3/4 my-6 dataset-hidden">
                         <div id="visualizer-container" class="w-3/4 h-full rounded shadow">
