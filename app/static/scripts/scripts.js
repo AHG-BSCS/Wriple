@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let phaseHeatmapInterval;
   // let rssiHistogramInterval;
   const d3PlotRefreshRate = 1000;
-  const radarRefreshRate = 200;
+  const radarRefreshRate = 100;
   const recordingDelay = 1000;
   const heatmapRefreshRate = 100;
   const systemStatusInterval = 8000;
@@ -285,24 +285,24 @@ document.addEventListener('DOMContentLoaded', () => {
   function setHeaderTextToDefault() {
     presenceStatus.textContent = "No";
     targetDetected.textContent = "0";
-    target1Dist.textContent = "0m";
+    target1Dist.textContent = "0.00m";
     packetCount.textContent = "0";
     rssiValue.textContent = "0";
   }
 
   function setAsideTextToDefault() {
-    target1Angle.textContent = "0°";
-    target2Angle.textContent = "0°";
-    target3Angle.textContent = "0°";
-    target1Distance.textContent = "0m";
-    target2Distance.textContent = "0m";
-    target3Distance.textContent = "0m";
+    target1Angle.textContent = "0.00°";
+    target2Angle.textContent = "0.00°";
+    target3Angle.textContent = "0.00°";
+    target1Distance.textContent = "0.00m";
+    target2Distance.textContent = "0.00m";
+    target3Distance.textContent = "0.00m";
     target1Speed.textContent = "0cm/s";
     target2Speed.textContent = "0cm/s";
     target3Speed.textContent = "0cm/s";
-    target1DistRes.textContent = "0m";
-    target2DistRes.textContent = "0m";
-    target3DistRes.textContent = "0m";
+    target1DistRes.textContent = "0";
+    target2DistRes.textContent = "0";
+    target3DistRes.textContent = "0";
   }
 
   function calculateDistance(x, y) {
@@ -392,35 +392,49 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(response => response.json())
       .then(data => {
         if (data.modeStatus != -1) {
-          const targetCount = countTarget(data);
-
-          if (isRadarVisible) visualizeRadarData(data);
-          if (isRSSIChartVisible) visualizeRSSI(data.rssi);
-          if (data.presence == 1) presenceStatus.textContent = "Yes";
-          else presenceStatus.textContent = "No";
-          if (data.radarY[0] != '0') {
-            target1Dist.textContent = calculateDistance(data.radarX[0], data.radarY[0]).toFixed(2) + "m";
+          if (parseInt(data.rssi) > -70) {
+            setHeaderTextToDefault();
+            setAsideTextToDefault();
+            presenceStatus.textContent = "Too Close";
           }
-          else target1Dist.textContent = "0m";
+          // Stop displaying radar data if no targets are detected by the model
+          else if (data.presence == 1) {
+            presenceStatus.textContent = "Yes";
+            if (isRSSIChartVisible) visualizeRSSI(data.rssi);
+            if (isRadarVisible) visualizeRadarData(data);
+            if (data.radarY[0] != '0') {
+              target1Dist.textContent = calculateDistance(data.radarX[0], data.radarY[0]).toFixed(2) + "m";
+            }
+            else target1Dist.textContent = "0m";
 
-          targetDetected.textContent = targetCount;
+            const targetCount = countTarget(data);
+            targetDetected.textContent = targetCount;
+
+            if (isMonitoring) {
+              target1Angle.textContent = calculateAngle(data.radarX[0], data.radarY[0]).toFixed(2) + "°";
+              target2Angle.textContent = calculateAngle(data.radarX[1], data.radarY[1]).toFixed(2) + "°";
+              target3Angle.textContent = calculateAngle(data.radarX[2], data.radarY[2]).toFixed(2) + "°";
+              target1Distance.textContent = calculateDistance(data.radarX[0], data.radarY[0]).toFixed(2) + "m";
+              target2Distance.textContent = calculateDistance(data.radarX[1], data.radarY[1]).toFixed(2) + "m";
+              target3Distance.textContent = calculateDistance(data.radarX[2], data.radarY[2]).toFixed(2) + "m";
+              target1Speed.textContent = data.radarSpeed[0] + "cm/s";
+              target2Speed.textContent = data.radarSpeed[1] + "cm/s";
+              target3Speed.textContent = data.radarSpeed[2] + "cm/s";
+              target1DistRes.textContent = data.radarDistRes[0];
+              target2DistRes.textContent = data.radarDistRes[1];
+              target3DistRes.textContent = data.radarDistRes[2];
+            }
+          }
+          else {
+            presenceStatus.textContent = "No";
+            setHeaderTextToDefault();
+            setAsideTextToDefault();
+          }
+
+          // This data must be updated
+          
           packetCount.textContent = data.totalPacket;
           rssiValue.textContent = data.rssi;
-
-          if (isMonitoring) {
-            target1Angle.textContent = calculateAngle(data.radarX[0], data.radarY[0]).toFixed(2) + "°";
-            target2Angle.textContent = calculateAngle(data.radarX[1], data.radarY[1]).toFixed(2) + "°";
-            target3Angle.textContent = calculateAngle(data.radarX[2], data.radarY[2]).toFixed(2) + "°";
-            target1Distance.textContent = calculateDistance(data.radarX[0], data.radarY[0]).toFixed(2) + "m";
-            target2Distance.textContent = calculateDistance(data.radarX[1], data.radarY[1]).toFixed(2) + "m";
-            target3Distance.textContent = calculateDistance(data.radarX[2], data.radarY[2]).toFixed(2) + "m";
-            target1Speed.textContent = data.radarSpeed[0] + "cm/s";
-            target2Speed.textContent = data.radarSpeed[1] + "cm/s";
-            target3Speed.textContent = data.radarSpeed[2] + "cm/s";
-            target1DistRes.textContent = data.radarDistRes[0];
-            target2DistRes.textContent = data.radarDistRes[1];
-            target3DistRes.textContent = data.radarDistRes[2];
-          }
         }
         else stopRecording();
       })
@@ -875,7 +889,7 @@ document.addEventListener('DOMContentLoaded', () => {
     amplitudeCanvas.width = MAX_COLS - 1;
     phaseCanvas.height = SUBCARRIER_COUNT - 1;
     phaseCanvas.width = MAX_COLS - 1;
-    rssiCanvasCtx.canvas.width = 700;
+    rssiCanvasCtx.canvas.width = 680;
     rssiCanvasCtx.canvas.height = 200;
   }
 
@@ -892,7 +906,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   function initializeRSSIChart() {
-    rssiCanvasCtx.canvas.width = 700;
+    rssiCanvasCtx.canvas.width = 680;
     rssiCanvasCtx.canvas.height = 200;
     rssiChart = new Chart(rssiCanvasCtx, {
       type: 'line',
