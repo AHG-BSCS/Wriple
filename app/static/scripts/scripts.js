@@ -116,8 +116,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const SUBCARRIER_COUNT = 21;
   const MAX_COLS = 160;
 
-  const MAX_RSSI_POINTS = 160; // 30 seconds of data at 1Hz
-  const RSSI_TICK_INTERVAL = 50; // seconds
+  const MAX_RSSI_POINTS = 120; // 30 seconds of data at 1Hz
+  const RSSI_TICK_INTERVAL = 10; // seconds
 
   let amplitudeBuffer = Array.from({ length: SUBCARRIER_COUNT }, () => []);
   let phaseBuffer = Array.from({ length: SUBCARRIER_COUNT }, () => []);
@@ -381,9 +381,11 @@ document.addEventListener('DOMContentLoaded', () => {
       rssiChart.data.datasets[0].data.shift();
     }
     
-    rssiChart.data.labels.push(tick / 10);
-    rssiChart.data.datasets[0].data.push(rssi);
-    rssiChart.update();
+    if (tick % 5 == 0) {
+      rssiChart.data.labels.push(tick / 10);
+      rssiChart.data.datasets[0].data.push(rssi);
+      rssiChart.update();
+    }
     tick++;
   }
 
