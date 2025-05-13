@@ -13,6 +13,7 @@ from scipy.signal import hilbert
 from sklearn.preprocessing import MinMaxScaler
 from scapy.all import Raw, IP, UDP, send
 from flask import Flask, jsonify, request, send_from_directory
+from scipy.signal import hilbert
 
 app = Flask(__name__)
 lock = threading.Lock()
@@ -51,7 +52,7 @@ radar_dist_res = [0, 0, 0]
 rssi = 0
 
 MM_SCALER = MinMaxScaler((-10, 10))
-# SCALER_MODEL = None
+SCALER_MODEL = None
 DIM_RED_MODEL = None
 PRESENCE_MODEL = None
 presence_pred = 0
@@ -167,15 +168,21 @@ def hilbert_features(data):
 
 def predict_presence():
     global presence_pred
-    if PRESENCE_MODEL:
-        X_pca = DIM_RED_MODEL.transform(amplitude_queue[:5])
+    data_size = len(amplitude_queue)
+    if PRESENCE_MODEL and data_size > 5:
+        # Feature extraction using Hilbert transform and 75th percentile
+        # X = [hilbert_features(amp) for amp in amplitude_queue]
+        # PACKET_FRAME_SETS = [(i, i + 6) for i in range(0, data_size, 3)]
+        # amplitude_features = [np.percentile(X[start:end], 77, axis=0) for start, end in PACKET_FRAME_SETS]
+
+        # For model that uses PCA
+        X_pca = DIM_RED_MODEL.transform(amplitude_queue[:2])
+
+        # Presence prediction
         y_pred = PRESENCE_MODEL.predict(X_pca)
         presence_pred = 0 if 0 in y_pred else 1
         # presence_pred = 1 if 1 in y_pred else 0
-
-        # FOR PREDICTION USING FRAMES
-        # frame_set = [(i, i + 5) for i in range(0, signal_queue_length, 2)]
-        # amplitude_features = [np.percentile(amplitude_queue[start:end], 25, axis=0) for start, end in frame_set]
+        print(y_pred)
 
         # FOR ConvLSTM
         # scaled_amp = SCALER_MODEL.transform(amplitude_queue[-10:])
@@ -368,12 +375,18 @@ def set_columns():
 def check_model():
     global SCALER_MODEL, DIM_RED_MODEL, PRESENCE_MODEL
     try:
-        if os.path.exists('app/model/wriple_v2_(logreg).pkl'):
-            # SCALER_MODEL = joblib.load('app/model/scaler.pkl')
-            DIM_RED_MODEL = joblib.load('app/model/wriple_v2_(pca).pkl')
+        if os.path.exists('app/model/wriple_v2_AB.pkl'):
+            # SCALER_MODEL = joblib.load('app/model/wriple_v2_STD.pkl')
+            # DIM_RED_MODEL = joblib.load('app/model/wriple_v2_PCA.pkl')
             # PRESENCE_MODEL = load_model('app/model/convlstm_model.keras')
-            PRESENCE_MODEL = joblib.load('app/model/wriple_v2_(logreg).pkl')
-            # PRESENCE_MODEL = joblib.load('app/model/wriple_v2_(presence).pkl')
+            # PRESENCE_MODEL = joblib.load('app/model/wriple_v2_LR.pkl')
+            # PRESENCE_MODEL = joblib.load('app/model/wriple_v2_ET.pkl')
+            # PRESENCE_MODEL = joblib.load('app/model/wriple_v2_AB.pkl')
+
+            # PRESENCE_MODEL = joblib.load('app/model/wriple_v2_LR_BEST_NO_PCA.pkl')
+
+            PRESENCE_MODEL = joblib.load('app/model/wriple_v2_LR_BEST_PCA.pkl')
+            DIM_RED_MODEL = joblib.load('app/model/wriple_v2_PCA_OF_BEST.pkl')
             return 1
         else:
             return 0

@@ -398,7 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(response => response.json())
       .then(data => {
         if (data.modeStatus != -1) {
-          if (parseInt(data.rssi) > -70) {
+          if (parseInt(data.rssi) > -60) {
             setHeaderTextToDefault();
             setAsideTextToDefault();
             presenceStatus.textContent = "Too Close";
@@ -434,6 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
             presenceStatus.textContent = "No";
             setHeaderTextToDefault();
             setAsideTextToDefault();
+            pointsContainer.innerHTML = '';
           }
 
           // This data must be updated
