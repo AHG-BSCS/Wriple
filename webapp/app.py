@@ -12,7 +12,7 @@ import threading
 from scipy.signal import hilbert
 from sklearn.preprocessing import MinMaxScaler
 from scapy.all import Raw, IP, UDP, send
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request, render_template
 from scipy.signal import hilbert
 
 app = Flask(__name__)
@@ -414,7 +414,7 @@ def check_system_status():
 
 @app.route('/')
 def serve_index():
-    return send_from_directory('.', 'index.html')
+    return render_template('index.html')
 
 @app.route('/start_recording/<mode>', methods=['GET'])
 def start_recording(mode):
