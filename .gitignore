@@ -1,6 +1,9 @@
 /.devcontainer
-/build
+/firmware/build
+/firmware/sdkconfig.old
 /app/dataset
-/app/utils
-/sdkconfig.old
-/webapp
+/app/temp
+/app/model
+/webapp/app/dataset
+/webapp/app/temp
+/webapp/app/model
