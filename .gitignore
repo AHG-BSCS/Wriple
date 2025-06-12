@@ -6,6 +6,4 @@ __pycache__/
 data/*
 firmware/build/*
 firmware/sdkconfig.old
-model/*
-!model/wriple_v1.6.pkl
 notebook/*
