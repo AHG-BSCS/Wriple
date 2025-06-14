@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const pointsContainer = document.getElementById('points');
 
   const presenceGroup = document.querySelectorAll('.group-presence-btn');
-  let presenceClass = -1;
+  let presenceClass;
   const targetGroup = document.querySelectorAll('.group-target-btn');
   let targetClass;
   const losInput = document.getElementById('los-input');
@@ -323,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function visualize3DPlot() {
-    fetch('/visualize_data', { method: "POST" })
+    fetch('/visualize_3d_plot', { method: "POST" })
       .then(response => response.json())
       .then(data => {
         d3PlotBtn.style.backgroundColor = btnActiveColor;
@@ -404,9 +404,9 @@ document.addEventListener('DOMContentLoaded', () => {
             presenceStatus.textContent = "Too Close";
           }
           // Stop displaying radar data if no targets are detected by the model
-          else if (data.presence == 1) {
+          // else if (data.presence == 1) {
+          if (true) { // Temporary for debugging
             presenceStatus.textContent = "Yes";
-            if (isRadarVisible) visualizeRadarData(data);
             if (data.radarY[0] != '0') {
               target1Dist.textContent = calculateDistance(data.radarX[0], data.radarY[0]).toFixed(2) + "m";
             }
@@ -439,6 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           // This data must be updated
           if (isRSSIChartVisible) visualizeRSSI(data.rssi);
+          if (isRadarVisible) visualizeRadarData(data);
           packetCount.textContent = data.totalPacket;
           rssiValue.textContent = data.rssi;
         }
@@ -518,22 +519,54 @@ document.addEventListener('DOMContentLoaded', () => {
       })
   }
 
-  function setRecordingData() {
+  async function setRecordParameter() {
     // Set target count to 0 if no target
     if (presenceClass == 0) targetClass = 0;
-    fetch('/set_recording_data', {
-      method: "POST",
-      headers: {
-          'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-          presence: presenceClass,
-          target: targetClass,
-          los: losInput.value,
+    if (presenceClass != null && targetClass != null && losInput.value != "" &&
+        angleInput.value != "" && distanceInput.value != "") {
+      fetch('/set_record_parameter', {
+        method: "POST",
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          class_label: presenceClass,
+          target_count: targetClass,
+          line_of_sight: losInput.value,
           angle: angleInput.value,
-          distance: distanceInput.value
+          distance_t1: distanceInput.value
+        })
       })
-    })
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'error') {
+            alert('Missing or invalid recording parameters.');
+            return false;
+          }
+          return true;
+        })
+        return true;
+    }
+    alert('Missing or invalid recording parameters.');
+    return false;
+  }
+
+  async function startRecording() {
+    const isParameterSet = await setRecordParameter();
+    if (isParameterSet) {
+      fetch('/start_recording/recording')
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'error') throw new Error(data.error);
+
+          recordModeBtn.style.backgroundColor = btnActiveColor;
+          isRecording = true;
+          
+          if (!isRadarVisible) {
+            isRadarVisible = true;
+            targetRadarBtn.style.backgroundColor = btnActiveColor;
+            radarVisualizerInterval = setInterval(setRadarData, radarRefreshRate);
+          }
+        })
+    }
   }
 
   function stopRecording() {
@@ -547,35 +580,6 @@ document.addEventListener('DOMContentLoaded', () => {
     targetRadarBtn.style.backgroundColor = btnDefaultColor;
     recordModeBtn.style.backgroundColor = btnDefaultColor;
     pointsContainer.innerHTML = '';
-  }
-
-  function startRecording() {
-    setRecordingData();
-    fetch('/start_recording/recording')
-      .then(response => response.json())
-      .then(data => {
-        if (data.status === "error") throw new Error(data.message);
-        
-        recordModeBtn.style.backgroundColor = btnActiveColor;
-        isRecording = true;
-        
-        if (!isRadarVisible) {
-          isRadarVisible = true;
-          targetRadarBtn.style.backgroundColor = btnActiveColor;
-          radarVisualizerInterval = setInterval(setRadarData, radarRefreshRate);
-        }
-      })
-      .catch(err => {
-        fetch('/stop_recording', { method: "POST" });
-        alert('Missing or invalid data for recording.');
-        list_csv_files();
-        clearInterval(radarVisualizerInterval);
-
-        isRecording = false;
-        pointsContainer.innerHTML = '';
-        targetRadarBtn.style.backgroundColor = btnDefaultColor;
-        recordModeBtn.style.backgroundColor = btnDefaultColor;
-      })
   }
 
   recordModeBtn.addEventListener('click', () => {
