@@ -9,6 +9,7 @@ import threading
 import time
 from scapy.all import Raw, IP, UDP, send
 from config.settings import NetworkConfiguration
+from utils.logger import setup_logger
 
 
 class NetworkManager:
@@ -19,13 +20,13 @@ class NetworkManager:
         self.socket = None
         self.is_listening = False
         self.is_transmitting = False
-        
-        # Create UDP packet for transmission
+        self.logger = setup_logger('NetworkManager')
+
         self.udp_packet = IP(dst=self.config.TX_ESP32_IP) / \
                          UDP(sport=self.config.TX_UDP_PORT, 
                              dport=self.config.RX_ESP32_PORT) / \
                          Raw(load=self.config.TX_PAYLOAD)
-    
+
     def check_wifi_connection(self):
         """Check if connected to the ESP32 AP"""
         try:
@@ -36,9 +37,10 @@ class NetworkManager:
             if self.config.AP_SSID in result.stdout:
                 return True
             
+            self.logger.warning(f"Not connected to AP: {self.config.AP_SSID}")
             return False
         except Exception as e:
-            print(f"Error checking AP connection: {e}")
+            self.logger.error(f"Error checking AP connection: {e}")
             return False
     
     # Receiver
@@ -52,7 +54,7 @@ class NetworkManager:
             self.socket.settimeout(self.config.RX_SOCKET_TIMEOUT)
             return True
         except Exception as e:
-            print(f"Error setting up socket: {e}")
+            self.logger.error(f"Error setting up socket: {e}")
             return False
     
     def start_listening(self, parse_received_data, record_packet_limit=None):
@@ -69,7 +71,7 @@ class NetworkManager:
         self.is_listening = True
         packet_count = 0
         
-        print("Started listening for packets...")
+        self.logger.info("Listening for packets...")
         
         while self.is_listening:
             try:
@@ -80,7 +82,7 @@ class NetworkManager:
                 threading.Thread(target=parse_received_data, args=(data,), daemon=True).start()
                 
                 if record_packet_limit and packet_count >= record_packet_limit:
-                    print('Recording completed')
+                    self.logger.info(f'Recording completed with {packet_count} packets')
                     break
                     
             # Implement a timeout to avoid continuous listening
@@ -89,11 +91,10 @@ class NetworkManager:
                     break
                 continue
             except Exception as e:
-                print(f"Error receiving packet: {e}")
+                self.logger.error(f"Error receiving packet: {e}")
                 continue
         
         self.stop_listening()
-        print("Stopped listening for packets.")
         return packet_count
     
     def stop_listening(self):
@@ -102,6 +103,7 @@ class NetworkManager:
         if self.socket:
             self.socket.close()
             self.socket = None
+        self.logger.info('Stopped listening for packets.')
     
     # Transmitter
 
@@ -119,7 +121,7 @@ class NetworkManager:
             return int((tx_time * 1_000_000) % 1_000_000_000)
             
         except Exception as e:
-            print(f"Error sending packet: {e}")
+            self.logger.error(f"Error sending packet: {e}")
             return None
     
     def start_transmitting(self):
@@ -131,7 +133,6 @@ class NetworkManager:
         """
         self.is_transmitting = True
         tx_timestamps = []
-        print('Started transmitting packets...')
         
         def _transmit():
             if self.is_transmitting:
@@ -142,9 +143,10 @@ class NetworkManager:
                 threading.Timer(self.config.TX_INTERVAL, _transmit).start()
         
         _transmit()
+        self.logger.info("Started packet transmission")
         return tx_timestamps
     
     def stop_transmitting(self):
         """Stop continuous packet transmission"""
         self.is_transmitting = False
-        print("Stopped transmitting packets.")
+        self.logger.info("Stopped packet transmission")

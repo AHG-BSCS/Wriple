@@ -8,6 +8,7 @@ import re
 import csv
 import threading
 from config.settings import FileConfiguration
+from utils.logger import setup_logger
 
 
 class DataRecorder:
@@ -20,6 +21,7 @@ class DataRecorder:
         self.file_prefix = FileConfiguration.CSV_FILE_PREFIX
         self.columns = FileConfiguration.CSV_COLUMNS
         self.lock = threading.Lock()
+        self.logger = setup_logger('DataRecorder')
         
         # Ensure directory exists
         os.makedirs(self.csv_directory, exist_ok=True)
@@ -44,12 +46,13 @@ class DataRecorder:
                 next_number = 1
             
             filename = f'{self.file_prefix}{next_number:03d}.csv'
+            self.logger.info(f'Writing on {filename}.')
             return os.path.join(self.csv_directory, filename)
             
         except Exception as e:
-            print(f"Error generating filename: {e}")
+            self.logger.error(f"Error generating new csv filename: {e}")
             # Fallback filename
-            return os.path.join(self.csv_directory, f'{self.file_prefix}001.csv')
+            return os.path.join(self.csv_directory, f'{self.file_prefix}ERROR.csv')
     
     def prepare_new_file(self):
         """Prepare a new CSV file for recording"""
@@ -63,7 +66,8 @@ class DataRecorder:
             
             return True
         except Exception as e:
-            print(f"Error creating CSV file: {e}")
+            self.logger.error(f"Error creating CSV file: {e}")
+            self.csv_file_path = None
             return False
     
     def write_data(self, data_row):
@@ -74,7 +78,7 @@ class DataRecorder:
             data_row: List of data values to write
         """
         if not self.csv_file_path:
-            print("No CSV file prepared. Creating new file.")
+            self.logger.warning("CSV file path is not set. Preparing new file.")
             self.prepare_new_file()
             return False
         
@@ -86,7 +90,7 @@ class DataRecorder:
             return True
             
         except Exception as e:
-            print(f"Error writing to CSV file: {e}")
+            self.logger.error(f"Error writing to CSV file: {e}")
             return False
     
     def list_csv_files(self):
@@ -96,7 +100,7 @@ class DataRecorder:
             csv_files = [f for f in files if f.endswith('.csv')]
             return sorted(csv_files)
         except Exception as e:
-            print(f"Error listing CSV files: {e}")
+            self.logger.error(f"Error listing CSV files: {e}")
             return []
     
     def get_file_path(self, filename):
@@ -115,10 +119,12 @@ class CSVVisualizer:
     def __init__(self, data_recorder):
         self.data_recorder = data_recorder
         self.current_visualization_file = None
+        self.logger = setup_logger('CSVVisualizer')
     
     def set_visualization_file(self, filename):
         """Set the file to be used for visualization"""
         if not self.data_recorder.file_exists(filename):
+            self.logger.error(f"CSV file not found: {filename}")
             raise FileNotFoundError(f"CSV file not found: {filename}")
         
         self.current_visualization_file = self.data_recorder.get_file_path(filename)
@@ -127,6 +133,7 @@ class CSVVisualizer:
     def load_visualization_data(self):
         """Load data from the current visualization file"""
         if not self.current_visualization_file:
+            # TODO: Impove this redundant implementation
             raise ValueError("No visualization file set")
         
         try:
@@ -141,7 +148,7 @@ class CSVVisualizer:
             return df
             
         except Exception as e:
-            print(f"Error loading visualization data: {e}")
+            self.logger.error(f"Error loading CSV file for visualization: {e}")
             return None
     
     def get_csi_data_for_processing(self, csi_processor):
@@ -160,5 +167,5 @@ class CSVVisualizer:
             return csi_processor.filter_amp_phase()
             
         except Exception as e:
-            print(f"Error processing CSV data for visualization: {e}")
+            self.logger.error(f"Error processing CSV data for visualization: {e}")
             return []

@@ -3,6 +3,9 @@ Input Validation Module
 Validates incoming API requests and data
 """
 
+from utils.logger import setup_logger
+
+logger = setup_logger('Validators')
 
 def validate_recording_parameters(data):
     """
@@ -14,24 +17,24 @@ def validate_recording_parameters(data):
     Returns:
         bool: True if valid, False otherwise
     """
-    if not isinstance(data, dict):
-        return False
-    
     try:
         # Check required fields exist
         required_fields = ['class_label', 'target_count', 'line_of_sight', 'angle', 'distance_t1']
         
         for field in required_fields:
             if field not in data:
+                logger.error(f"Missing required field: {field}")
                 return False
         
         # Validate data types and ranges
         presence = data.get('class_label')
         if not isinstance(presence, (int, str)) or int(presence) not in [0, 1]:
+            logger.error(f"Invalid class_label: {presence}")
             return False
         
         target = data.get('target_count')
         if not isinstance(target, (int, str)) or not str(target).isdigit():
+            logger.error(f"Invalid target_count: {target}")
             return False
         
         # Validate numeric fields
@@ -39,28 +42,31 @@ def validate_recording_parameters(data):
         for field in numeric_fields:
             value = data.get(field)
             if not isinstance(value, (int, float, str)):
+                logger.error(f"Invalid type for {field}: {value}")
                 return False
             
             try:
                 float(value)
             except (ValueError, TypeError):
+                logger.error(f"Invalid value for {field}: {value}")
                 return False
         
         # Additional range validation
         angle = float(data.get('angle', 0))
         if not -180 <= angle <= 180:
+            logger.error(f"Angle out of range: {angle}")
             return False
         
         distance = float(data.get('distance_t1', 0))
         if distance < 0:
+            logger.error(f"Distance_t1 cannot be negative: {distance}")
             return False
         
         return True
         
     except Exception as e:
-        print(f"Validation error: {e}")
+        logger.error(f"Error validating recording parameters: {e}")
         return False
-
 
 def validate_filename(filename):
     """

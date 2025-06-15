@@ -1,7 +1,11 @@
 """Utility functions for parsing packet data from hardware devices"""
 
+from utils.logger import setup_logger
+
 class PacketParser:
     """Utility class for parsing received packet data"""
+
+    logger = setup_logger('PacketParser')
     
     @staticmethod
     def parse_csi_data(data_str):
@@ -28,7 +32,7 @@ class PacketParser:
             return parts[:-1] + [raw_csi]
             
         except (ValueError, IndexError) as e:
-            print(f"Error parsing CSI data: {e}")
+            PacketParser.logger.error(f"Error parsing CSI data: {e}")
             return []
     
     @staticmethod
@@ -51,5 +55,5 @@ class PacketParser:
                 [parsed_data[8], parsed_data[12], parsed_data[16]],
             ]
         except (IndexError, TypeError) as e:
-            print(f"Error extracting radar data: {e}")
+            PacketParser.logger.error(f"Error extracting radar data: {e}")
             return []

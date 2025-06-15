@@ -9,7 +9,7 @@ class NetworkConfiguration:
     TX_PAYLOAD: str = 'Wiremap'
     TX_INTERVAL: float = 0.05
     RX_ESP32_PORT: int = 5001
-    RX_SOCKET_TIMEOUT: float = 1.0
+    RX_SOCKET_TIMEOUT: float = 0.5
     RX_BUFFER_SIZE: int = 2048
 
 
@@ -43,8 +43,13 @@ class VisualizerConfiguration:
     AVERAGED: bool = True
     AVERAGED_WINDOWS: list = [(0, 10), (10, -1)]
     SUBCARRIER_COUNT: int = 306
+    AMP_HEATMAP_START = 127
+    AMP_HEATMAP_END = 148
+    PHASE_HEATMAP_START = 6
+    PHASE_HEATMAP_END = 27
     D3_STD_THRESHOLD: float = 1.75
     D3_VISUALIZER_SCALE: tuple = (-10, 10)
+    # TODO: Improve the max packet implementation
     MAX_PACKET: int = 100
     # 0: RSSI, 1: X, 2: Y, 3: Speed, 4: Resolution
     RADAR_DATA: list = [0, [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]

@@ -8,6 +8,7 @@ from core.data_recorder import DataRecorder
 from utils.model_loader import ModelLoader
 from utils.packet_parser import PacketParser
 from api.routes import create_api_routes
+from utils.logger import setup_logger
 
 
 class HumanDetectionSystem:
@@ -32,6 +33,8 @@ class HumanDetectionSystem:
         self.radar_data = VisualizerConfiguration.RADAR_DATA
         self.record_parameters = RecordingConfiguration.RECORD_PARAMETERS
         # self.ml_predictor = self.model_loader.load_models()
+
+        self.logger = setup_logger('HumanDetectionSystem')
     
     def parse_received_data(self, raw_data):
         """Process data received from ESP32"""
@@ -44,14 +47,14 @@ class HumanDetectionSystem:
             amplitudes, phases = self.csi_processor.compute_csi_amplitude_phase(parsed_data[-1])
             self.csi_processor.add_to_queue(amplitudes, phases)
             
-            # Handle recording
+            # Record data to csv file if recording
             if self.is_recording:
                 self.record_data_packet(parsed_data)
             
             self.total_packet_count += 1
             
         except Exception as e:
-            print(f'Error processing received data: {e}')
+            self.logger.error(f'Error parsing received data: {e}')
     
     def record_data_packet(self, parsed_data):
         """Record data packet to CSV file"""
@@ -97,15 +100,11 @@ class HumanDetectionSystem:
     
     def predict_presence(self):
         """Make presence prediction using ML model"""
-        try:
-            if (self.model_loader.is_model_loaded 
-                and self.csi_processor.get_queue_size() >= self.signal_window * 2):
-                # Get the latest data for prediction
-                features = self.csi_processor.amplitude_queue[:self.signal_window]
-                self.presence_prediction = self.ml_predictor.predict(features)
-        except Exception as e:
-            print(f"Error in presence prediction: {e}")
-            self.presence_prediction = 0
+        if (self.model_loader.is_model_loaded 
+            and self.csi_processor.get_queue_size() >= self.signal_window * 2):
+            # Get the latest data for prediction
+            features = self.csi_processor.amplitude_queue[:self.signal_window]
+            self.presence_prediction = self.ml_predictor.predict(features)
     
     def get_system_status(self):
         """Get current system components status"""
@@ -144,9 +143,10 @@ class HumanDetectionSystem:
                 float(params.get('angle', 0.0)) - float(params.get('line_of_sight', 0.0)),
                 float(params.get('distance_t1', 0.0))
             ]
+            self.logger.info(f"Recording parameters set")
             return True
         except (ValueError, TypeError) as e:
-            print(f"Error setting recording parameters: {e}")
+            self.logger.error(f"Error setting recording parameters exception: {e}")
             return False
 
 

@@ -7,6 +7,7 @@ import math
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 from config.settings import VisualizerConfiguration
+from utils.logger import setup_logger
 
 
 class CSIProcessor:
@@ -18,6 +19,7 @@ class CSIProcessor:
         self.std_threshold = VisualizerConfiguration.D3_STD_THRESHOLD
         self.mm_scaler = MinMaxScaler(VisualizerConfiguration.D3_VISUALIZER_SCALE)
         self.max_packets = VisualizerConfiguration.MAX_PACKET
+        self.logger = setup_logger('CSIProcessor')
     
     def compute_csi_amplitude_phase(self, csi_data):
         """
@@ -30,6 +32,7 @@ class CSIProcessor:
             tuple: (amplitudes, phases)
         """
         if len(csi_data) % 2 != 0:
+            self.logger.error('CSI data length must be even (I/Q pairs).')
             raise ValueError('CSI data length must be even (I/Q pairs).')
         
         amplitudes = []
@@ -63,6 +66,9 @@ class CSIProcessor:
             
             lower_threshold.append(mean - self.std_threshold * std_dev)
             upper_threshold.append(mean + self.std_threshold * std_dev)
+
+        self.logger.debug(f'Lower thresholds: {lower_threshold}')
+        self.logger.debug(f'Upper thresholds: {upper_threshold}')
         
         return lower_threshold, upper_threshold
     
@@ -86,6 +92,7 @@ class CSIProcessor:
     def filter_amp_phase(self):
         """Filter and process amplitude/phase data for visualization"""
         if not self.amplitude_queue:
+            self.logger.warning('Amplitude queue is empty.')
             return []
         
         signal_coordinates = []
@@ -121,17 +128,19 @@ class CSIProcessor:
         
         return signal_coordinates
     
-    def get_latest_amplitude_subset(self, start_idx=127, end_idx=148):
+    def get_latest_amplitude(self, start_idx=127, end_idx=148):
         """Get subset of latest amplitude data"""
         if not self.amplitude_queue:
+            self.logger.warning('Amplitude queue is empty.')
             return []
         
         latest_amplitudes = self.amplitude_queue[-1][start_idx:end_idx]
         return [[x, 0, float(latest_amplitudes[x])] for x in range(len(latest_amplitudes))]
     
-    def get_latest_phase_subset(self, start_idx=6, end_idx=27):
+    def get_latest_phase(self, start_idx=6, end_idx=27):
         """Get subset of latest phase data"""
         if not self.phase_queue:
+            self.logger.warning('Phase queue is empty.')
             return []
         
         latest_phases = self.phase_queue[-1][start_idx:end_idx]
@@ -141,6 +150,7 @@ class CSIProcessor:
         """Clear amplitude and phase queues"""
         self.amplitude_queue.clear()
         self.phase_queue.clear()
+        self.logger.info('Cleared amplitude and phase queues.')
     
     def set_max_packets(self, max_packets):
         """Set maximum number of packets to keep in queues"""

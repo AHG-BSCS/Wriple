@@ -3,12 +3,15 @@ Handles machine learning predictions and data preprocessing
 for human presence detection for different models
 """
 
+from utils.logger import setup_logger
+
 class MLPredictor:
     """Handles ML predictions for presence detection"""
     
     def __init__(self, pca_model, presence_model):
         self.pca_model = pca_model
         self.presence_model = presence_model
+        self.logger = setup_logger('MLPredictor')
     
     def predict(self, amplitude_data):
         """
@@ -34,5 +37,5 @@ class MLPredictor:
             return presence_pred
             
         except Exception as e:
-            print(f"Error in prediction: {e}")
+            self.logger.error(f"Error in logistic regression prediction: {e}")
             return 0
