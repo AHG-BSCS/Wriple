@@ -520,33 +520,23 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function setRecordParameter() {
-    // Set target count to 0 if no target
-    if (presenceClass == 0) targetClass = 0;
-    if (presenceClass != null && targetClass != null && losInput.value != "" &&
-        angleInput.value != "" && distanceInput.value != "") {
-      fetch('/set_record_parameter', {
-        method: "POST",
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          class_label: presenceClass,
-          target_count: targetClass,
-          line_of_sight: losInput.value,
-          angle: angleInput.value,
-          distance_t1: distanceInput.value
-        })
+     const response = await fetch('/set_record_parameter', {
+      method: "POST",
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        class_label: presenceClass,
+        target_count: targetClass,
+        line_of_sight: losInput.value,
+        angle: angleInput.value,
+        distance_t1: distanceInput.value
       })
-        .then(response => response.json())
-        .then(data => {
-          if (data.status === 'error') {
-            alert('Missing or invalid recording parameters.');
-            return false;
-          }
-          return true;
-        })
-        return true;
+    })
+    const data = await response.json();
+    if (data.status === 'error') {
+      alert('Missing or invalid recording parameters.');
+      return false;
     }
-    alert('Missing or invalid recording parameters.');
-    return false;
+    return true;
   }
 
   async function startRecording() {

@@ -1,7 +1,7 @@
 """Route handlers for the human detection system"""
 
 from flask import jsonify, request, render_template
-from .validators import validate_recording_parameters
+from .validators import validate_recording_parameters, validate_target_count
 from config.settings import VisualizerConfiguration as config
 
 
@@ -47,17 +47,14 @@ def create_api_routes(app, detection_system):
     @app.route('/set_record_parameter', methods=['POST'])
     def set_record_parameter():
         """Set parameters for recording session"""
-        try:
-            data = request.get_json()
-            
-            # Validate input data first
-            if not validate_recording_parameters(data):
-                return jsonify({'status': 'error'}), 400
-            else:
-                detection_system.set_recording_parameters(data)
-                return jsonify({'status': 'success'})
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
+        data = request.get_json()
+        
+        if not validate_recording_parameters(data):
+            return jsonify({'status': 'error'}), 400
+        
+        data = validate_target_count(data)
+        detection_system.set_recording_parameters(data)
+        return jsonify({'status': 'success'})
     
     @app.route('/visualize_3d_plot', methods=['POST'])
     def visualize_3d_plot():
