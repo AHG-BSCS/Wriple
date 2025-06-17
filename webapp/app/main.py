@@ -17,8 +17,8 @@ class HumanDetectionSystem:
     def __init__(self):
         # Initialize core components
         self.csi_processor = CSIProcessor()
-        self.network_manager = NetworkManager()
         self.data_recorder = DataRecorder()
+        self.network_manager = NetworkManager()
         self.model_loader = ModelLoader()
         
         # Application state and counter

@@ -109,9 +109,9 @@ def create_api_routes(app, detection_system):
     def visualize_csv_file(filename):
         """Set a CSV file for visualization"""
         try:
-            from core.data_recorder import CSVVisualizer
+            from core.visualizer import Visualizer
             
-            visualizer = CSVVisualizer(detection_system.data_recorder)
+            visualizer = Visualizer(detection_system.data_recorder)
             visualizer.set_visualization_file(filename)
             
             # Set recording packet limit for visualization
@@ -137,9 +137,9 @@ def create_api_routes(app, detection_system):
             if not filename:
                 return jsonify({'error': 'Filename required'}), 400
             
-            from core.data_recorder import CSVVisualizer
+            from core.visualizer import Visualizer
             
-            visualizer = CSVVisualizer(detection_system.data_recorder)
+            visualizer = Visualizer(detection_system.data_recorder)
             visualizer.set_visualization_file(filename)
             
             # Process the CSV data
