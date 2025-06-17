@@ -14,14 +14,14 @@ class CSIProcessor:
     """Handles CSI data processing operations"""
     
     def __init__(self):
-        self.amplitude_queue = []
-        self.phase_queue = []
-        self.std_threshold = VisualizerConfiguration.D3_STD_THRESHOLD
-        self.mm_scaler = MinMaxScaler(VisualizerConfiguration.D3_VISUALIZER_SCALE)
-        self.max_packets = VisualizerConfiguration.MAX_PACKET
-        self.logger = setup_logger('CSIProcessor')
+        self._amplitude_queue = []
+        self._phase_queue = []
+        self._std_threshold = VisualizerConfiguration.D3_STD_THRESHOLD
+        self._mm_scaler = MinMaxScaler(VisualizerConfiguration.D3_VISUALIZER_SCALE)
+        self._max_packets = VisualizerConfiguration.MAX_PACKET
+        self._logger = setup_logger('CSIProcessor')
     
-    def compute_csi_amplitude_phase(self, csi_data):
+    def compute_amplitude_phase(self, csi_data: list) -> tuple:
         """
         Compute amplitude and phase from CSI I/Q data
         
@@ -31,12 +31,12 @@ class CSIProcessor:
         Returns:
             tuple: (amplitudes, phases)
         """
-        if len(csi_data) % 2 != 0:
-            self.logger.error('CSI data length must be even (I/Q pairs).')
-            raise ValueError('CSI data length must be even (I/Q pairs).')
-        
         amplitudes = []
         phases = []
+
+        if len(csi_data) % 2 != 0:
+            self._logger.error('CSI data length must be even (I/Q pairs).')
+            return amplitudes, phases
         
         for i in range(0, len(csi_data), 2):
             I = csi_data[i]
@@ -46,17 +46,20 @@ class CSIProcessor:
         
         return amplitudes, phases
     
-    def add_to_queue(self, amplitudes, phases):
+    def buffer_amplitude_phase(self, parsed_data: list):
         """Add amplitude and phase data to processing queues"""
-        # Remove old signals if queue exceeds limit
-        while len(self.amplitude_queue) >= self.max_packets:
-            self.amplitude_queue.pop(0)
-            self.phase_queue.pop(0)
+
+        amplitudes, phases = self.compute_amplitude_phase(parsed_data)
         
-        self.amplitude_queue.append(amplitudes)
-        self.phase_queue.append(phases)
+        # Remove old signals if queue exceeds limit
+        while len(self._amplitude_queue) >= self._max_packets:
+            self._amplitude_queue.pop(0)
+            self._phase_queue.pop(0)
+        
+        self._amplitude_queue.append(amplitudes)
+        self._phase_queue.append(phases)
     
-    def get_subcarrier_threshold(self, data_transposed):
+    def get_subcarrier_threshold(self, data_transposed: list) -> tuple:
         """Calculate threshold values for each subcarrier"""
         lower_threshold, upper_threshold = [], []
         
@@ -64,15 +67,15 @@ class CSIProcessor:
             mean = np.mean(column)
             std_dev = np.std(column)
             
-            lower_threshold.append(mean - self.std_threshold * std_dev)
-            upper_threshold.append(mean + self.std_threshold * std_dev)
+            lower_threshold.append(mean - self._std_threshold * std_dev)
+            upper_threshold.append(mean + self._std_threshold * std_dev)
 
-        self.logger.debug(f'Lower thresholds: {lower_threshold}')
-        self.logger.debug(f'Upper thresholds: {upper_threshold}')
+        self._logger.debug(f'Lower thresholds: {lower_threshold}')
+        self._logger.debug(f'Upper thresholds: {upper_threshold}')
         
         return lower_threshold, upper_threshold
     
-    def clean_and_filter_data(self, amplitudes, phases, amp_lower, amp_upper, 
+    def threshold_filter(self, amplitudes, phases, amp_lower, amp_upper, 
                             phase_lower, phase_upper):
         """Filter data based on amplitude and phase thresholds"""
         cleaned_amplitudes = []
@@ -89,21 +92,21 @@ class CSIProcessor:
         
         return cleaned_amplitudes, cleaned_phases
     
-    def filter_amp_phase(self):
+    def get_amp_phase_3d_coords(self):
         """Filter and process amplitude/phase data for visualization"""
-        if not self.amplitude_queue:
-            self.logger.warning('Amplitude queue is empty.')
+        if not self._amplitude_queue:
+            self._logger.warning('Amplitude queue is empty.')
             return []
         
         signal_coordinates = []
         
         # Convert to pandas-like structure for processing
-        amps_transposed = list(map(list, zip(*self.amplitude_queue)))
-        phases_transposed = list(map(list, zip(*self.phase_queue)))
+        amps_transposed = list(map(list, zip(*self._amplitude_queue)))
+        phases_transposed = list(map(list, zip(*self._phase_queue)))
         
         # Scale data for visualization
-        scaled_amplitudes = self.mm_scaler.fit_transform(amps_transposed).T
-        scaled_phases = self.mm_scaler.fit_transform(phases_transposed).T
+        scaled_amplitudes = self._mm_scaler.fit_transform(amps_transposed).T
+        scaled_phases = self._mm_scaler.fit_transform(phases_transposed).T
         
         # Get thresholds
         amp_lower, amp_upper = self.get_subcarrier_threshold(scaled_amplitudes.T)
@@ -115,7 +118,7 @@ class CSIProcessor:
             phase = np.array(phase)
             
             # Filter data
-            amp, phase = self.clean_and_filter_data(
+            amp, phase = self.threshold_filter(
                 amp, phase, amp_lower, amp_upper, phase_lower, phase_upper
             )
             
@@ -128,34 +131,48 @@ class CSIProcessor:
         
         return signal_coordinates
     
-    def get_latest_amplitude(self, start_idx=127, end_idx=148):
-        """Get subset of latest amplitude data"""
-        if not self.amplitude_queue:
-            self.logger.warning('Amplitude queue is empty.')
-            return []
-        
-        latest_amplitudes = self.amplitude_queue[-1][start_idx:end_idx]
-        return [[x, 0, float(latest_amplitudes[x])] for x in range(len(latest_amplitudes))]
-    
-    def get_latest_phase(self, start_idx=6, end_idx=27):
-        """Get subset of latest phase data"""
-        if not self.phase_queue:
-            self.logger.warning('Phase queue is empty.')
-            return []
-        
-        latest_phases = self.phase_queue[-1][start_idx:end_idx]
-        return [[x, 0, float(latest_phases[x])] for x in range(len(latest_phases))]
-    
     def clear_queues(self):
         """Clear amplitude and phase queues"""
-        self.amplitude_queue.clear()
-        self.phase_queue.clear()
-        self.logger.info('Cleared amplitude and phase queues.')
+        self._amplitude_queue.clear()
+        self._phase_queue.clear()
+        self._logger.info('Cleared amplitude and phase queues.')
     
-    def set_max_packets(self, max_packets):
-        """Set maximum number of packets to keep in queues"""
-        self.max_packets = max_packets
-    
-    def get_queue_size(self):
+    def get_queue_size(self) -> int:
         """Get current queue size"""
-        return len(self.amplitude_queue)
+        return len(self._amplitude_queue)
+    
+    def get_latest_amplitude(self, start_idx: int = 127, end_idx: int = 148) -> list:
+        """Get subset of latest amplitude data"""
+        if not self._amplitude_queue:
+            self._logger.warning('Amplitude queue is empty.')
+            return []
+        
+        latest_amplitudes = self._amplitude_queue[-1][start_idx:end_idx]
+        return [[x, 0, float(latest_amplitudes[x])] for x in range(len(latest_amplitudes))]
+    
+    def get_latest_phase(self, start_idx:int = 6, end_idx: int = 27) -> list:
+        """Get subset of latest phase data"""
+        if not self._phase_queue:
+            self._logger.warning('Phase queue is empty.')
+            return []
+        
+        latest_phases = self._phase_queue[-1][start_idx:end_idx]
+        return [[x, 0, float(latest_phases[x])] for x in range(len(latest_phases))]
+    
+    def get_amplitude_window(self, signal_window: int = 10) -> list:
+        """Get a window of amplitude data for visualization"""
+        return self._amplitude_queue[:signal_window]
+    
+    # Setters and Getters
+
+    @property
+    def max_packets(self) -> int:
+        """Get maximum number of packets to keep in queues"""
+        return self._max_packets
+
+    @max_packets.setter
+    def set_max_packets(self, value: int):
+        """Set maximum number of packets to keep in queues"""
+        if value <= 0:
+            raise ValueError("Packet limit must be positive.")
+        self._max_packets = value

@@ -42,9 +42,8 @@ class HumanDetectionSystem:
             parsed_data = PacketParser.parse_csi_data(data_str)
             
             # Extract radar and CSI data
+            self.csi_processor.buffer_amplitude_phase(parsed_data[-1])
             self.radar_data = PacketParser.extract_radar_data(parsed_data)
-            amplitudes, phases = self.csi_processor.compute_csi_amplitude_phase(parsed_data[-1])
-            self.csi_processor.add_to_queue(amplitudes, phases)
             
             # Record data to csv file if recording
             if self.is_recording:
@@ -59,8 +58,8 @@ class HumanDetectionSystem:
         """Record data packet to CSV file"""
         # Add recording metadata
         timestamp = self.tx_timestamps.pop(0)
-        complete_data = [timestamp] + self.record_parameters + parsed_data
-        self.file_manager.write_data(complete_data)
+        row = [timestamp] + self.record_parameters + parsed_data
+        self.file_manager.write_data(row)
     
     def start_recording_mode(self):
         """Start recording Wi-Fi CSI data into CSV file"""
@@ -70,7 +69,7 @@ class HumanDetectionSystem:
         
         self.is_recording = True
         self.file_manager.init_new_csv()
-        self.csi_processor.set_max_packets(self.record_packet_limit)
+        self.csi_processor.set_max_packets = self.record_packet_limit
         self.tx_timestamps = self.network_manager.start_transmitting()
 
         threading.Thread(
@@ -86,7 +85,7 @@ class HumanDetectionSystem:
             return
         
         self.is_monitoring = True
-        self.csi_processor.set_max_packets(RecordingConfiguration.MONITOR_QUEUE_LIMIT)
+        self.csi_processor.set_max_packets = RecordingConfiguration.MONITOR_QUEUE_LIMIT
         self.network_manager.start_transmitting()
 
         threading.Thread(
@@ -110,7 +109,7 @@ class HumanDetectionSystem:
         if (self.model_manager.model_loaded 
             and self.csi_processor.get_queue_size() >= self.signal_window * 2):
             # Get the latest data for prediction
-            features = self.csi_processor.amplitude_queue[:self.signal_window]
+            features = self.csi_processor.get_amplitude_window(self.signal_window)
             self.presence_prediction = self.model_manager.predict(features)
     
     def get_system_status(self):

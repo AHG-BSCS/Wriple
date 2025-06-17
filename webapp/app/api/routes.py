@@ -60,7 +60,7 @@ def create_api_routes(app, detection_system):
     def visualize_3d_plot():
         """Get processed signal data for visualization"""
         try:
-            signal_coordinates = detection_system.csi_processor.filter_amp_phase()
+            signal_coordinates = detection_system.csi_processor.get_amp_phase_3d_coords()
             return jsonify({'signalCoordinates': signal_coordinates})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
@@ -109,7 +109,7 @@ def create_api_routes(app, detection_system):
     def select_csv_file(filename):
         """Set a CSV file for visualization"""
         if (detection_system.file_manager.select_csv_file(filename)):
-            detection_system.csi_processor.set_max_packets(detection_system.record_packet_limit)
+            detection_system.csi_processor.set_max_packets = detection_system.record_packet_limit
             return jsonify({'status': 'success'})
         else:
             return jsonify({'status': 'error'}), 404
