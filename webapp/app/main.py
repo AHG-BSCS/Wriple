@@ -4,9 +4,8 @@ from flask import Flask
 from config.settings import FlaskConfiguration, PredictionConfiguration, RecordingConfiguration, VisualizerConfiguration
 from core.csi_processor import CSIProcessor
 from core.file_manager import FileManager
+from core.model_manager import ModelManager
 from core.network_manager import NetworkManager
-# from core.visualizer import Visualizer
-from utils.model_loader import ModelLoader
 from utils.packet_parser import PacketParser
 from api.routes import create_api_routes
 from utils.logger import setup_logger
@@ -19,9 +18,8 @@ class HumanDetectionSystem:
         # Initialize core components
         self.csi_processor = CSIProcessor()
         self.file_manager = FileManager()
+        self.model_manager = ModelManager()
         self.network_manager = NetworkManager()
-        self.model_loader = ModelLoader()
-        # self.visualizer = Visualizer()
         
         # Application state and counter
         self.is_recording = False
@@ -35,8 +33,6 @@ class HumanDetectionSystem:
         self.radar_data = VisualizerConfiguration.RADAR_DATA
         self.record_parameters = RecordingConfiguration.RECORD_PARAMETERS
         self.record_packet_limit = RecordingConfiguration.RECORD_PACKET_LIMIT
-        # self.ml_predictor = self.model_loader.load_models()
-
         self.logger = setup_logger('HumanDetectionSystem')
     
     def parse_received_data(self, raw_data):
@@ -111,11 +107,11 @@ class HumanDetectionSystem:
     
     def predict_presence(self):
         """Make presence prediction using ML model"""
-        if (self.model_loader.is_model_loaded 
+        if (self.model_manager.model_loaded 
             and self.csi_processor.get_queue_size() >= self.signal_window * 2):
             # Get the latest data for prediction
             features = self.csi_processor.amplitude_queue[:self.signal_window]
-            self.presence_prediction = self.ml_predictor.predict(features)
+            self.presence_prediction = self.model_manager.predict(features)
     
     def get_system_status(self):
         """Get current system components status"""
@@ -124,7 +120,7 @@ class HumanDetectionSystem:
             'ap': self.network_manager.check_wifi_connection(),
             'rd03d': 1,  # Temporary placeholder for RD03D status
             'port': 1,   # Temporary placeholder for port status
-            'model': self.model_loader.is_model_loaded
+            'model': self.model_manager.model_loaded
         }
     
     def get_radar_status(self):
