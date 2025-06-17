@@ -1,4 +1,4 @@
-"""Route handlers for the human detection system"""
+"""Route handlers for the Human Presence Detection System"""
 
 from flask import jsonify, request, render_template
 from .validators import validate_recording_parameters, validate_target_count
@@ -100,57 +100,19 @@ def create_api_routes(app, detection_system):
     def list_csv_files():
         """List all recorded CSV files"""
         try:
-            files = detection_system.data_recorder.list_csv_files()
+            files = detection_system.file_manager.list_csv_files()
             return jsonify(files)
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
     @app.route('/visualize_csv_file/<filename>', methods=['GET'])
-    def visualize_csv_file(filename):
+    def select_csv_file(filename):
         """Set a CSV file for visualization"""
-        try:
-            from core.visualizer import Visualizer
-            
-            visualizer = Visualizer(detection_system.data_recorder)
-            visualizer.set_visualization_file(filename)
-            
-            # Set recording packet limit for visualization
-            from config.settings import RecordingConfiguration
-            detection_system.csi_processor.set_max_packets(
-                RecordingConfiguration.RECORD_PACKET_LIMIT
-            )
-            
-            return jsonify({'status': 'CSV file set for visualization'})
-            
-        except FileNotFoundError:
-            return jsonify({'error': 'File not found'}), 404
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
-    
-    @app.route('/load_csv_visualization', methods=['POST'])
-    def load_csv_visualization():
-        """Load and process CSV data for visualization"""
-        try:
-            data = request.get_json()
-            filename = data.get('filename')
-            
-            if not filename:
-                return jsonify({'error': 'Filename required'}), 400
-            
-            from core.visualizer import Visualizer
-            
-            visualizer = Visualizer(detection_system.data_recorder)
-            visualizer.set_visualization_file(filename)
-            
-            # Process the CSV data
-            signal_coordinates = visualizer.get_csi_data_for_processing(
-                detection_system.csi_processor
-            )
-            
-            return jsonify({'signalCoordinates': signal_coordinates})
-            
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
+        if (detection_system.file_manager.select_csv_file(filename)):
+            detection_system.csi_processor.set_max_packets(detection_system.record_packet_limit)
+            return jsonify({'status': 'success'})
+        else:
+            return jsonify({'status': 'error'}), 404
     
     # Error Handlers
     

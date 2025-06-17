@@ -1,30 +1,28 @@
-"""
-Data Recording Module
-Handles CSV file creation, writing, and management
-"""
+"""File Manager Module"""
 
+import csv
 import os
 import re
-import csv
 import threading
+
 from config.settings import FileConfiguration
 from utils.logger import setup_logger
 
+class FileManager:
+    """Handles CSV file CRUD operations and management"""
 
-class DataRecorder:
-    """Manages CSV data recording operations"""
-    
     def __init__(self):
-        self.csv_file_path = None
-        self.csv_directory = FileConfiguration.CSV_DIRECTORY
-        self.file_pattern = FileConfiguration.CSV_FILE_PATTERN
-        self.file_prefix = FileConfiguration.CSV_FILE_PREFIX
-        self.columns = FileConfiguration.CSV_COLUMNS
-        self.lock = threading.Lock()
-        self.logger = setup_logger('DataRecorder')
-        
-        # Ensure directory exists
-        os.makedirs(self.csv_directory, exist_ok=True)
+            self.csv_file_path = None
+            self.selected_csv_file = None
+            self.csv_columns = FileConfiguration.CSV_COLUMNS
+            self.csv_directory = FileConfiguration.CSV_DIRECTORY
+            self.file_pattern = FileConfiguration.CSV_FILE_PATTERN
+            self.file_prefix = FileConfiguration.CSV_FILE_PREFIX
+            self.lock = threading.Lock()
+            self.logger = setup_logger('FileManager')
+            
+            # Ensure directory exists
+            os.makedirs(self.csv_directory, exist_ok=True)
     
     def get_next_filename(self):
         """Generate the next available CSV filename"""
@@ -54,7 +52,30 @@ class DataRecorder:
             # Fallback filename
             return os.path.join(self.csv_directory, f'{self.file_prefix}ERROR.csv')
     
-    def prepare_new_file(self):
+    def list_csv_files(self):
+        """List all CSV files in the recording directory"""
+        try:
+            files = os.listdir(self.csv_directory)
+            csv_files = [f for f in files if f.endswith('.csv')]
+            return sorted(csv_files)
+        except Exception as e:
+            self.logger.error(f"Error listing CSV files: {e}")
+            return []
+    
+    def select_csv_file(self, filename):
+        """Set the file to be used for visualization"""
+        self.selected_csv_file = os.path.join(self.csv_directory, filename)
+        file_path = self.get_file_path(filename)
+        
+        if os.path.exists(file_path):
+            self.logger.info(f"{filename} is selected for visualization")
+            return True
+        else:
+            self.selected_csv_file = None
+            self.logger.error(f"{filename} is not found")
+            return False
+    
+    def init_new_csv(self):
         """Prepare a new CSV file for recording"""
         self.csv_file_path = self.get_next_filename()
         
@@ -62,7 +83,7 @@ class DataRecorder:
             # Create file with headers
             with open(self.csv_file_path, mode='w', newline='') as file:
                 writer = csv.writer(file)
-                writer.writerow(self.columns)
+                writer.writerow(self.csv_columns)
             
             return True
         except Exception as e:
@@ -79,7 +100,7 @@ class DataRecorder:
         """
         if not self.csv_file_path:
             self.logger.warning("CSV file path is not set. Preparing new file.")
-            self.prepare_new_file()
+            self.init_new_csv()
             return False
         
         try:
@@ -92,22 +113,3 @@ class DataRecorder:
         except Exception as e:
             self.logger.error(f"Error writing to CSV file: {e}")
             return False
-    
-    def list_csv_files(self):
-        """List all CSV files in the recording directory"""
-        try:
-            files = os.listdir(self.csv_directory)
-            csv_files = [f for f in files if f.endswith('.csv')]
-            return sorted(csv_files)
-        except Exception as e:
-            self.logger.error(f"Error listing CSV files: {e}")
-            return []
-    
-    def get_file_path(self, filename):
-        """Get full path for a CSV file"""
-        return os.path.join(self.csv_directory, filename)
-    
-    def file_exists(self, filename):
-        """Check if a CSV file exists"""
-        file_path = self.get_file_path(filename)
-        return os.path.exists(file_path)

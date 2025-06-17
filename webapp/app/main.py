@@ -3,8 +3,9 @@ from flask import Flask
 
 from config.settings import FlaskConfiguration, PredictionConfiguration, RecordingConfiguration, VisualizerConfiguration
 from core.csi_processor import CSIProcessor
+from core.file_manager import FileManager
 from core.network_manager import NetworkManager
-from core.data_recorder import DataRecorder
+# from core.visualizer import Visualizer
 from utils.model_loader import ModelLoader
 from utils.packet_parser import PacketParser
 from api.routes import create_api_routes
@@ -17,9 +18,10 @@ class HumanDetectionSystem:
     def __init__(self):
         # Initialize core components
         self.csi_processor = CSIProcessor()
-        self.data_recorder = DataRecorder()
+        self.file_manager = FileManager()
         self.network_manager = NetworkManager()
         self.model_loader = ModelLoader()
+        # self.visualizer = Visualizer()
         
         # Application state and counter
         self.is_recording = False
@@ -32,6 +34,7 @@ class HumanDetectionSystem:
         self.signal_window = PredictionConfiguration.SIGNAL_WINDOW
         self.radar_data = VisualizerConfiguration.RADAR_DATA
         self.record_parameters = RecordingConfiguration.RECORD_PARAMETERS
+        self.record_packet_limit = RecordingConfiguration.RECORD_PACKET_LIMIT
         # self.ml_predictor = self.model_loader.load_models()
 
         self.logger = setup_logger('HumanDetectionSystem')
@@ -61,7 +64,7 @@ class HumanDetectionSystem:
         # Add recording metadata
         timestamp = self.tx_timestamps.pop(0)
         complete_data = [timestamp] + self.record_parameters + parsed_data
-        self.data_recorder.write_data(complete_data)
+        self.file_manager.write_data(complete_data)
     
     def start_recording_mode(self):
         """Start recording Wi-Fi CSI data into CSV file"""
@@ -70,13 +73,13 @@ class HumanDetectionSystem:
             return
         
         self.is_recording = True
-        self.data_recorder.prepare_new_file()
-        self.csi_processor.set_max_packets(RecordingConfiguration.RECORD_PACKET_LIMIT)
+        self.file_manager.init_new_csv()
+        self.csi_processor.set_max_packets(self.record_packet_limit)
         self.tx_timestamps = self.network_manager.start_transmitting()
 
         threading.Thread(
             target=self.network_manager.start_listening,
-            args=(self.parse_received_data, RecordingConfiguration.RECORD_PACKET_LIMIT),
+            args=(self.parse_received_data, self.record_packet_limit),
             daemon=True
         ).start()
     
