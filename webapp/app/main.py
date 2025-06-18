@@ -24,8 +24,7 @@ class HumanDetectionSystem:
         # Application state and counter
         self.is_recording = False
         self.is_monitoring = False
-        self.total_packet_count = 0
-        self.presence_prediction = 0
+        self.packet_count = 0
 
         # Initialize parameters and data storage
         self.tx_timestamps = []
@@ -49,7 +48,7 @@ class HumanDetectionSystem:
             if self.is_recording:
                 self.record_data_packet(parsed_data)
             
-            self.total_packet_count += 1
+            self.packet_count += 1
             
         except Exception as e:
             self.logger.error(f'Error parsing received data: {e}')
@@ -98,7 +97,7 @@ class HumanDetectionSystem:
         """Stop all recording/monitoring operations"""
         self.is_recording = False
         self.is_monitoring = False
-        self.total_packet_count = 0
+        self.packet_count = 0
         
         self.network_manager.stop_transmitting()
         self.network_manager.stop_listening()
@@ -106,11 +105,14 @@ class HumanDetectionSystem:
     
     def predict_presence(self):
         """Make presence prediction using ML model"""
-        if (self.model_manager.model_loaded 
+        if (self.model_manager.model_loaded
             and self.csi_processor.get_queue_size() >= self.signal_window * 2):
+            # TODO: Move signal window size to csi_processor
             # Get the latest data for prediction
             features = self.csi_processor.get_amplitude_window(self.signal_window)
-            self.presence_prediction = self.model_manager.predict(features)
+            return self.model_manager.predict(features)
+        else:
+            return 0
     
     def get_system_status(self):
         """Get current system components status"""
@@ -124,18 +126,17 @@ class HumanDetectionSystem:
     
     def get_radar_status(self):
         """Get radar data and predictions"""
-        self.predict_presence()
-        
+        presence_prediction = self.predict_presence()
         mode_status = (0 if self.is_recording and self.network_manager.is_listening else 
                       1 if self.is_monitoring else -1)
         
         return {
-            'presence': self.presence_prediction,
+            'presence': presence_prediction,
             'radarX': self.radar_data[1],
             'radarY': self.radar_data[2],
             'radarSpeed': self.radar_data[3],
             'radarDistRes': self.radar_data[4],
-            'totalPacket': self.total_packet_count,
+            'totalPacket': self.packet_count,
             'rssi': self.radar_data[0],
             'modeStatus': mode_status
         }
