@@ -49,8 +49,6 @@ class VisualizerConfiguration:
     PHASE_HEATMAP_END = 27
     D3_STD_THRESHOLD: float = 1.75
     D3_VISUALIZER_SCALE: tuple = (-10, 10)
-    # TODO: Improve the max packet implementation
-    MAX_PACKET: int = 100
     # 0: RSSI, 1: X, 2: Y, 3: Speed, 4: Resolution
     RADAR_DATA: list = [0, [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]
 

@@ -6,7 +6,7 @@ Handles CSI data computation, filtering, and feature extraction
 import math
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
-from config.settings import VisualizerConfiguration, PredictionConfiguration
+from config.settings import VisualizerConfiguration, PredictionConfiguration, RecordingConfiguration
 from utils.logger import setup_logger
 
 
@@ -19,7 +19,9 @@ class CSIProcessor:
         self._signal_window = PredictionConfiguration.SIGNAL_WINDOW
         self._std_threshold = VisualizerConfiguration.D3_STD_THRESHOLD
         self._mm_scaler = MinMaxScaler(VisualizerConfiguration.D3_VISUALIZER_SCALE)
-        self._max_packets = VisualizerConfiguration.MAX_PACKET
+        self._max_packets = 0
+        self._record_packet_limit = RecordingConfiguration.RECORD_PACKET_LIMIT
+        self._monitor_queue_limit = RecordingConfiguration.MONITOR_QUEUE_LIMIT
         self._logger = setup_logger('CSIProcessor')
     
     def compute_amplitude_phase(self, csi_data: list) -> tuple:
@@ -167,16 +169,21 @@ class CSIProcessor:
         else:
             return None
     
-    # Setters and Getters
+    def set_max_packets(self, value: int):
+        """
+        Set maximum number of packets to keep in queues
+
+        Args:
+            value (int): 1 for recording mode, 0 for monitoring mode
+        """
+        if value == 1:
+            self._max_packets = RecordingConfiguration.RECORD_PACKET_LIMIT
+        elif value == 0:
+            self._max_packets = RecordingConfiguration.MONITOR_QUEUE_LIMIT
+        else:
+            self._logger.error('Invalid max packets value. Must be 0 or 1.')
 
     @property
     def max_packets(self) -> int:
         """Get maximum number of packets to keep in queues"""
         return self._max_packets
-
-    @max_packets.setter
-    def set_max_packets(self, value: int):
-        """Set maximum number of packets to keep in queues"""
-        if value <= 0:
-            raise ValueError("Packet limit must be positive.")
-        self._max_packets = value

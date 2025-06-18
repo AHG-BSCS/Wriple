@@ -28,7 +28,6 @@ class HumanDetectionSystem:
         # Initialize parameters and data storage
         self.radar_data = VisualizerConfiguration.RADAR_DATA
         self.record_parameters = RecordingConfiguration.RECORD_PARAMETERS
-        self.record_packet_limit = RecordingConfiguration.RECORD_PACKET_LIMIT
         self.logger = setup_logger('HumanDetectionSystem')
     
     def record_data_packet(self, parsed_data, tx_timestamp):
@@ -62,12 +61,12 @@ class HumanDetectionSystem:
         
         self.is_recording = True
         self.file_manager.init_new_csv()
-        self.csi_processor.set_max_packets = self.record_packet_limit
+        self.csi_processor.set_max_packets(0)
         self.network_manager.start_transmitting()
 
         threading.Thread(
             target=self.network_manager.start_listening,
-            args=(self.parse_received_data, self.record_packet_limit),
+            args=(self.parse_received_data, RecordingConfiguration.RECORD_PACKET_LIMIT),
             daemon=True
         ).start()
     
@@ -78,7 +77,7 @@ class HumanDetectionSystem:
             return
         
         self.is_monitoring = True
-        self.csi_processor.set_max_packets = RecordingConfiguration.MONITOR_QUEUE_LIMIT
+        self.csi_processor.set_max_packets(0)
         self.network_manager.start_transmitting()
 
         threading.Thread(

@@ -109,7 +109,7 @@ def create_api_routes(app, detection_system):
     def select_csv_file(filename):
         """Set a CSV file for visualization"""
         if (detection_system.file_manager.select_csv_file(filename)):
-            detection_system.csi_processor.set_max_packets = detection_system.record_packet_limit
+            detection_system.csi_processor.set_max_packets(0)
             return jsonify({'status': 'success'})
         else:
             return jsonify({'status': 'error'}), 404
