@@ -20,7 +20,7 @@ class ModelManager:
         self._config = ModelConfiguration
         self._logger = setup_logger('ModelManager')
 
-        self.load_models()
+        # self.load_models()
     
     def load_models(self):
         """Load all required ML models"""
@@ -44,7 +44,7 @@ class ModelManager:
             int: Presence prediction (0 or 1)
         """
         try:
-            if len(amplitude_data) > 2:
+            if amplitude_data is None:
                 return 0
             
             # Use the newest data for prediction

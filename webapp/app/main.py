@@ -1,7 +1,7 @@
 import threading
 from flask import Flask
 
-from config.settings import FlaskConfiguration, PredictionConfiguration, RecordingConfiguration, VisualizerConfiguration
+from config.settings import FlaskConfiguration, RecordingConfiguration, VisualizerConfiguration
 from core.csi_processor import CSIProcessor
 from core.file_manager import FileManager
 from core.model_manager import ModelManager
@@ -28,7 +28,6 @@ class HumanDetectionSystem:
 
         # Initialize parameters and data storage
         self.tx_timestamps = []
-        self.signal_window = PredictionConfiguration.SIGNAL_WINDOW
         self.radar_data = VisualizerConfiguration.RADAR_DATA
         self.record_parameters = RecordingConfiguration.RECORD_PARAMETERS
         self.record_packet_limit = RecordingConfiguration.RECORD_PACKET_LIMIT
@@ -105,11 +104,8 @@ class HumanDetectionSystem:
     
     def predict_presence(self):
         """Make presence prediction using ML model"""
-        if (self.model_manager.model_loaded
-            and self.csi_processor.get_queue_size() >= self.signal_window * 2):
-            # TODO: Move signal window size to csi_processor
-            # Get the latest data for prediction
-            features = self.csi_processor.get_amplitude_window(self.signal_window)
+        if self.model_manager.model_loaded:
+            features = self.csi_processor.get_amplitude_window()
             return self.model_manager.predict(features)
         else:
             return 0

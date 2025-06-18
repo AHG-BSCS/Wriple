@@ -6,7 +6,7 @@ Handles CSI data computation, filtering, and feature extraction
 import math
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
-from config.settings import VisualizerConfiguration
+from config.settings import VisualizerConfiguration, PredictionConfiguration
 from utils.logger import setup_logger
 
 
@@ -16,6 +16,7 @@ class CSIProcessor:
     def __init__(self):
         self._amplitude_queue = []
         self._phase_queue = []
+        self._signal_window = PredictionConfiguration.SIGNAL_WINDOW
         self._std_threshold = VisualizerConfiguration.D3_STD_THRESHOLD
         self._mm_scaler = MinMaxScaler(VisualizerConfiguration.D3_VISUALIZER_SCALE)
         self._max_packets = VisualizerConfiguration.MAX_PACKET
@@ -159,9 +160,12 @@ class CSIProcessor:
         latest_phases = self._phase_queue[-1][start_idx:end_idx]
         return [[x, 0, float(latest_phases[x])] for x in range(len(latest_phases))]
     
-    def get_amplitude_window(self, signal_window: int = 10) -> list:
+    def get_amplitude_window(self) -> list:
         """Get a window of amplitude data for visualization"""
-        return self._amplitude_queue[:signal_window]
+        if (len(self._amplitude_queue) >= self._signal_window * 2):
+            return self._amplitude_queue[:self._signal_window]
+        else:
+            return None
     
     # Setters and Getters
 
