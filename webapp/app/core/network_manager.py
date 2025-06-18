@@ -18,8 +18,10 @@ class NetworkManager:
     def __init__(self):
         self.config = NetworkConfiguration()
         self.socket = None
-        self.is_listening = False
+        self._tx_timestamps = []
+        self._is_listening = False
         self.is_transmitting = False
+        self._packet_count = 0
         self.logger = setup_logger('NetworkManager')
 
         self.udp_packet = IP(dst=self.config.TX_ESP32_IP) / \
@@ -66,28 +68,31 @@ class NetworkManager:
             record_packet_limit: Maximum number of packets to receive (None for unlimited)
         """
         if not self.setup_socket():
-            return False
+            return
         
-        self.is_listening = True
-        packet_count = 0
-        
+        self._is_listening = True
         self.logger.info("Listening for packets...")
         
-        while self.is_listening:
+        while self._is_listening:
             try:
                 data, addr = self.socket.recvfrom(self.config.RX_BUFFER_SIZE)
-                packet_count += 1
+                self._packet_count += 1
                 
                 # Process data in separate thread
-                threading.Thread(target=parse_received_data, args=(data,), daemon=True).start()
+                threading.Thread(
+                    target=parse_received_data, 
+                    args=(data, 
+                    self._tx_timestamps.pop(0)), 
+                    daemon=True
+                ).start()
                 
-                if record_packet_limit and packet_count >= record_packet_limit:
-                    self.logger.info(f'Recording completed with {packet_count} packets')
+                if record_packet_limit and self._packet_count >= record_packet_limit:
+                    self.logger.info(f'Recording completed with {self._packet_count} packets')
                     break
                     
             # Implement a timeout to avoid continuous listening
             except socket.timeout:
-                if not self.is_listening:
+                if not self._is_listening:
                     break
                 continue
             except Exception as e:
@@ -95,11 +100,11 @@ class NetworkManager:
                 continue
         
         self.stop_listening()
-        return packet_count
     
     def stop_listening(self):
         """Stop listening for packets"""
-        self.is_listening = False
+        self._is_listening = False
+        self._packet_count = 0
         if self.socket:
             self.socket.close()
             self.socket = None
@@ -108,45 +113,40 @@ class NetworkManager:
     # Transmitter
 
     def send_single_packet(self):
-        """
-        Send a single UDP packet
-        
-        Returns:
-            int or None: Timestamp, None otherwise
-        """
+        """Send a single UDP packet"""
         try:
             send(self.udp_packet, verbose=False)
-            
             tx_time = time.time()
-            return int((tx_time * 1_000_000) % 1_000_000_000)
-            
+            tx_time = int(tx_time * 1_000_000) % 1_000_000_000
+            self._tx_timestamps.append(tx_time)
         except Exception as e:
             self.logger.error(f"Error sending packet: {e}")
-            return None
     
     def start_transmitting(self):
-        """
-        Start continuous packet transmission
-        
-        Returns:
-            list: Timestamps, empty list otherwise
-        """
+        """Start continuous packet transmission"""
         self.is_transmitting = True
-        tx_timestamps = []
         
         def _transmit():
             if self.is_transmitting:
-                timestamp = self.send_single_packet()
-                tx_timestamps.append(timestamp)
+                self.send_single_packet()
                 
                 # Schedule next transmission
                 threading.Timer(self.config.TX_INTERVAL, _transmit).start()
         
         _transmit()
         self.logger.info("Started packet transmission")
-        return tx_timestamps
     
     def stop_transmitting(self):
         """Stop continuous packet transmission"""
         self.is_transmitting = False
         self.logger.info("Stopped packet transmission")
+
+    @property
+    def is_listening(self) -> bool:
+        """Check if the manager is currently listening for packets"""
+        return self._is_listening
+
+    @property
+    def packet_count(self) -> int:
+        """Get the current packet count"""
+        return self._packet_count

@@ -24,16 +24,20 @@ class HumanDetectionSystem:
         # Application state and counter
         self.is_recording = False
         self.is_monitoring = False
-        self.packet_count = 0
 
         # Initialize parameters and data storage
-        self.tx_timestamps = []
         self.radar_data = VisualizerConfiguration.RADAR_DATA
         self.record_parameters = RecordingConfiguration.RECORD_PARAMETERS
         self.record_packet_limit = RecordingConfiguration.RECORD_PACKET_LIMIT
         self.logger = setup_logger('HumanDetectionSystem')
     
-    def parse_received_data(self, raw_data):
+    def record_data_packet(self, parsed_data, tx_timestamp):
+        """Record data packet to CSV file"""
+        # Add recording metadata
+        row = [tx_timestamp] + self.record_parameters + parsed_data
+        self.file_manager.write_data(row)
+
+    def parse_received_data(self, raw_data, tx_timestamp):
         """Process data received from ESP32"""
         try:
             data_str = raw_data.decode('utf-8').strip()
@@ -45,19 +49,10 @@ class HumanDetectionSystem:
             
             # Record data to csv file if recording
             if self.is_recording:
-                self.record_data_packet(parsed_data)
-            
-            self.packet_count += 1
+                self.record_data_packet(parsed_data, tx_timestamp)
             
         except Exception as e:
             self.logger.error(f'Error parsing received data: {e}')
-    
-    def record_data_packet(self, parsed_data):
-        """Record data packet to CSV file"""
-        # Add recording metadata
-        timestamp = self.tx_timestamps.pop(0)
-        row = [timestamp] + self.record_parameters + parsed_data
-        self.file_manager.write_data(row)
     
     def start_recording_mode(self):
         """Start recording Wi-Fi CSI data into CSV file"""
@@ -68,7 +63,7 @@ class HumanDetectionSystem:
         self.is_recording = True
         self.file_manager.init_new_csv()
         self.csi_processor.set_max_packets = self.record_packet_limit
-        self.tx_timestamps = self.network_manager.start_transmitting()
+        self.network_manager.start_transmitting()
 
         threading.Thread(
             target=self.network_manager.start_listening,
@@ -96,7 +91,6 @@ class HumanDetectionSystem:
         """Stop all recording/monitoring operations"""
         self.is_recording = False
         self.is_monitoring = False
-        self.packet_count = 0
         
         self.network_manager.stop_transmitting()
         self.network_manager.stop_listening()
@@ -132,7 +126,7 @@ class HumanDetectionSystem:
             'radarY': self.radar_data[2],
             'radarSpeed': self.radar_data[3],
             'radarDistRes': self.radar_data[4],
-            'totalPacket': self.packet_count,
+            'totalPacket': self.network_manager.packet_count,
             'rssi': self.radar_data[0],
             'modeStatus': mode_status
         }
