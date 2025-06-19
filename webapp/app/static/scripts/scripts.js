@@ -593,6 +593,8 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch('/stop_recording', { method: "POST" });
     clearInterval(radarVisualizerInterval);
     clearInterval(d3PlotVisualizerInterval);
+    clearInterval(amplitudeHeatmapInterval);
+    clearInterval(phaseHeatmapInterval);
 
     isMonitoring = false;
     isRadarVisible = false;
@@ -841,10 +843,8 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch('/fetch_amplitude_data', { method: "POST" })
       .then(res => res.json())
       .then(data => {
-        const amplitudePoints = data.latestAmplitude.map(p => p[2]);
-  
         // Push new time column for amplitude
-        amplitudePoints.forEach((val, i) => {
+        data.latestAmplitudes.forEach((val, i) => {
           amplitudeBuffer[i].push(val);
           if (amplitudeBuffer[i].length > MAX_COLS) amplitudeBuffer[i].shift();
         });
@@ -858,10 +858,8 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch('/fetch_phase_data', { method: "POST" })
       .then(res => res.json())
       .then(data => {
-        const phasePoints = data.latestPhase.map(p => p[2]);
-  
         // Push new time column for phase
-        phasePoints.forEach((val, i) => {
+        data.latestPhases.forEach((val, i) => {
           phaseBuffer[i].push(val);
           if (phaseBuffer[i].length > MAX_COLS) phaseBuffer[i].shift();
         });

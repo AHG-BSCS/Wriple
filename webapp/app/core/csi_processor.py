@@ -134,33 +134,41 @@ class CSIProcessor:
         
         return signal_coordinates
     
-    def clear_queues(self):
-        """Clear amplitude and phase queues"""
-        self._amplitude_queue.clear()
-        self._phase_queue.clear()
-        self._logger.info('Cleared amplitude and phase queues.')
-    
-    def get_queue_size(self) -> int:
-        """Get current queue size"""
-        return len(self._amplitude_queue)
-    
-    def get_latest_amplitude(self, start_idx: int = 127, end_idx: int = 148) -> list:
-        """Get subset of latest amplitude data"""
+    def get_latest_amplitude(self, start_subcarrier: int, end_subcarrier: int) -> list:
+        """
+        Get subset of latest amplitude data
+
+        Args:
+            start_idx (int): Starting subcarrier for amplitude data
+            end_idx (int): Ending subcarrier for amplitude data
+
+        Returns:
+            list: Amplitudes containing specific subcarriers. The 0 is the permanent y axis in heatmap
+        """
         if not self._amplitude_queue:
             self._logger.warning('Amplitude queue is empty.')
             return []
         
-        latest_amplitudes = self._amplitude_queue[-1][start_idx:end_idx]
-        return [[x, 0, float(latest_amplitudes[x])] for x in range(len(latest_amplitudes))]
+        latest_amplitudes = self._amplitude_queue[-1][start_subcarrier:end_subcarrier]
+        return latest_amplitudes
     
-    def get_latest_phase(self, start_idx:int = 6, end_idx: int = 27) -> list:
-        """Get subset of latest phase data"""
+    def get_latest_phase(self, start_subcarrier:int, end_subcarrier: int) -> list:
+        """
+        Get subset of latest phase data
+
+        Args:
+            start_idx (int): Starting subcarrier for phase data
+            end_idx (int): Ending subcarrier for phase data
+
+        Returns:
+            list: Phases containing specific subcarriers. The 0 is the permanent y axis in heatmap.
+        """
         if not self._phase_queue:
             self._logger.warning('Phase queue is empty.')
             return []
         
-        latest_phases = self._phase_queue[-1][start_idx:end_idx]
-        return [[x, 0, float(latest_phases[x])] for x in range(len(latest_phases))]
+        latest_phases = self._phase_queue[-1][start_subcarrier:end_subcarrier]
+        return latest_phases
     
     def get_amplitude_window(self) -> list:
         """Get a window of amplitude data for visualization"""
@@ -168,6 +176,15 @@ class CSIProcessor:
             return self._amplitude_queue[:self._signal_window]
         else:
             return None
+    def get_queue_size(self) -> int:
+        """Get current queue size"""
+        return len(self._amplitude_queue)
+    
+    def clear_queues(self):
+        """Clear amplitude and phase queues"""
+        self._amplitude_queue.clear()
+        self._phase_queue.clear()
+        self._logger.info('Cleared amplitude and phase queues.')
     
     def set_max_packets(self, value: int):
         """

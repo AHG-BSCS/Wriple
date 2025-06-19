@@ -78,9 +78,11 @@ def create_api_routes(app, detection_system):
     def fetch_amplitude_data():
         """Get latest amplitude data subset"""
         try:
-            amplitude_points = detection_system.csi_processor.get_latest_amplitude(
-                config.AMP_HEATMAP_START, config.AMP_HEATMAP_END)
-            return jsonify({'latestAmplitude': amplitude_points})
+            latest_amplitudes = detection_system.csi_processor.get_latest_amplitude(
+                                    config.AMP_HEATMAP_START, 
+                                    config.AMP_HEATMAP_END
+                               )
+            return jsonify({'latestAmplitudes': latest_amplitudes})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
@@ -88,9 +90,11 @@ def create_api_routes(app, detection_system):
     def fetch_phase_data():
         """Get latest phase data subset"""
         try:
-            phase_points = detection_system.csi_processor.get_latest_phase(
-                config.PHASE_HEATMAP_START, config.PHASE_HEATMAP_END)
-            return jsonify({'latestPhase': phase_points})
+            latest_phases = detection_system.csi_processor.get_latest_phase(
+                                config.PHASE_HEATMAP_START, 
+                                config.PHASE_HEATMAP_END
+                           )
+            return jsonify({'latestPhases': latest_phases})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
