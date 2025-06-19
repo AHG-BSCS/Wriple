@@ -1,7 +1,4 @@
-"""
-CSI Data Processing Module
-Handles CSI data computation, filtering, and feature extraction
-"""
+"""CSI Data Processing Module"""
 
 import math
 import numpy as np
@@ -11,7 +8,7 @@ from utils.logger import setup_logger
 
 
 class CSIProcessor:
-    """Handles CSI data processing operations"""
+    """Handles CSI data computation, filtering, and feature extraction"""
     
     def __init__(self):
         self._amplitude_queue = []
@@ -23,7 +20,7 @@ class CSIProcessor:
         self._max_packets = 0
         self._logger = setup_logger('CSIProcessor')
     
-    def compute_amplitude_phase(self, csi_data: list) -> tuple:
+    def compute_amplitude_phase(self, csi_data: list) -> tuple[list, list]:
         """
         Compute amplitude and phase from CSI I/Q data
         
@@ -31,7 +28,7 @@ class CSIProcessor:
             csi_data: List of I/Q values
             
         Returns:
-            tuple: (amplitudes, phases)
+            tuple: (Amplitudes, Phases)
         """
         amplitudes = []
         phases = []
@@ -49,7 +46,12 @@ class CSIProcessor:
         return amplitudes, phases
     
     def buffer_amplitude_phase(self, parsed_data: list):
-        """Add amplitude and phase data to processing queues"""
+        """
+        Add amplitude and phase data to processing queues
+        
+        Args:
+            parsed_data: Separated and validated Wi-Fi CSI data from ESP32
+        """
 
         amplitudes, phases = self.compute_amplitude_phase(parsed_data)
         
@@ -61,8 +63,16 @@ class CSIProcessor:
         self._amplitude_queue.append(amplitudes)
         self._phase_queue.append(phases)
     
-    def get_subcarrier_threshold(self, data_transposed: list) -> tuple:
-        """Calculate threshold values for each subcarrier"""
+    def get_subcarrier_threshold(self, data_transposed: list) -> tuple[list, list]:
+        """
+        Calculate threshold values for each subcarrier
+
+        Args:
+            data_transposed: Transposed amplitude and phase data
+
+        Returns:
+            tuple: (Lower Threshold, Upper Threshold)
+        """
         lower_threshold, upper_threshold = [], []
         
         for column in data_transposed:
@@ -77,9 +87,23 @@ class CSIProcessor:
         
         return lower_threshold, upper_threshold
     
-    def threshold_filter(self, amplitudes, phases, amp_lower, amp_upper, 
-                            phase_lower, phase_upper):
-        """Filter data based on amplitude and phase thresholds"""
+    def threshold_filter(self, amplitudes: list, phases: list,
+                         amp_lower: list, amp_upper: list, 
+                         phase_lower: list, phase_upper: list) -> tuple[list, list]:
+        """
+        Filter data based on amplitude and phase thresholds
+        
+        Args:
+            amplitudes: Amplitudes to be filter using thresholds
+            phases: Phases to be filter using thresholds
+            amp_lower: Amplitudes lower threshold
+            amp_upper: Amplitudes upper threshold
+            phase_lower: Phase lower threshold
+            phase_upper: Phase upper threshold
+        
+        Returns:
+            tuple: (Cleaned Amplitudes, Cleaned Phases)
+        """
         cleaned_amplitudes = []
         cleaned_phases = []
         
@@ -94,8 +118,13 @@ class CSIProcessor:
         
         return cleaned_amplitudes, cleaned_phases
     
-    def get_amp_phase_3d_coords(self):
-        """Filter and process amplitude/phase data for visualization"""
+    def get_amp_phase_3d_coords(self) -> list:
+        """
+        Filter and process amplitude/phase data for visualization
+        
+        Returns:
+            list: Coordinates of amplitude and phase for 3D visualization
+        """
         if not self._amplitude_queue:
             self._logger.warning('Amplitude queue is empty.')
             return []
@@ -138,8 +167,8 @@ class CSIProcessor:
         Get subset of latest amplitude data
 
         Args:
-            start_idx (int): Starting subcarrier for amplitude data
-            end_idx (int): Ending subcarrier for amplitude data
+            start_idx: Starting subcarrier for amplitude data
+            end_idx: Ending subcarrier for amplitude data
 
         Returns:
             list: Amplitudes containing specific subcarriers. The 0 is the permanent y axis in heatmap
@@ -156,8 +185,8 @@ class CSIProcessor:
         Get subset of latest phase data
 
         Args:
-            start_idx (int): Starting subcarrier for phase data
-            end_idx (int): Ending subcarrier for phase data
+            start_idx: Starting subcarrier for phase data
+            end_idx: Ending subcarrier for phase data
 
         Returns:
             list: Phases containing specific subcarriers. The 0 is the permanent y axis in heatmap.
@@ -170,13 +199,23 @@ class CSIProcessor:
         return latest_phases
     
     def get_amplitude_window(self) -> list:
-        """Get a window of amplitude data for visualization"""
+        """
+        Get a window of amplitude data for visualization
+
+        Returns:
+            list: Amplitude data for the current signal window, or None if not enough data
+        """
         if (len(self._amplitude_queue) >= self._signal_window * 2):
             return self._amplitude_queue[:self._signal_window]
         else:
             return None
     def get_queue_size(self) -> int:
-        """Get current queue size"""
+        """
+        Get current queue size
+        
+        Returns:
+            int: Number of packets in amplitude queue
+        """
         return len(self._amplitude_queue)
     
     def clear_queues(self):
@@ -190,7 +229,7 @@ class CSIProcessor:
         Set maximum number of packets to keep in queues
 
         Args:
-            value (int): 1 for recording mode, 0 for monitoring mode
+            value: 1 for recording mode, 0 for monitoring mode
         """
         if value == 1:
             self._max_packets = RecordingConfiguration.RECORD_PACKET_LIMIT
@@ -201,5 +240,10 @@ class CSIProcessor:
 
     @property
     def max_packets(self) -> int:
-        """Get maximum number of packets to keep in queues"""
+        """
+        Get maximum number of packets to keep in queues
+        
+        Returns:
+            int: Maximum packets limit
+        """
         return self._max_packets
