@@ -18,10 +18,9 @@ class CSIProcessor:
         self._phase_queue = []
         self._signal_window = PredictionConfiguration.SIGNAL_WINDOW
         self._std_threshold = VisualizerConfiguration.D3_STD_THRESHOLD
+        # Use a scaler model based from dataset to avoid fit_transform()
         self._mm_scaler = MinMaxScaler(VisualizerConfiguration.D3_VISUALIZER_SCALE)
         self._max_packets = 0
-        self._record_packet_limit = RecordingConfiguration.RECORD_PACKET_LIMIT
-        self._monitor_queue_limit = RecordingConfiguration.MONITOR_QUEUE_LIMIT
         self._logger = setup_logger('CSIProcessor')
     
     def compute_amplitude_phase(self, csi_data: list) -> tuple:
