@@ -12,23 +12,25 @@ class FileManager:
     """Handles CSV file CRUD operations and management"""
 
     def __init__(self):
-            self.csv_file_path = None
-            self.selected_csv_file = None
-            self.csv_columns = FileConfiguration.CSV_COLUMNS
-            self.csv_directory = FileConfiguration.CSV_DIRECTORY
-            self.file_pattern = FileConfiguration.CSV_FILE_PATTERN
-            self.file_prefix = FileConfiguration.CSV_FILE_PREFIX
-            self.lock = threading.Lock()
-            self.logger = setup_logger('FileManager')
+            self._csv_file_path = None
+            self._selected_csv_file = None
+            self._csv_directory = FileConfiguration.CSV_DIRECTORY
+            self._lock = threading.Lock()
+            self._logger = setup_logger('FileManager')
             
             # Ensure directory exists
-            os.makedirs(self.csv_directory, exist_ok=True)
+            os.makedirs(self._csv_directory, exist_ok=True)
     
-    def get_next_filename(self):
-        """Generate the next available CSV filename"""
+    def get_next_filename(self) -> str:
+        """
+        Generate the next available CSV filename
+        
+        Returns:
+            str: Full path to the next CSV file
+        """
         try:
-            files = os.listdir(self.csv_directory)
-            pattern = re.compile(self.file_pattern)
+            files = os.listdir(self._csv_directory)
+            pattern = re.compile(FileConfiguration.CSV_FILE_PATTERN)
             matching_files = [f for f in files if pattern.match(f)]
             
             if matching_files:
@@ -43,73 +45,93 @@ class FileManager:
             else:
                 next_number = 1
             
-            filename = f'{self.file_prefix}{next_number:03d}.csv'
-            self.logger.info(f'Writing on {filename}.')
-            return os.path.join(self.csv_directory, filename)
+            filename = f'{FileConfiguration.CSV_FILE_PREFIX}{next_number:03d}.csv'
+            self._logger.info(f'Writing on {filename}.')
+            return os.path.join(self._csv_directory, filename)
             
         except Exception as e:
-            self.logger.error(f"Error generating new csv filename: {e}")
+            self._logger.error(f"Error generating new csv filename: {e}")
             # Fallback filename
-            return os.path.join(self.csv_directory, f'{self.file_prefix}ERROR.csv')
+            return os.path.join(self._csv_directory, f'{FileConfiguration.CSV_FILE_PREFIX}ERROR.csv')
     
-    def list_csv_files(self):
-        """List all CSV files in the recording directory"""
+    def list_csv_files(self) -> list:
+        """
+        Retrieve all CSV files in the recording directory
+
+        Returns:
+            list: Sorted list of CSV filenames
+        """
         try:
-            files = os.listdir(self.csv_directory)
+            files = os.listdir(self._csv_directory)
             csv_files = [f for f in files if f.endswith('.csv')]
             return sorted(csv_files)
         except Exception as e:
-            self.logger.error(f"Error listing CSV files: {e}")
+            self._logger.error(f"Error listing CSV files: {e}")
             return []
     
-    def select_csv_file(self, filename):
-        """Set the file to be used for visualization"""
-        self.selected_csv_file = os.path.join(self.csv_directory, filename)
-        file_path = self.get_file_path(filename)
+    def select_csv_file(self, filename: str) -> bool:
+        """
+        Set the file to be used for visualization
+
+        Args:
+            filename: Name of the CSV file to select
+
+        Returns:
+            bool: True if file exists and is selected, False otherwise
+        """
+        self._selected_csv_file = os.path.join(self._csv_directory, filename)
         
-        if os.path.exists(file_path):
-            self.logger.info(f"{filename} is selected for visualization")
+        if os.path.exists(self._selected_csv_file):
+            self._logger.info(f"{filename} is selected for visualization")
             return True
         else:
-            self.selected_csv_file = None
-            self.logger.error(f"{filename} is not found")
+            self._selected_csv_file = None
+            self._logger.error(f"{filename} is not found")
             return False
     
-    def init_new_csv(self):
-        """Prepare a new CSV file for recording"""
-        self.csv_file_path = self.get_next_filename()
+    def init_new_csv(self) -> bool:
+        """
+        Prepare a new CSV file for recording
+        
+        Returns:
+            bool: True if file was created successfully, False otherwise
+        """
+        self._csv_file_path = self.get_next_filename()
         
         try:
-            # Create file with headers
-            with open(self.csv_file_path, mode='w', newline='') as file:
+            # Create file with column names as headers
+            with open(self._csv_file_path, mode='w', newline='') as file:
                 writer = csv.writer(file)
-                writer.writerow(self.csv_columns)
+                writer.writerow(FileConfiguration.CSV_COLUMNS)
             
             return True
         except Exception as e:
-            self.logger.error(f"Error creating CSV file: {e}")
-            self.csv_file_path = None
+            self._logger.error(f"Error creating CSV file: {e}")
+            self._csv_file_path = None
             return False
     
-    def write_data(self, data_row):
+    def write_data(self, data_row: list) -> bool:
         """
         Write a data row to the CSV file
         
         Args:
             data_row: List of data values to write
+
+        Returns: 
+            bool: True if write was successful, False otherwise
         """
-        if not self.csv_file_path:
-            self.logger.warning("CSV file path is not set. Preparing new file.")
+        if not self._csv_file_path:
+            self._logger.warning("CSV file path is not set. Preparing new file.")
             self.init_new_csv()
             return False
         
         try:
-            with self.lock:
-                with open(self.csv_file_path, mode='a', newline='') as file:
+            with self._lock:
+                with open(self._csv_file_path, mode='a', newline='') as file:
                     writer = csv.writer(file)
                     writer.writerow(data_row)
             return True
             
         except Exception as e:
-            self.logger.error(f"Error writing to CSV file: {e}")
+            self._logger.error(f"Error writing to CSV file: {e}")
             return False
