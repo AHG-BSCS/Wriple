@@ -17,17 +17,17 @@ class ModelManager:
         self._model_loaded = False
         self._pca_model = None
         self._presence_model = None
-        self._config = ModelConfiguration
         self._logger = setup_logger('ModelManager')
 
+        # Temporarily avoid loading models during development
         # self.load_models()
     
     def load_models(self):
         """Load all required ML models"""
         try:
-            if os.path.exists(self._config.PCA_PATH) and os.path.exists(self._config.LOGREG_PATH):
-                self._pca_model = joblib.load(self._config.PCA_PATH)
-                self._presence_model = joblib.load(self._config.LOGREG_PATH)
+            if os.path.exists(ModelConfiguration.PCA_PATH) and os.path.exists(ModelConfiguration.LOGREG_PATH):
+                self._pca_model = joblib.load(ModelConfiguration.PCA_PATH)
+                self._presence_model = joblib.load(ModelConfiguration.LOGREG_PATH)
                 self._model_loaded = True
                 self._logger.info("Models loaded successfully")
         except Exception as e:
@@ -41,7 +41,7 @@ class ModelManager:
             amplitude_data: List of amplitude arrays
             
         Returns:
-            int: Presence prediction (0 or 1)
+            int: Presence prediction. 0 for absense, 1 for presence
         """
         try:
             if amplitude_data is None:
@@ -62,5 +62,10 @@ class ModelManager:
 
     @property
     def model_loaded(self) -> bool:
-        """Check if the model is loaded"""
+        """
+        Check if the model is loaded
+        
+        Returns:
+            bool: True if model is loaded, False otherwise
+        """
         return self._model_loaded

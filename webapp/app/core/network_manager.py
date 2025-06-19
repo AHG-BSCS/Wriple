@@ -1,7 +1,4 @@
-"""
-Network Communication Module
-Handles UDP packet transmission, reception, and connection management
-"""
+"""Network Communication Module"""
 
 import socket
 import subprocess
@@ -13,55 +10,73 @@ from utils.logger import setup_logger
 
 
 class NetworkManager:
-    """Manages network communication with ESP32"""
+    """
+    Manages network communication with ESP32
+    Handles UDP packet transmission, reception, and connection management
+    """
     
     def __init__(self):
-        self.config = NetworkConfiguration()
-        self.socket = None
-        self._tx_timestamps = []
+        # Receiver related variables
         self._is_listening = False
-        self.is_transmitting = False
+        self._socket = None
         self._packet_count = 0
-        self.logger = setup_logger('NetworkManager')
 
-        self.udp_packet = IP(dst=self.config.TX_ESP32_IP) / \
-                         UDP(sport=self.config.TX_UDP_PORT, 
-                             dport=self.config.RX_ESP32_PORT) / \
-                         Raw(load=self.config.TX_PAYLOAD)
+        # Transmitter related variables
+        self._is_transmitting = False
+        self._tx_timestamps = []
+        self._tx_interval = NetworkConfiguration.TX_INTERVAL
+        self._tx_buffer_size = NetworkConfiguration.RX_BUFFER_SIZE
+        self._udp_packet = IP(dst=NetworkConfiguration.TX_ESP32_IP) / \
+                         UDP(sport=NetworkConfiguration.TX_UDP_PORT, 
+                             dport=NetworkConfiguration.RX_ESP32_PORT) / \
+                         Raw(load=NetworkConfiguration.TX_PAYLOAD)
+        
+        self._ap_ssid = NetworkConfiguration.AP_SSID
+        self._logger = setup_logger('NetworkManager')
 
-    def check_wifi_connection(self):
-        """Check if connected to the ESP32 AP"""
+    def check_wifi_connection(self) -> bool:
+        """
+        Check if connected to the ESP32 AP
+        
+        Returns:
+            bool: True if connected, False otherwise
+        """
         try:
             result = subprocess.run(
                 ['netsh', 'wlan', 'show', 'interfaces'], 
                 capture_output=True, text=True
             )
-            if self.config.AP_SSID in result.stdout:
+            if self._ap_ssid in result.stdout:
                 return True
             
-            self.logger.warning(f"Not connected to AP: {self.config.AP_SSID}")
+            self._logger.warning(f"Not connected to AP: {self._ap_ssid}")
             return False
         except Exception as e:
-            self.logger.error(f"Error checking AP connection: {e}")
+            self._logger.error(f"Error checking AP connection: {e}")
             return False
     
     # Receiver
 
-    def setup_socket(self):
-        """Setup UDP socket for receiving packets"""
+    def setup_socket(self) -> bool:
+        """
+        Setup UDP socket for receiving packets
+
+        Returns:
+            bool: True if socket setup is successful, False otherwise
+        """
         try:
-            self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self.socket.bind(('0.0.0.0', self.config.TX_UDP_PORT))
-            self.socket.settimeout(self.config.RX_SOCKET_TIMEOUT)
+            self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self._socket.bind(('0.0.0.0', NetworkConfiguration.TX_UDP_PORT))
+            self._socket.settimeout(NetworkConfiguration.RX_SOCKET_TIMEOUT)
             return True
         except Exception as e:
-            self.logger.error(f"Error setting up socket: {e}")
+            self._logger.error(f"Error setting up socket: {e}")
             return False
     
     def start_listening(self, parse_received_data, record_packet_limit=None):
         """
-        Start listening for UDP packets
+        Start listening for UDP packets from ESP32
         
         Args:
             parse_received_data: Function to call when data is received
@@ -71,11 +86,11 @@ class NetworkManager:
             return
         
         self._is_listening = True
-        self.logger.info("Listening for packets...")
+        self._logger.info("Listening for packets...")
         
         while self._is_listening:
             try:
-                data, addr = self.socket.recvfrom(self.config.RX_BUFFER_SIZE)
+                data, addr = self._socket.recvfrom(self._tx_buffer_size)
                 self._packet_count += 1
                 
                 # Process data in separate thread
@@ -87,7 +102,7 @@ class NetworkManager:
                 ).start()
                 
                 if record_packet_limit and self._packet_count >= record_packet_limit:
-                    self.logger.info(f'Recording completed with {self._packet_count} packets')
+                    self._logger.info(f'Recording completed with {self._packet_count} packets')
                     break
                     
             # Implement a timeout to avoid continuous listening
@@ -96,7 +111,7 @@ class NetworkManager:
                     break
                 continue
             except Exception as e:
-                self.logger.error(f"Error receiving packet: {e}")
+                self._logger.error(f"Error receiving packet: {e}")
                 continue
         
         self.stop_listening()
@@ -105,48 +120,56 @@ class NetworkManager:
         """Stop listening for packets"""
         self._is_listening = False
         self._packet_count = 0
-        if self.socket:
-            self.socket.close()
-            self.socket = None
-        self.logger.info('Stopped listening for packets.')
+        if self._socket:
+            self._socket.close()
+            self._socket = None
+        self._logger.info('Stopped listening for packets.')
     
     # Transmitter
 
     def send_single_packet(self):
         """Send a single UDP packet"""
         try:
-            send(self.udp_packet, verbose=False)
+            send(self._udp_packet, verbose=False)
             tx_time = time.time()
             tx_time = int(tx_time * 1_000_000) % 1_000_000_000
             self._tx_timestamps.append(tx_time)
         except Exception as e:
-            self.logger.error(f"Error sending packet: {e}")
+            self._logger.error(f"Error sending packet: {e}")
     
     def start_transmitting(self):
-        """Start continuous packet transmission"""
-        self.is_transmitting = True
+        """Start continuous packet transmission at specified intervals"""
+        self._is_transmitting = True
         
         def _transmit():
-            if self.is_transmitting:
+            if self._is_transmitting:
                 self.send_single_packet()
                 
                 # Schedule next transmission
-                threading.Timer(self.config.TX_INTERVAL, _transmit).start()
+                threading.Timer(self._tx_interval, _transmit).start()
         
         _transmit()
-        self.logger.info("Started packet transmission")
+        self._logger.info("Started packet transmission")
     
     def stop_transmitting(self):
         """Stop continuous packet transmission"""
-        self.is_transmitting = False
-        self.logger.info("Stopped packet transmission")
+        self._is_transmitting = False
+        self._logger.info("Stopped packet transmission")
 
     @property
     def is_listening(self) -> bool:
-        """Check if the manager is currently listening for packets"""
+        """
+        Check if the manager is currently listening for packets
+        Returns:
+            bool: True if listening, False otherwise
+        """
         return self._is_listening
 
     @property
     def packet_count(self) -> int:
-        """Get the current packet count"""
+        """
+        Get the current packet count
+        Returns:
+            int: Number of packets received
+        """
         return self._packet_count
