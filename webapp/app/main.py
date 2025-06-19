@@ -31,13 +31,25 @@ class HumanDetectionSystem:
         self.logger = setup_logger('HumanDetectionSystem')
     
     def record_data_packet(self, parsed_data, tx_timestamp):
-        """Record data packet to CSV file"""
+        """
+        Record data packet to CSV file
+
+        Args:
+            parsed_data: Parsed data from ESP32
+            tx_timestamp: Timestamp of the transmitted packet
+        """
         # Add recording metadata
         row = [tx_timestamp] + self.record_parameters + parsed_data
         self.file_manager.write_data(row)
 
-    def parse_received_data(self, raw_data, tx_timestamp):
-        """Process data received from ESP32"""
+    def parse_received_data(self, raw_data: bytes, tx_timestamp: int):
+        """
+        Process data received from ESP32
+        
+        Args:
+            raw_data: Raw data bytes received from ESP32 including the data from other sensors
+            tx_timestamp: Timestamp of the transmitted packet
+        """
         try:
             data_str = raw_data.decode('utf-8').strip()
             parsed_data = PacketParser.parse_csi_data(data_str)
@@ -95,16 +107,26 @@ class HumanDetectionSystem:
         self.network_manager.stop_listening()
         self.csi_processor.clear_queues()
     
-    def predict_presence(self):
-        """Make presence prediction using ML model"""
+    def predict_presence(self) -> int:
+        """
+        Make presence prediction using ML model
+        
+        Returns:
+            int: Presence prediction (1 for presence, 0 for absence)
+        """
         if self.model_manager.model_loaded:
             features = self.csi_processor.get_amplitude_window()
             return self.model_manager.predict(features)
         else:
             return 0
     
-    def get_system_status(self):
-        """Get current system components status"""
+    def get_system_status(self) -> dict:
+        """
+        Get current system components status
+        
+        Returns:
+            dict: Dictionary with status of each system component
+        """
         return {
             'esp32': 1,  # Temporary placeholder for ESP32 status
             'ap': self.network_manager.check_wifi_connection(),
@@ -113,8 +135,13 @@ class HumanDetectionSystem:
             'model': self.model_manager.model_loaded
         }
     
-    def get_radar_status(self):
-        """Get radar data and predictions"""
+    def get_radar_status(self) -> dict:
+        """
+        Get radar data and predictions
+        
+        Returns:
+            dict: Dictionary with radar data and presence prediction
+        """
         presence_prediction = self.predict_presence()
         mode_status = (0 if self.is_recording and self.network_manager.is_listening else 
                       1 if self.is_monitoring else -1)
@@ -130,8 +157,21 @@ class HumanDetectionSystem:
             'modeStatus': mode_status
         }
     
-    def set_recording_parameters(self, params: dict):
-        """Set parameters for recording"""
+    def set_recording_parameters(self, params: dict) -> bool:
+        """
+        Set parameters for recording
+        
+        Args:
+            params: Dictionary with recording parameters including:
+                - class_label: Label for the presence class
+                - target_count: Number of targets to record
+                - angle: Angle of the target
+                - line_of_sight: Line of sight angle from the radar center point of view
+                - distance_t1: Distance to target
+        
+        Returns:
+            bool: True if parameters were set successfully, False otherwise
+        """
         try:
             self.record_parameters = [
                 params['class_label'],
