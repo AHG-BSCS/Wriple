@@ -23,18 +23,18 @@ def validate_recording_parameters(params) -> bool:
         
         for field in required_fields:
             if field not in params:
-                logger.error(f"Missing required field: {field}")
+                logger.error(f'Missing required field: {field}')
                 return False
         
         # Validate data types and ranges
         presence = params.get('class_label')
         if not isinstance(presence, (int, str)) or int(presence) not in [0, 1]:
-            logger.error(f"Invalid class_label: {presence}")
+            logger.error(f'Invalid class_label: {presence}')
             return False
         
         target = params.get('target_count')
         if not isinstance(target, (int, str)) or not str(target).isdigit():
-            logger.error(f"Invalid target_count: {target}")
+            logger.error(f'Invalid target_count: {target}')
             return False
         
         # Validate numeric fields
@@ -42,30 +42,30 @@ def validate_recording_parameters(params) -> bool:
         for field in numeric_fields:
             value = params.get(field)
             if not isinstance(value, (int, float, str)):
-                logger.error(f"Invalid type for {field}: {value}")
+                logger.error(f'Invalid type for {field}: {value}')
                 return False
             
             try:
                 float(value)
             except (ValueError, TypeError):
-                logger.error(f"Invalid value for {field}: {value}")
+                logger.error(f'Invalid value for {field}: {value}')
                 return False
         
         # Additional range validation
         angle = float(params.get('angle', 0))
         if not -180 <= angle <= 180:
-            logger.error(f"Angle out of range: {angle}")
+            logger.error(f'Angle out of range: {angle}')
             return False
         
         distance = float(params.get('distance_t1', 0))
         if distance < 0:
-            logger.error(f"Distance_t1 cannot be negative: {distance}")
+            logger.error(f'Distance_t1 cannot be negative: {distance}')
             return False
         
         return True
         
     except Exception as e:
-        logger.error(f"Error validating recording parameters: {e}")
+        logger.error(f'Error validating recording parameters: {e}')
         return False
 
 def validate_target_count(params) -> dict:
@@ -85,7 +85,7 @@ def validate_target_count(params) -> dict:
             params['target_count'] = int(params.get('target_count', -1))
         return params
     except Exception as e:
-        logger.error(f"Error validating target count: {e}")
+        logger.error(f'Error validating target count: {e}')
         return params
 
 def validate_filename(filename) -> bool:

@@ -49,10 +49,10 @@ class NetworkManager:
             if self._ap_ssid in result.stdout:
                 return True
             
-            self._logger.warning(f"Not connected to AP: {self._ap_ssid}")
+            self._logger.warning(f'Not connected to AP: {self._ap_ssid}')
             return False
         except Exception as e:
-            self._logger.error(f"Error checking AP connection: {e}")
+            self._logger.error(f'Error checking AP connection: {e}')
             return False
     
     # Receiver
@@ -71,7 +71,7 @@ class NetworkManager:
             self._socket.settimeout(NetworkConfiguration.RX_SOCKET_TIMEOUT)
             return True
         except Exception as e:
-            self._logger.error(f"Error setting up socket: {e}")
+            self._logger.error(f'Error setting up socket: {e}')
             return False
     
     def start_listening(self, parse_received_data, record_packet_limit=None):
@@ -86,7 +86,7 @@ class NetworkManager:
             return
         
         self._is_listening = True
-        self._logger.info("Listening for packets...")
+        self._logger.info('Listening for packets...')
         
         while self._is_listening:
             try:
@@ -111,7 +111,7 @@ class NetworkManager:
                     break
                 continue
             except Exception as e:
-                self._logger.error(f"Error receiving packet: {e}")
+                self._logger.error(f'Error receiving packet: {e}')
                 continue
         
         self.stop_listening()
@@ -135,7 +135,7 @@ class NetworkManager:
             tx_time = int(tx_time * 1_000_000) % 1_000_000_000
             self._tx_timestamps.append(tx_time)
         except Exception as e:
-            self._logger.error(f"Error sending packet: {e}")
+            self._logger.error(f'Error sending packet: {e}')
     
     def start_transmitting(self):
         """Start continuous packet transmission at specified intervals"""
@@ -149,12 +149,12 @@ class NetworkManager:
                 threading.Timer(self._tx_interval, _transmit).start()
         
         _transmit()
-        self._logger.info("Started packet transmission")
+        self._logger.info('Started packet transmission')
     
     def stop_transmitting(self):
         """Stop continuous packet transmission"""
         self._is_transmitting = False
-        self._logger.info("Stopped packet transmission")
+        self._logger.info('Stopped packet transmission')
 
     @property
     def is_listening(self) -> bool:

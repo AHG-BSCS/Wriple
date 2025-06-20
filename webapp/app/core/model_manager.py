@@ -29,9 +29,9 @@ class ModelManager:
                 self._pca_model = joblib.load(ModelConfiguration.PCA_PATH)
                 self._presence_model = joblib.load(ModelConfiguration.LOGREG_PATH)
                 self._model_loaded = True
-                self._logger.info("Models loaded successfully")
+                self._logger.info('Models loaded successfully')
         except Exception as e:
-            self._logger.error(f"Error loading models: {e}")
+            self._logger.error(f'Error loading models: {e}')
     
     def predict(self, amplitude_data: list) -> int:
         """
@@ -52,12 +52,12 @@ class ModelManager:
             X_pca = self._pca_model.transform(X)
             y_pred = self._presence_model.predict(X_pca)
             presence_pred = 0 if 0 in y_pred else 1
-            self._logger.debug(f"Prediction: {presence_pred}")
+            self._logger.debug(f'Prediction: {presence_pred}')
             
             return presence_pred
             
         except Exception as e:
-            self._logger.error(f"Error in logistic regression prediction: {e}")
+            self._logger.error(f'Error in logistic regression prediction: {e}')
             return 0
 
     @property

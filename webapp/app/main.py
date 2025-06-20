@@ -68,7 +68,7 @@ class HumanDetectionSystem:
     def start_recording_mode(self):
         """Start recording Wi-Fi CSI data into CSV file"""
         if not self.network_manager.check_wifi_connection():
-            self.logger.error("Not connected to ESP32 AP, cannot start recording")
+            self.logger.error('Not connected to ESP32 AP, cannot start recording')
             return
         
         self.is_recording = True
@@ -85,7 +85,7 @@ class HumanDetectionSystem:
     def start_monitoring_mode(self):
         """Start monitoring WI-Fi CSI data without recording"""
         if not self.network_manager.check_wifi_connection():
-            self.logger.error("Not connected to ESP32 AP, cannot start monitoring")
+            self.logger.error('Not connected to ESP32 AP, cannot start monitoring')
             return
         
         self.is_monitoring = True
@@ -179,10 +179,10 @@ class HumanDetectionSystem:
                 float(params['angle']) - float(params['line_of_sight']),
                 float(params['distance_t1'])
             ]
-            self.logger.info(f"Recording parameters set")
+            self.logger.info(f'Recording parameters set')
             return True
         except (ValueError, TypeError) as e:
-            self.logger.error(f"Error setting recording parameters exception: {e}")
+            self.logger.error(f'Error setting recording parameters exception: {e}')
             return False
 
 

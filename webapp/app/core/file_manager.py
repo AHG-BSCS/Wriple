@@ -50,7 +50,7 @@ class FileManager:
             return os.path.join(self._csv_directory, filename)
             
         except Exception as e:
-            self._logger.error(f"Error generating new csv filename: {e}")
+            self._logger.error(f'Error generating new csv filename: {e}')
             # Fallback filename
             return os.path.join(self._csv_directory, f'{FileConfiguration.CSV_FILE_PREFIX}ERROR.csv')
     
@@ -66,7 +66,7 @@ class FileManager:
             csv_files = [f for f in files if f.endswith('.csv')]
             return sorted(csv_files)
         except Exception as e:
-            self._logger.error(f"Error listing CSV files: {e}")
+            self._logger.error(f'Error listing CSV files: {e}')
             return []
     
     def select_csv_file(self, filename: str) -> bool:
@@ -82,11 +82,11 @@ class FileManager:
         self._selected_csv_file = os.path.join(self._csv_directory, filename)
         
         if os.path.exists(self._selected_csv_file):
-            self._logger.info(f"{filename} is selected for visualization")
+            self._logger.info(f'{filename} is selected for visualization')
             return True
         else:
             self._selected_csv_file = None
-            self._logger.error(f"{filename} is not found")
+            self._logger.error(f'{filename} is not found')
             return False
     
     def init_new_csv(self) -> bool:
@@ -106,7 +106,7 @@ class FileManager:
             
             return True
         except Exception as e:
-            self._logger.error(f"Error creating CSV file: {e}")
+            self._logger.error(f'Error creating CSV file: {e}')
             self._csv_file_path = None
             return False
     
@@ -121,7 +121,7 @@ class FileManager:
             bool: True if write was successful, False otherwise
         """
         if not self._csv_file_path:
-            self._logger.warning("CSV file path is not set. Preparing new file.")
+            self._logger.warning('CSV file path is not set. Preparing new file.')
             self.init_new_csv()
             return False
         
@@ -133,5 +133,5 @@ class FileManager:
             return True
             
         except Exception as e:
-            self._logger.error(f"Error writing to CSV file: {e}")
+            self._logger.error(f'Error writing to CSV file: {e}')
             return False

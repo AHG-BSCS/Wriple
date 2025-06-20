@@ -33,7 +33,7 @@ class PacketParser:
             return parts[:-1] + [raw_csi]
             
         except (ValueError, IndexError) as e:
-            PacketParser._logger.error(f"Error parsing CSI data: {e}")
+            PacketParser._logger.error(f'Error parsing CSI data: {e}')
             return []
     
     @staticmethod
@@ -66,5 +66,5 @@ class PacketParser:
                 [parsed_data[8], parsed_data[12], parsed_data[16]],
             ]
         except (IndexError, TypeError) as e:
-            PacketParser._logger.error(f"Error extracting radar data: {e}")
+            PacketParser._logger.error(f'Error extracting radar data: {e}')
             return []
