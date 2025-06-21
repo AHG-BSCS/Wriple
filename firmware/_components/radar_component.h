@@ -21,10 +21,8 @@
 #define RD03D_RX_PIN    16
 #define RD03D_BAUD_RATE 256000
 
-static const char *RADAR_TAG = "RD03D";
+static const char *RD03D_TAG = "RD03D";
 static uint8_t radar_data_buffer[RD03D_BUF_SIZE];
-
-bool is_single_target = false;
 
 bool target1_updated = false;
 int16_t target1_x = 0;
@@ -119,19 +117,11 @@ void rd03d_init() {
     uart_param_config(RD03D_UART_PORT, &uart_config);
     uart_set_pin(RD03D_UART_PORT, RD03D_TX_PIN, RD03D_RX_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
     uart_driver_install(RD03D_UART_PORT, RD03D_BUF_SIZE, 0, 0, NULL, 0);
-
-    // Send single-target detection mode command
-    if (is_single_target) {
-        uint8_t cmd[12] = {0xFD, 0xFC, 0xFB, 0xFA, 0x02, 0x00, 0x80, 0x00, 0x04, 0x03, 0x02, 0x01};
-        uart_write_bytes(RD03D_UART_PORT, (const char *)cmd, sizeof(cmd));
-        ESP_LOGI(RADAR_TAG, "Single-target detection mode activated.");
-    }
+    
     // Send multi-target detection mode command
-    else {
-        uint8_t cmd[12] = {0xFD, 0xFC, 0xFB, 0xFA, 0x02, 0x00, 0x90, 0x00, 0x04, 0x03, 0x02, 0x01};
-        uart_write_bytes(RD03D_UART_PORT, (const char *)cmd, sizeof(cmd));
-        ESP_LOGI(RADAR_TAG, "Multi-target detection mode activated.");
-    }
+    uint8_t cmd[12] = {0xFD, 0xFC, 0xFB, 0xFA, 0x02, 0x00, 0x90, 0x00, 0x04, 0x03, 0x02, 0x01};
+    uart_write_bytes(RD03D_UART_PORT, (const char *)cmd, sizeof(cmd));
+    ESP_LOGI(RD03D_TAG, "Multi-target detection mode activated.");
 }
 
 void parse_single_target(const uint8_t* buf, bool& is_updated, int16_t& x, int16_t& y, int16_t& speed, 
@@ -145,7 +135,7 @@ void parse_single_target(const uint8_t* buf, bool& is_updated, int16_t& x, int16
         uint16_t speed_raw = buf[4] | (buf[5] << 8);
         speed = (speed_raw & 0x7FFF) * ((speed_raw & 0x8000) ? -1 : 1);
         dist_res = buf[6] | (buf[7] << 8);
-        ESP_LOGI(RADAR_TAG, "Target %d - X: %d mm, Y: %d mm, Speed: %d cm/s, Dist_Res: %d mm", 
+        ESP_LOGI(RD03D_TAG, "Target %d - X: %d mm, Y: %d mm, Speed: %d cm/s, Dist_Res: %d mm", 
             target_num, x, y, speed, dist_res);
     } else {
         is_updated = false;

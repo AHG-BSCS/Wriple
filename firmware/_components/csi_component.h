@@ -9,6 +9,7 @@
 #include "lwip/sockets.h"
 
 #include "../_components/radar_component.h"
+#include "../_components/ld2420_component.h"
 
 #define LED_GPIO_PIN GPIO_NUM_2
 

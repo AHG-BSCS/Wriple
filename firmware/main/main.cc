@@ -86,5 +86,6 @@ extern "C" void app_main() {
     wifi_init_softap();
 
     rd03d_init();
+    ld2420_init();
     csi_init();
 }
