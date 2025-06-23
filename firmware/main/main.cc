@@ -10,7 +10,7 @@
 #define WIFI_CHANNEL    CONFIG_ESP_WIFI_CHANNEL
 #define MAX_STA_CONN    CONFIG_ESP_MAX_STA_CONN
 
-const char *MAIN_TAG = "Main";
+#define MAIN_TAG "MAIN"
 
 static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
     if (event_id == WIFI_EVENT_AP_STACONNECTED) {

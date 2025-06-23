@@ -1,13 +1,6 @@
 #ifndef RD03D_RADAR_COMPONENT_H
 #define RD03D_RADAR_COMPONENT_H
 
-#include "driver/uart.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "string.h"
-#include "math.h"
-#include "esp_log.h"
-
 #define RD03D_UART_PORT     UART_NUM_1
 #define RD03D_BAUD_RATE     256000
 #define RD03D_UART_BUF_SIZE 256
@@ -202,7 +195,7 @@ void rd03d_init() {
     ESP_LOGI(RD03D_TAG, "RD03D Mode: Multi-target.");
 
     // Temporary timer for debugging
-    start_rd03d_timer();
+    // start_rd03d_timer();
 }
 
 #endif

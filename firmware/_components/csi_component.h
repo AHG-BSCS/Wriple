@@ -2,21 +2,20 @@
 #define ESP32_CSI_COMPONENT_H
 
 #include <sstream>
-#include "esp_log.h"
 #include "driver/gpio.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/timers.h"
+#include "driver/uart.h"
 #include "lwip/sockets.h"
 
-#include "../_components/radar_component.h"
-#include "../_components/ld2420_component.h"
+#include "rd03d_component.h"
+#include "ld2420_component.h"
 
 #define LED_GPIO_PIN GPIO_NUM_2
+
+#define CSI_TAG "ESP32"
 
 SemaphoreHandle_t mutex = xSemaphoreCreateMutex();
 TimerHandle_t led_timer;
 
-static const char *CSI_TAG = "ESP32";
 static bool connected = false;
 static int total_packet_count = 0;
 
