@@ -121,7 +121,7 @@ void rd03d_init() {
     // Send multi-target detection mode command
     uint8_t cmd[12] = {0xFD, 0xFC, 0xFB, 0xFA, 0x02, 0x00, 0x90, 0x00, 0x04, 0x03, 0x02, 0x01};
     uart_write_bytes(RD03D_UART_PORT, (const char *)cmd, sizeof(cmd));
-    ESP_LOGI(RD03D_TAG, "Multi-target detection mode activated.");
+    ESP_LOGI(RD03D_TAG, "RD03D Mode: Multi-target.");
 }
 
 void parse_single_target(const uint8_t* buf, bool& is_updated, int16_t& x, int16_t& y, int16_t& speed, 

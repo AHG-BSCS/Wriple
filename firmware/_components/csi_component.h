@@ -26,7 +26,7 @@ static const uint8_t target_mac[6] = {0xE0, 0x2B, 0xE9, 0x95, 0xED, 0x68}; // MA
 static const char *target_ip = "192.168.4.2"; // IP address of the station
 
 void led_timer_callback(TimerHandle_t xTimer) {
-    if (connected && total_packet_count > 100) {
+    if (connected && total_packet_count > 25) {
         gpio_set_level(LED_GPIO_PIN, 1);
         total_packet_count = 0;
     }
@@ -49,36 +49,32 @@ void _wifi_csi_callback(void *ctx, wifi_csi_info_t *data) {
         
         std::stringstream ss;
         wifi_csi_info_t d = data[0];
+        std::string ld2420_rdmap_str = read_ld2420_debug_data();
         read_radar_data();
         char mac[20] = {0};
         sprintf(mac, "%02X:%02X:%02X:%02X:%02X:%02X", d.mac[0], d.mac[1], d.mac[2], d.mac[3], d.mac[4], d.mac[5]);
 
-        ss << d.rx_ctrl.rssi << ","
-        << d.rx_ctrl.rate << ","
-        << d.rx_ctrl.mcs << ","
-        << d.rx_ctrl.channel << ","
-        << d.rx_ctrl.timestamp << ","
-        << get_target1_x() << ","
-        << get_target1_y() << ","
-        << get_target1_speed() << ","
-        << get_target1_dist_res() << ","
-        << get_target2_x() << ","
-        << get_target2_y() << ","
-        << get_target2_speed() << ","
-        << get_target2_dist_res() << ","
-        << get_target3_x() << ","
-        << get_target3_y() << ","
-        << get_target3_speed() << ","
-        << get_target3_dist_res() << ",[";
+        // (1) Metadata
+        ss << "(" << d.rx_ctrl.timestamp << "," << d.rx_ctrl.rssi << "," << d.rx_ctrl.channel << ") | ";
 
-        int data_len = data->len;
-        int8_t *my_ptr = data->buf;
-
-        for (int i = 0; i < data_len; i++) {
-            ss << (int) my_ptr[i] << " ";
+        // (2) CSI
+        ss << "[";
+        for (int i = 0; i < data->len; i++) {
+            ss << (int)data->buf[i];
+            if (i < data->len - 1) ss << " ";
         }
+        ss << "] | ";
 
-        ss << "]\n";
+        // (3) RD03D (3 targets × 4 fields each)
+        ss << "("
+        << get_target1_x() << "," << get_target1_y() << "," << get_target1_speed() << "," << get_target1_dist_res() << ","
+        << get_target2_x() << "," << get_target2_y() << "," << get_target2_speed() << "," << get_target2_dist_res() << ","
+        << get_target3_x() << "," << get_target3_y() << "," << get_target3_speed() << "," << get_target3_dist_res()
+        << ") | ";
+
+        // (4) LD2420 (flat doppler × gate array as string)
+        ss << ld2420_rdmap_str << "\n";
+
         // Send the CSI data to the station
         sendto(sock, ss.str().c_str(), strlen(ss.str().c_str()), 0, (struct sockaddr *)&client_addr, sizeof(client_addr));
         total_packet_count++;
