@@ -38,8 +38,9 @@ class HumanDetectionSystem:
             parsed_data: Parsed data from ESP32
             tx_timestamp: Timestamp of the transmitted packet
         """
-        # Add recording metadata
-        row = [tx_timestamp] + self.record_parameters + parsed_data
+
+        # row = [tx_timestamp] + self.record_parameters + parsed_data
+        row = self.record_parameters + [tx_timestamp] + parsed_data
         self.file_manager.write_data(row)
 
     def parse_received_data(self, raw_data: bytes, tx_timestamp: int):
@@ -50,20 +51,14 @@ class HumanDetectionSystem:
             raw_data: Raw data bytes received from ESP32 including the data from other sensors
             tx_timestamp: Timestamp of the transmitted packet
         """
-        try:
-            data_str = raw_data.decode('utf-8').strip()
-            parsed_data = PacketParser.parse_csi_data(data_str)
-            
-            # Extract radar and CSI data
-            self.csi_processor.buffer_amplitude_phase(parsed_data[-1])
-            self.radar_data = PacketParser.extract_radar_data(parsed_data)
-            
-            # Record data to csv file if recording
-            if self.is_recording:
-                self.record_data_packet(parsed_data, tx_timestamp)
-            
-        except Exception as e:
-            self.logger.error(f'Error parsing received data: {e}')
+        # Extract radar and CSI data from parsed data
+        parsed_data = PacketParser.parse_csi_data(raw_data)
+        self.csi_processor.buffer_amplitude_phase(parsed_data[3])
+        self.radar_data = [parsed_data[1], parsed_data[4], parsed_data[5], parsed_data[6]]
+        
+        # Record data to csv file if recording
+        if self.is_recording:
+            self.record_data_packet(parsed_data, tx_timestamp)
     
     def start_recording_mode(self):
         """Start recording Wi-Fi CSI data into CSV file"""
@@ -148,10 +143,9 @@ class HumanDetectionSystem:
         
         return {
             'presence': presence_prediction,
-            'radarX': self.radar_data[1],
-            'radarY': self.radar_data[2],
-            'radarSpeed': self.radar_data[3],
-            'radarDistRes': self.radar_data[4],
+            'target1': self.radar_data[1],
+            'target2': self.radar_data[2],
+            'target3': self.radar_data[3],
             'totalPacket': self.network_manager.packet_count,
             'rssi': self.radar_data[0],
             'modeStatus': mode_status

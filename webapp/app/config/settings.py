@@ -2,15 +2,15 @@
 
 class NetworkConfiguration:
     """Configuration for network settings"""
-    AP_SSID: str = 'Wiremap'
-    AP_PASSWORD: str = 'WiReMap@ESP32'
+    AP_SSID: str = 'Wriple'
+    AP_PASSWORD: str = 'Wr!ple@ESP32'
     TX_ESP32_IP: str = '192.168.4.1'
     TX_UDP_PORT: int = 5000
     TX_PAYLOAD: str = 'Wiremap'
-    TX_INTERVAL: float = 0.05
+    TX_INTERVAL: float = 0.5
     RX_ESP32_PORT: int = 5001
     RX_SOCKET_TIMEOUT: float = 0.5
-    RX_BUFFER_SIZE: int = 2048
+    RX_BUFFER_SIZE: int = 4096
 
 
 class RecordingConfiguration:
@@ -30,11 +30,15 @@ class FileConfiguration:
     CSV_FILE_PATTERN: str = r'^CSI_DATA_.*$'
     CSV_FILE_PREFIX: str = 'CSI_DATA_'
     CSV_COLUMNS: list = [
-        'Transmit_Timestamp', 'Presence', 'Target_Count', 'Angle', 'Distance', 
-        'RSSI', 'Rate', 'MCS', 'Channel', 'Received_Timestamp',
-        'Target1_X', 'Target1_Y', 'Target1_Speed', 'Target1_Resolution', 
-        'Target2_X', 'Target2_Y', 'Target2_Speed', 'Target2_Resolution', 
-        'Target3_X', 'Target3_Y', 'Target3_Speed', 'Target3_Resolution', 'Raw_CSI'
+        'Presence', 'Target_Count', 'Angle', 'Distance',
+        'Transmit_Timestamp', 'Received_Timestamp', 'RSSI', 'Channel',
+        'Raw_CSI',
+        'RD03D_Target_1', 'RD03D_Target_2', 'RD03D_Target_3',
+        'LD2420_Doppler_1', 'LD2420_Doppler_2', 'LD2420_Doppler_3', 'LD2420_Doppler_4',
+        'LD2420_Doppler_5', 'LD2420_Doppler_6', 'LD2420_Doppler_7', 'LD2420_Doppler_8',
+        'LD2420_Doppler_9', 'LD2420_Doppler_10', 'LD2420_Doppler_11', 'LD2420_Doppler_12',
+        'LD2420_Doppler_13', 'LD2420_Doppler_14', 'LD2420_Doppler_15', 'LD2420_Doppler_16',
+        'LD2420_Doppler_17', 'LD2420_Doppler_18', 'LD2420_Doppler_19', 'LD2420_Doppler_20'
     ]
 
 
@@ -49,8 +53,8 @@ class VisualizerConfiguration:
     PHASE_HEATMAP_END = 27
     D3_STD_THRESHOLD: float = 1.75
     D3_VISUALIZER_SCALE: tuple = (-10, 10)
-    # 0: RSSI, 1: X, 2: Y, 3: Speed, 4: Resolution
-    RADAR_DATA: list = [0, [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]
+    # 0: RSSI, 1: Target 1, 2: Target 2, 3: Target 3
+    RADAR_DATA: list = [0, [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
 
 
 class ModelConfiguration:

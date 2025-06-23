@@ -357,25 +357,23 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   }
 
-  function visualizeRadarData(data) {
+  function visualizeRadarData(target) {
     const radarRect = radarContainer.getBoundingClientRect();
     const centerX = pointsContainer.offsetWidth / 2;
     pointsContainer.innerHTML = ''; // Clear previous points
 
-    for (let i = 0; i < 3; i++) {
-      if (data.radarY[i] != '0') {
-        const x = scaleXToRadar(data.radarX[i], radarRect.width);
-        const y = scaleYToRadar(data.radarY[i], radarRect.height);
-        createPoint((centerX + x), (radarRect.height - y));
-      }
+    if (target[1] != '0') {
+      const x = scaleXToRadar(target[0], radarRect.width);
+      const y = scaleYToRadar(target[1], radarRect.height);
+      createPoint((centerX + x), (radarRect.height - y));
     }
   }
 
   function countTarget(data) {
     let targetCount = 0;
-    for (let i = 0; i < 3; i++) {
-      if (data.radarY[i] != '0') targetCount += 1;
-    }
+    if (data.target1[1] != '0') targetCount += 1;
+    if (data.target2[1] != '0') targetCount += 1;
+    if (data.target3[1] != '0') targetCount += 1;
     return targetCount;
   }
 
@@ -407,8 +405,8 @@ document.addEventListener('DOMContentLoaded', () => {
           // else if (data.presence == 1) {
           if (true) { // Temporary for debugging
             presenceStatus.textContent = "Yes";
-            if (data.radarY[0] != '0') {
-              target1Dist.textContent = calculateDistance(data.radarX[0], data.radarY[0]).toFixed(2) + "m";
+            if (data.target1[1] != '0') {
+              target1Dist.textContent = calculateDistance(data.target1[0], data.target1[1]).toFixed(2) + "m";
             }
             else target1Dist.textContent = "0m";
 
@@ -416,18 +414,18 @@ document.addEventListener('DOMContentLoaded', () => {
             targetDetected.textContent = targetCount;
 
             if (isMonitoring) {
-              target1Angle.textContent = calculateAngle(data.radarX[0], data.radarY[0]).toFixed(2) + "°";
-              target2Angle.textContent = calculateAngle(data.radarX[1], data.radarY[1]).toFixed(2) + "°";
-              target3Angle.textContent = calculateAngle(data.radarX[2], data.radarY[2]).toFixed(2) + "°";
-              target1Distance.textContent = calculateDistance(data.radarX[0], data.radarY[0]).toFixed(2) + "m";
-              target2Distance.textContent = calculateDistance(data.radarX[1], data.radarY[1]).toFixed(2) + "m";
-              target3Distance.textContent = calculateDistance(data.radarX[2], data.radarY[2]).toFixed(2) + "m";
-              target1Speed.textContent = data.radarSpeed[0] + "cm/s";
-              target2Speed.textContent = data.radarSpeed[1] + "cm/s";
-              target3Speed.textContent = data.radarSpeed[2] + "cm/s";
-              target1DistRes.textContent = data.radarDistRes[0];
-              target2DistRes.textContent = data.radarDistRes[1];
-              target3DistRes.textContent = data.radarDistRes[2];
+              target1Angle.textContent = calculateAngle(data.target1[0], data.target1[1]).toFixed(2) + "°";
+              target2Angle.textContent = calculateAngle(data.target2[0], data.target2[1]).toFixed(2) + "°";
+              target3Angle.textContent = calculateAngle(data.target3[0], data.target3[1]).toFixed(2) + "°";
+              target1Distance.textContent = calculateDistance(data.target1[0], data.target1[1]).toFixed(2) + "m";
+              target2Distance.textContent = calculateDistance(data.target2[0], data.target2[1]).toFixed(2) + "m";
+              target3Distance.textContent = calculateDistance(data.target3[0], data.target3[1]).toFixed(2) + "m";
+              target1Speed.textContent = data.target1[2] + "cm/s";
+              target2Speed.textContent = data.target2[2] + "cm/s";
+              target3Speed.textContent = data.target3[2] + "cm/s";
+              target1DistRes.textContent = data.target1[3];
+              target2DistRes.textContent = data.target2[3];
+              target3DistRes.textContent = data.target3[3];
             }
           }
           else {
@@ -439,7 +437,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
           // This data must be updated
           if (isRSSIChartVisible) visualizeRSSI(data.rssi);
-          if (isRadarVisible) visualizeRadarData(data);
+          if (isRadarVisible) {
+            visualizeRadarData(data.target1);
+            visualizeRadarData(data.target2);
+            visualizeRadarData(data.target3);
+          }
           packetCount.textContent = data.totalPacket;
           rssiValue.textContent = data.rssi;
         }
