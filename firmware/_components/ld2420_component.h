@@ -25,7 +25,7 @@
 #define DOPPLER_BINS  20
 #define GATES         16
 
-#define LD2420_TIMER_INTERVAL  500 // Lower than 500 ms cause a timing issue with data buffer
+#define LD2420_TIMER_INTERVAL  500 // LD2420 debug mode only updates every 500 ms
 #define LD2420_TAG "LD2420"
 
 static TimerHandle_t ld2420_timer;
@@ -41,7 +41,7 @@ std::string read_ld2420_debug_data() {
     }
 
     // Look for index of the header in half of the buffer
-    for (int i = 0; i <= len - LD2420_BUF_SIZE / 2; i++) {
+    for (int i = 0; i <= LD2420_BUF_SIZE / 2; i++) {
         // Check for valid frame header and tail
         int tail_idx = i + LD2420_FRAME_SIZE - LD2420_TAIL_LEN;
         if (ld2420_buffer[i] == LD2420_HEADER_1 &&
@@ -124,7 +124,7 @@ void ld2420_init() {
     ESP_LOGI(LD2420_TAG, "LD2420 Mode: Debug.");
 
     // Temporary timer for debugging
-    start_ld2420_timer();
+    // start_ld2420_timer();
 }
 
 #endif

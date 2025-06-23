@@ -1,13 +1,12 @@
 #ifndef RD03D_RADAR_COMPONENT_H
 #define RD03D_RADAR_COMPONENT_H
 
-#define RD03D_UART_PORT     UART_NUM_1
-#define RD03D_BAUD_RATE     256000
-#define RD03D_UART_BUF_SIZE 256
-#define RD03D_BUF_SIZE      32
-#define RD03D_TX_PIN        17
-#define RD03D_RX_PIN        16
-#define RD03D_TIMER_PERIOD  50 // Less than 45 ms is too fast for rd-03d to send data
+#define RD03D_UART_PORT      UART_NUM_1
+#define RD03D_UART_WAIT      50 / portTICK_PERIOD_MS // 5 ms (Keep it low for low latency read)
+#define RD03D_BAUD_RATE      256000
+#define RD03D_UART_BUF_SIZE  256
+#define RD03D_TX_PIN         17
+#define RD03D_RX_PIN         16
 
 // Multi-target detection mode header and tail bytes
 #define RD03D_HEADER_1  0xAA
@@ -18,7 +17,9 @@
 #define RD03D_TAIL_2    0xCC
 
 #define RD03D_FRAME_SIZE 30 // 4 bytes header + 8 * 3 bytes target data + 2 bytes tail
+#define RD03D_BUF_SIZE   64
 
+#define RD03D_TIMER_INTERVAL 100
 #define RD03D_TAG "RD03D"
 
 static TimerHandle_t rd03d_timer;
@@ -131,7 +132,7 @@ void parse_targets(const uint8_t* buf) {
 }
 
 void read_radar_data() {
-    int len = uart_read_bytes(RD03D_UART_PORT, rd03d_buffer, RD03D_BUF_SIZE, RD03D_TIMER_PERIOD / portTICK_PERIOD_MS);
+    int len = uart_read_bytes(RD03D_UART_PORT, rd03d_buffer, RD03D_BUF_SIZE, RD03D_UART_WAIT);
     
     if (len < RD03D_FRAME_SIZE) {
         ESP_LOGW(RD03D_TAG, "Not enough data (%d bytes)", len);
@@ -151,7 +152,7 @@ void read_radar_data() {
         return;
     }
 
-    ESP_LOGW(RD03D_TAG, "No valid RD03D data frame found");
+    ESP_LOGW(RD03D_TAG, "No valid data frame found in %d bytes", len);
 }
 
 void rd03d_timer_callback(TimerHandle_t xTimer) {
@@ -169,7 +170,7 @@ void start_rd03d_timer() {
     if (rd03d_task_handle == NULL)
         xTaskCreate(rd03d_task, "RD03D_Task", 4096, NULL, 10, &rd03d_task_handle);
 
-    rd03d_timer = xTimerCreate("RD03D_Timer", pdMS_TO_TICKS(RD03D_TIMER_PERIOD), pdTRUE, (void *)0, rd03d_timer_callback);
+    rd03d_timer = xTimerCreate("RD03D_Timer", pdMS_TO_TICKS(RD03D_TIMER_INTERVAL), pdTRUE, (void *)0, rd03d_timer_callback);
     xTimerStart(rd03d_timer, 0);
 }
 
@@ -195,7 +196,7 @@ void rd03d_init() {
     ESP_LOGI(RD03D_TAG, "RD03D Mode: Multi-target.");
 
     // Temporary timer for debugging
-    // start_rd03d_timer();
+    start_rd03d_timer();
 }
 
 #endif
