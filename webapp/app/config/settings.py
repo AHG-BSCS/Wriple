@@ -9,7 +9,7 @@ class NetworkConfiguration:
     TX_CSI_PAYLOAD: str = 'CSI'         # 85 frame length
     TX_MONITOR_PAYLOAD: str = 'RD03D'     # 87 frame length
     TX_RECORD_PAYLOAD: str = 'LD2420'   # 88 frame length
-    TX_CSI_INTERVAL: float = 0.1
+    TX_CSI_INTERVAL: float = 0.05
     TX_MONITOR_INTERVAL: float = 0.1
     TX_RECORD_INTERVAL: float = 0.5
     RX_ESP32_PORT: int = 5001

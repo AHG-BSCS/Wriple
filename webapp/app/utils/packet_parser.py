@@ -53,6 +53,7 @@ class PacketParser:
                 # Parse RD03D
                 if sections[1].startswith('!'): # If RD03D sensor doesn't provide data
                     rd03d_targets = [[0, 0, 0, 0]] * 3
+                    PacketParser._logger.error('LD2420 has no data')
                 else:
                     rd03d_values = list(map(int, sections[1].split(',')))
                     rd03d_targets = [rd03d_values[i:i+4] for i in range(0, len(rd03d_values), 4)]

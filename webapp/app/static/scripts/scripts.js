@@ -610,6 +610,7 @@ document.addEventListener('DOMContentLoaded', () => {
     packetCount.textContent = "0";
     presenceStatus.textContent = "No"
     svg.selectAll('*').remove();
+    d3PlotContainer.classList.add('hidden');
     pointsContainer.innerHTML = '';
 
     setTimeout(() => {
@@ -623,6 +624,15 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(response => response.json())
       .then(data => {
         if (data.status === "error") throw new Error(data.message);
+        if (isAmpitudeHeatmapVisible) {
+          fetch('/request_csi_data', { method: "POST" });
+          amplitudeHeatmapInterval = setInterval(fetchAmplitudeData, heatmapRefreshRate);
+        }
+
+        if (isPhaseHeatmapVisible) {
+          fetch('/request_csi_data', { method: "POST" });
+          phaseHeatmapInterval = setInterval(fetchPhaseData, heatmapRefreshRate);
+        }
         
         d3PlotBtn.disabled = false;
         targetRadarBtn.disabled = false;
@@ -699,7 +709,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function stopPhaseHeatmap() {
     if (!isAmpitudeHeatmapVisible)
       fetch('/stop_csi_request', { method: "POST" });
-    
+
     phaseHeatmapBtn.style.backgroundColor = btnDefaultColor;
     phaseHeatmapContainer.classList.add('hidden');
     clearInterval(phaseHeatmapInterval);
