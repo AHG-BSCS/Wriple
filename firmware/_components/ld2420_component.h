@@ -32,7 +32,7 @@ static TimerHandle_t ld2420_timer;
 static TaskHandle_t ld2420_task_handle = NULL;
 static uint8_t ld2420_buffer[LD2420_BUF_SIZE];
 
-std::string read_ld2420_debug_data() {
+std::string get_ld2420_data() {
     int len = uart_read_bytes(LD2420_UART_PORT, ld2420_buffer, LD2420_BUF_SIZE, LD2420_UART_WAIT);
 
     if (len < LD2420_FRAME_SIZE) {
@@ -90,7 +90,7 @@ void ld2420_timer_callback(TimerHandle_t xTimer) {
 void ld2420_task(void *pvParameters) {
     while (1) {
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-        read_ld2420_debug_data();
+        get_ld2420_data();
     }
 }
 

@@ -16,8 +16,10 @@
 #define RD03D_TAIL_1    0x55
 #define RD03D_TAIL_2    0xCC
 
+#define RD03D_HEADER_LEN  4
+#define RD03D_TAIL_LEN    2
 #define RD03D_FRAME_SIZE 30 // 4 bytes header + 8 * 3 bytes target data + 2 bytes tail
-#define RD03D_BUF_SIZE   64
+#define RD03D_BUF_SIZE   128
 
 #define RD03D_TIMER_INTERVAL 100
 #define RD03D_TAG "RD03D"
@@ -25,84 +27,6 @@
 static TimerHandle_t rd03d_timer;
 static TaskHandle_t rd03d_task_handle = NULL;
 static uint8_t rd03d_buffer[RD03D_BUF_SIZE];
-
-bool target1_updated = false;
-int16_t target1_x = 0;
-int16_t target1_y = 0;
-int16_t target1_speed = 0;
-uint16_t target1_dist_res = 0;
-
-bool target2_updated = false;
-int16_t target2_x = 0;
-int16_t target2_y = 0;
-int16_t target2_speed = 0;
-uint16_t target2_dist_res = 0;
-
-bool target3_updated = false;
-int16_t target3_x = 0;
-int16_t target3_y = 0;
-int16_t target3_speed = 0;
-uint16_t target3_dist_res = 0;
-
-int16_t get_target1_x() {
-    if (target1_updated) return target1_x;
-    else return 0;
-}
-
-int16_t get_target1_y() {
-    if (target1_updated) return target1_y;
-    else return 0;
-}
-
-int16_t get_target1_speed() {
-    if (target1_updated) return target1_speed;
-    else return 0;
-}
-
-uint16_t get_target1_dist_res() {
-    if (target1_updated) return target1_dist_res;
-    else return 0;
-}
-
-int16_t get_target2_x() {
-    if (target2_updated) return target2_x;
-    else return 0;
-}
-
-int16_t get_target2_y() {
-    if (target2_updated) return target2_y;
-    else return 0;
-}
-
-int16_t get_target2_speed() {
-    if (target2_updated) return target2_speed;
-    else return 0;
-}
-
-uint16_t get_target2_dist_res() {
-    if (target2_updated) return target2_dist_res;
-    else return 0;
-}
-
-int16_t get_target3_x() {
-    if (target3_updated) return target3_x;
-    else return 0;
-}
-
-int16_t get_target3_y() {
-    if (target3_updated) return target3_y;
-    else return 0;
-}
-
-int16_t get_target3_speed() {
-    if (target3_updated) return target3_speed;
-    else return 0;
-}
-
-uint16_t get_target3_dist_res() {
-    if (target3_updated) return target3_dist_res;
-    else return 0;
-}
 
 void parse_single_target(const uint8_t* buf, bool& is_updated, int16_t& x, int16_t& y, int16_t& speed, 
                          uint16_t& dist_res, const int target_num) {
@@ -122,38 +46,50 @@ void parse_single_target(const uint8_t* buf, bool& is_updated, int16_t& x, int16
     }
 }
 
-void parse_targets(const uint8_t* buf) {
-    parse_single_target(&buf[0], target1_updated, target1_x, target1_y, 
-                        target1_speed, target1_dist_res, 1);
-    parse_single_target(&buf[8], target2_updated, target2_x, target2_y, 
-                        target2_speed, target2_dist_res, 2);
-    parse_single_target(&buf[16], target3_updated, target3_x, target3_y, 
-                        target3_speed, target3_dist_res, 3);
-}
-
-void read_radar_data() {
+std::string get_rd03d_data() {
     int len = uart_read_bytes(RD03D_UART_PORT, rd03d_buffer, RD03D_BUF_SIZE, RD03D_UART_WAIT);
-    
+
     if (len < RD03D_FRAME_SIZE) {
         ESP_LOGW(RD03D_TAG, "Not enough data (%d bytes)", len);
-        return;
+        return "[0,0,0,0,0,0,0,0,0,0,0,0]";
     }
 
-    // Check for valid frame header and tail
-    if (rd03d_buffer[0] == RD03D_HEADER_1 &&
-        rd03d_buffer[1] == RD03D_HEADER_2 &&
-        rd03d_buffer[2] == RD03D_HEADER_3 &&
-        rd03d_buffer[3] == RD03D_HEADER_4 &&
-        rd03d_buffer[28] == RD03D_TAIL_1 &&
-        rd03d_buffer[29] == RD03D_TAIL_2)
-    {
-        parse_targets(&rd03d_buffer[4]);
-        ESP_LOGI(RD03D_TAG, "Valid data frame parsed");
-        return;
+    for (int i = 0; i <= RD03D_BUF_SIZE / 2; i++) {
+        // Check for valid frame header and tail
+        int tail_idx = i + RD03D_FRAME_SIZE - RD03D_TAIL_LEN;
+        if (rd03d_buffer[i] == RD03D_HEADER_1 &&
+            rd03d_buffer[i + 1] == RD03D_HEADER_2 &&
+            rd03d_buffer[i + 2] == RD03D_HEADER_3 &&
+            rd03d_buffer[i + 3] == RD03D_HEADER_4 &&
+            rd03d_buffer[tail_idx] == RD03D_TAIL_1 &&
+            rd03d_buffer[tail_idx + 1] == RD03D_TAIL_2)
+        {
+            // Parse raw data
+            int16_t x[3] = {0}, y[3] = {0}, speed[3] = {0};
+            uint16_t dist_res[3] = {0};
+            bool updated[3] = {false};
+
+            for (int i = 0; i < 3; ++i) {
+                parse_single_target(&rd03d_buffer[4 + i * 8], updated[i], x[i], y[i], speed[i], dist_res[i], i + 1);
+            }
+
+            std::stringstream ss;
+            ss << "[";
+            for (int i = 0; i < 3; ++i) {
+                ss << x[i] << "," << y[i] << "," << speed[i] << "," << dist_res[i];
+                if (i < 2) ss << ",";
+            }
+
+            ss << "]";
+            ESP_LOGI(RD03D_TAG, "Valid data frame parsed at index %d", i);
+            return ss.str();
+        }
     }
 
     ESP_LOGW(RD03D_TAG, "No valid data frame found in %d bytes", len);
+    return "[0,0,0,0,0,0,0,0,0,0,0,0]";
 }
+
 
 void rd03d_timer_callback(TimerHandle_t xTimer) {
     if (rd03d_task_handle) xTaskNotifyGive(rd03d_task_handle);
@@ -162,7 +98,10 @@ void rd03d_timer_callback(TimerHandle_t xTimer) {
 void rd03d_task(void *pvParameters) {
     while (1) {
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-        read_radar_data();
+        get_rd03d_data();
+        // std::stringstream ss;
+        // ss << get_rd03d_data();
+        // ESP_LOGI(RD03D_TAG, "RD03D Data: %s", ss.str().c_str());
     }
 }
 
@@ -196,7 +135,7 @@ void rd03d_init() {
     ESP_LOGI(RD03D_TAG, "RD03D Mode: Multi-target.");
 
     // Temporary timer for debugging
-    start_rd03d_timer();
+    // start_rd03d_timer();
 }
 
 #endif

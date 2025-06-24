@@ -37,7 +37,7 @@ class PacketParser:
 
             # Parse RD03D
             if len(sections[2]) > 3: # If RD03D sensor doesn't provide data
-                rd03d_str = sections[2].strip('()')
+                rd03d_str = sections[2].strip('[]')
                 rd03d_values = list(map(int, rd03d_str.split(',')))
                 rd03d_targets = [rd03d_values[i:i+4] for i in range(0, len(rd03d_values), 4)]
 

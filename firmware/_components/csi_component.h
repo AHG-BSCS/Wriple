@@ -48,8 +48,6 @@ void _wifi_csi_callback(void *ctx, wifi_csi_info_t *data) {
         
         std::stringstream ss;
         wifi_csi_info_t d = data[0];
-        std::string ld2420_rdmap_str = read_ld2420_debug_data();
-        read_radar_data();
         char mac[20] = {0};
         sprintf(mac, "%02X:%02X:%02X:%02X:%02X:%02X", d.mac[0], d.mac[1], d.mac[2], d.mac[3], d.mac[4], d.mac[5]);
 
@@ -65,14 +63,10 @@ void _wifi_csi_callback(void *ctx, wifi_csi_info_t *data) {
         ss << "] | ";
 
         // (3) RD03D (3 targets × 4 fields each)
-        ss << "("
-        << get_target1_x() << "," << get_target1_y() << "," << get_target1_speed() << "," << get_target1_dist_res() << ","
-        << get_target2_x() << "," << get_target2_y() << "," << get_target2_speed() << "," << get_target2_dist_res() << ","
-        << get_target3_x() << "," << get_target3_y() << "," << get_target3_speed() << "," << get_target3_dist_res()
-        << ") | ";
+        ss << get_rd03d_data() << " | ";
 
         // (4) LD2420 (flat doppler × gate array as string)
-        ss << ld2420_rdmap_str << "\n";
+        ss << get_ld2420_data() << "\n";
 
         // Send the CSI data to the station
         sendto(sock, ss.str().c_str(), strlen(ss.str().c_str()), 0, (struct sockaddr *)&client_addr, sizeof(client_addr));
