@@ -23,16 +23,24 @@ class NetworkManager:
 
         # Transmitter related variables
         self._is_transmitting = False
+        self._requesting_csi = False
         self._tx_timestamps = []
-        self._tx_interval = NetworkConfiguration.TX_INTERVAL
+        self._tx_csi_interval = NetworkConfiguration.TX_CSI_INTERVAL
+        self._tx_monitor_interval = NetworkConfiguration.TX_MONITOR_INTERVAL
+        self._tx_record_interval = NetworkConfiguration.TX_RECORD_INTERVAL
         self._tx_buffer_size = NetworkConfiguration.RX_BUFFER_SIZE
-        self._udp_packet = IP(dst=NetworkConfiguration.TX_ESP32_IP) / \
-                         UDP(sport=NetworkConfiguration.TX_UDP_PORT, 
-                             dport=NetworkConfiguration.RX_ESP32_PORT) / \
-                         Raw(load=NetworkConfiguration.TX_PAYLOAD)
-        
+        self._csi_req_packet = self.init_udp_packet(NetworkConfiguration.TX_CSI_PAYLOAD)
+        self._monitor_req_packet = self.init_udp_packet(NetworkConfiguration.TX_MONITOR_PAYLOAD)
+        self._record_req_packet = self.init_udp_packet(NetworkConfiguration.TX_RECORD_PAYLOAD)
         self._ap_ssid = NetworkConfiguration.AP_SSID
         self._logger = setup_logger('NetworkManager')
+
+    def init_udp_packet(self, tx_payload: str):
+        udp_packet = IP(dst=NetworkConfiguration.TX_ESP32_IP) / \
+                     UDP(sport=NetworkConfiguration.TX_UDP_PORT, 
+                         dport=NetworkConfiguration.RX_ESP32_PORT) / \
+                     Raw(load=tx_payload)
+        return udp_packet
 
     def check_wifi_connection(self) -> bool:
         """
@@ -127,34 +135,70 @@ class NetworkManager:
     
     # Transmitter
 
-    def send_single_packet(self):
+    def send_single_packet(self, udp_packet):
         """Send a single UDP packet"""
         try:
-            send(self._udp_packet, verbose=False)
+            send(udp_packet, verbose=False)
+            # TODO: Timestamp will be remove in the future
             tx_time = time.time()
             tx_time = int(tx_time * 1_000_000) % 1_000_000_000
             self._tx_timestamps.append(tx_time)
         except Exception as e:
             self._logger.error(f'Error sending packet: {e}')
     
-    def start_transmitting(self):
+    def request_record_data(self):
         """Start continuous packet transmission at specified intervals"""
         self._is_transmitting = True
         
         def _transmit():
             if self._is_transmitting:
-                self.send_single_packet()
+                self.send_single_packet(self._record_req_packet)
                 
                 # Schedule next transmission
-                threading.Timer(self._tx_interval, _transmit).start()
+                threading.Timer(self._tx_record_interval, _transmit).start()
         
         _transmit()
         self._logger.info('Started packet transmission')
     
+    def request_monitor_data(self):
+        """Start continuous packet transmission at specified intervals"""
+        self._is_transmitting = True
+        
+        def _transmit():
+            if self._is_transmitting:
+                self.send_single_packet(self._monitor_req_packet)
+                
+                # Schedule next transmission
+                threading.Timer(self._tx_monitor_interval, _transmit).start()
+        
+        _transmit()
+        self._logger.info('Started packet transmission')
+    
+    def request_csi_data(self):
+        """Start continuous packet transmission at specified intervals"""
+        if self._requesting_csi:
+            return
+        self._requesting_csi = True
+        
+        def _transmit():
+            if self._requesting_csi:
+                self.send_single_packet(self._csi_req_packet)
+                
+                # Schedule next transmission
+                threading.Timer(self._tx_csi_interval, _transmit).start()
+        
+        _transmit()
+        self._logger.info('Started packet transmission')
+
     def stop_transmitting(self):
         """Stop continuous packet transmission"""
         self._is_transmitting = False
+        self._requesting_csi = False
         self._logger.info('Stopped packet transmission')
+
+    def stop_csi_request(self):
+        self._requesting_csi = False
+        self._logger.info('Stopped CSI request')
 
     @property
     def is_listening(self) -> bool:

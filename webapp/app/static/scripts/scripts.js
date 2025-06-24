@@ -360,7 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function visualizeRadarData(target) {
     const radarRect = radarContainer.getBoundingClientRect();
     const centerX = pointsContainer.offsetWidth / 2;
-    pointsContainer.innerHTML = ''; // Clear previous points
+    
 
     if (target[1] != '0') {
       const x = scaleXToRadar(target[0], radarRect.width);
@@ -438,6 +438,7 @@ document.addEventListener('DOMContentLoaded', () => {
           // This data must be updated
           if (isRSSIChartVisible) visualizeRSSI(data.rssi);
           if (isRadarVisible) {
+            pointsContainer.innerHTML = ''; // Clear previous points
             visualizeRadarData(data.target1);
             visualizeRadarData(data.target2);
             visualizeRadarData(data.target3);
@@ -662,6 +663,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   function startAmplitudeHeatmap() {
+    fetch('/request_csi_data', { method: "POST" });
     amplitudeHeatmapBtn.style.backgroundColor = btnActiveColor;
     amplitudeHeatmapContainer.classList.remove('hidden');
     isAmpitudeHeatmapVisible = true;
@@ -669,6 +671,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function stopAmplitudeHeatmap() {
+    if (!isPhaseHeatmapVisible)
+      fetch('/stop_csi_request', { method: "POST" });
+
     amplitudeHeatmapBtn.style.backgroundColor = btnDefaultColor;
     amplitudeHeatmapContainer.classList.add('hidden');
     clearInterval(amplitudeHeatmapInterval);
@@ -684,6 +689,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   function startPhaseHeatmap() {
+    fetch('/request_csi_data', { method: "POST" });
     phaseHeatmapBtn.style.backgroundColor = btnActiveColor;
     phaseHeatmapContainer.classList.remove('hidden');
     isPhaseHeatmapVisible = true;
@@ -691,6 +697,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function stopPhaseHeatmap() {
+    if (!isAmpitudeHeatmapVisible)
+      fetch('/stop_csi_request', { method: "POST" });
+    
     phaseHeatmapBtn.style.backgroundColor = btnDefaultColor;
     phaseHeatmapContainer.classList.add('hidden');
     clearInterval(phaseHeatmapInterval);

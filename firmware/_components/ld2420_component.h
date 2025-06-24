@@ -37,7 +37,7 @@ std::string get_ld2420_data() {
 
     if (len < LD2420_FRAME_SIZE) {
         ESP_LOGW(LD2420_TAG, "Not enough data (%d bytes)", len);
-        return "[]";
+        return "!";
     }
 
     // Look for index of the header in half of the buffer
@@ -54,7 +54,6 @@ std::string get_ld2420_data() {
             ld2420_buffer[tail_idx + 3] == LD2420_TAIL_4)
         {
             std::stringstream ss;
-            ss << "[";
             const uint8_t* rdmap_data = &ld2420_buffer[i + LD2420_HEADER_LEN];
 
             for (int doppler = 0; doppler < DOPPLER_BINS; doppler++) {
@@ -73,14 +72,13 @@ std::string get_ld2420_data() {
                 }
             }
 
-            ss << "]";
-            ESP_LOGI(LD2420_TAG, "RDMAP data parsed at index %d", i);
+            // ESP_LOGI(LD2420_TAG, "RDMAP data parsed at index %d", i);
             return ss.str();
         }
     }
 
     ESP_LOGW(LD2420_TAG, "No valid debug frame found in %d bytes", len);
-    return "[]";
+    return "!";
 }
 
 void ld2420_timer_callback(TimerHandle_t xTimer) {

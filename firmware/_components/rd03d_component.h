@@ -51,7 +51,7 @@ std::string get_rd03d_data() {
 
     if (len < RD03D_FRAME_SIZE) {
         ESP_LOGW(RD03D_TAG, "Not enough data (%d bytes)", len);
-        return "[0,0,0,0,0,0,0,0,0,0,0,0]";
+        return "!";
     }
 
     for (int i = 0; i <= RD03D_BUF_SIZE / 2; i++) {
@@ -74,20 +74,18 @@ std::string get_rd03d_data() {
             }
 
             std::stringstream ss;
-            ss << "[";
             for (int i = 0; i < 3; ++i) {
                 ss << x[i] << "," << y[i] << "," << speed[i] << "," << dist_res[i];
                 if (i < 2) ss << ",";
             }
 
-            ss << "]";
-            ESP_LOGI(RD03D_TAG, "Valid data frame parsed at index %d", i);
+            // ESP_LOGI(RD03D_TAG, "Valid data frame parsed at index %d", i);
             return ss.str();
         }
     }
 
     ESP_LOGW(RD03D_TAG, "No valid data frame found in %d bytes", len);
-    return "[0,0,0,0,0,0,0,0,0,0,0,0]";
+    return "!";
 }
 
 
@@ -99,9 +97,6 @@ void rd03d_task(void *pvParameters) {
     while (1) {
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
         get_rd03d_data();
-        // std::stringstream ss;
-        // ss << get_rd03d_data();
-        // ESP_LOGI(RD03D_TAG, "RD03D Data: %s", ss.str().c_str());
     }
 }
 

@@ -35,6 +35,18 @@ def create_api_routes(app, detection_system):
         
         return jsonify({'status': 'success'})
     
+    @app.route('/request_csi_data', methods=['POST'])
+    def request_csi_data():
+        """Request CSI data from the ESP32"""
+        detection_system.network_manager.request_csi_data()
+        return jsonify({'status': 'success'})
+    
+    @app.route('/stop_csi_request', methods=['POST'])
+    def stop_csi_request():
+        """Stop requesting CSI data from the ESP32"""
+        detection_system.network_manager.stop_csi_request()
+        return jsonify({'status': 'success'})
+
     @app.route('/stop_recording', methods=['POST'])
     def stop_recording():
         """Stop recording or monitoring"""
