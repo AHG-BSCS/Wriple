@@ -2,7 +2,7 @@
 #define LD2420_RADAR_COMPONENT_H
 
 #define LD2420_UART_PORT     UART_NUM_2
-#define LD2420_UART_WAIT     1 / portTICK_PERIOD_MS // 1 ms (Keep it low for low latency read)
+#define LD2420_UART_WAIT     5 / portTICK_PERIOD_MS // 5 ms (Keep it low for low latency read)
 #define LD2420_BAUD_RATE     115200
 #define LD2420_TX_PIN        19
 #define LD2420_RX_PIN        18
@@ -20,7 +20,7 @@
 #define LD2420_HEADER_LEN    4
 #define LD2420_TAIL_LEN      4
 #define LD2420_FRAME_SIZE    1288 // 4 bytes header + 1280 bytes RDMAP data + 4 bytes tail
-#define LD2420_BUF_SIZE      2700 // Double the size with  of debug frame size to ensure a full frames
+#define LD2420_BUF_SIZE      2700 // Double the size with of debug frame size to ensure a full frames
 
 #define DOPPLER_BINS  20
 #define GATES         16
