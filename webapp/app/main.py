@@ -27,10 +27,12 @@ class HumanDetectionSystem:
 
         # Initialize parameters and data storage
         self.radar_data = VisualizerConfiguration.RADAR_DATA
+        self.gate_thresholds = VisualizerConfiguration.GATE_THRESHOLDS
+        self.mmwave_data = []
         self.record_parameters = RecordingConfiguration.RECORD_PARAMETERS
         self.logger = setup_logger('HumanDetectionSystem')
     
-    def record_data_packet(self, parsed_data):
+    def record_data_packet(self, parsed_data, tx_timestamp):
         """
         Record data packet to CSV file
 
@@ -40,7 +42,7 @@ class HumanDetectionSystem:
         """
 
         # row = [tx_timestamp] + self.record_parameters + parsed_data
-        row = self.record_parameters + parsed_data
+        row = self.record_parameters + [tx_timestamp] + parsed_data
         self.file_manager.write_data(row)
 
     def parse_received_data(self, raw_data: bytes, tx_timestamp: int):
@@ -53,14 +55,30 @@ class HumanDetectionSystem:
         """
         # Extract radar and CSI data from parsed data
         parsed_data = PacketParser.parse_csi_data(raw_data)
-        if parsed_data[0] == 0:
-            self.csi_processor.buffer_amplitude_phase(parsed_data[4])
-        if parsed_data[0] == 1:
-            self.radar_data = [parsed_data[2], parsed_data[4], parsed_data[5], parsed_data[6]]
+        self.csi_processor.buffer_amplitude_phase(parsed_data[5])
+
+        if parsed_data[0]: # If rd03d data is valid
+            self.radar_data = [parsed_data[3], parsed_data[6], parsed_data[7], parsed_data[8]]
+        
+        if parsed_data[1]: # If ld24020 data is valid
+            self.mmwave_data = parsed_data[9:]
+        
+    def record_received_data(self, raw_data: bytes, tx_timestamp: int):
+        """
+        Process data received from ESP32
+        
+        Args:
+            raw_data: Raw data bytes received from ESP32 including the data from other sensors
+            tx_timestamp: Timestamp of the transmitted packet
+        """
+        # Extract radar and CSI data from parsed data
+        parsed_data = PacketParser.parse_csi_data(raw_data, self.is_recording)
         
         # Record data to csv file if recording
-        if self.is_recording and parsed_data[0] == 2:
-            self.record_data_packet(parsed_data[1:])
+        if self.is_recording and parsed_data[0] and parsed_data[1]:
+            self.record_data_packet(parsed_data[2:], tx_timestamp)
+        else:
+            print('Missing data. Packet was skipped')
     
     def start_recording_mode(self):
         """Start recording Wi-Fi CSI data into CSV file"""
@@ -75,7 +93,7 @@ class HumanDetectionSystem:
 
         threading.Thread(
             target=self.network_manager.start_listening,
-            args=(self.parse_received_data, RecordingConfiguration.RECORD_PACKET_LIMIT),
+            args=(self.record_received_data, RecordingConfiguration.RECORD_PACKET_LIMIT),
             daemon=True
         ).start()
     

@@ -7,9 +7,10 @@ class PacketParser:
     """Utility class for parsing received packet data"""
 
     _logger = setup_logger('PacketParser')
+    _ld2420_error = 0
     
     @staticmethod
-    def parse_csi_data(raw_data: bytes) -> list:
+    def parse_csi_data(raw_data: bytes, is_recording: bool = False) -> list:
         """
         Parse CSI data from received packet
         
@@ -20,71 +21,58 @@ class PacketParser:
             list: Parsed CSI data components
         """
         try:
-            data_set = -1 # 0 = CSI, 1 = RD03D, 2 = LD2420
             data_str = raw_data.decode('utf-8').strip()
+            rd03d_valid = True
+            ld2420_valid = True
 
             # Split using the section delimiter
             sections = [s.strip() for s in data_str.split('|')]
-            if len(sections) != 3:
+            if len(sections) != 4:
                 raise ValueError("Incomplete data packet")
 
-            # Check for data set based from request
-            if sections[0].startswith('CSI'):
-                data_set = 0
-                # Parse Metadata
-                rx_timestamp, rssi, channel = map(int, sections[1].split(','))
-                # Parse CSI
-                raw_csi = [int(x) for x in sections[2].strip().split(',')]
+            # Parse Metadata
+            rx_timestamp, rssi, channel = map(int, sections[0].split(','))
 
-            elif sections[0].startswith('RD03D'):
-                data_set = 1
-                # Parse Metadata
-                rx_timestamp, rssi, channel = map(int, sections[1].split(','))
+            # Parse CSI
+            raw_csi = [int(x) for x in sections[1].strip().split(' ')]
 
-                # Parse RD03D
-                if sections[2].startswith('!'): # If RD03D sensor doesn't provide data
-                    rd03d_targets = [[0, 0, 0, 0]] * 3
-                else:
-                    rd03d_values = list(map(int, sections[2].split(',')))
-                    rd03d_targets = [rd03d_values[i:i+4] for i in range(0, len(rd03d_values), 4)]
+            # Parse RD03D
+            if not sections[2].startswith('!'):
+                rd03d_values = list(map(int, sections[2].split(',')))
+                rd03d_targets = [rd03d_values[i:i+4] for i in range(0, len(rd03d_values), 4)]
+            else:
+                PacketParser._logger.error('RD03D might be disconnected')
+                rd03d_valid = False
+                rd03d_targets = [[0, 0, 0, 0]] * 3 # Default to empty targets if no data from sensor
 
-            elif sections[0].startswith('LD2420'):
-                data_set = 2
-                # Parse RD03D
-                if sections[1].startswith('!'): # If RD03D sensor doesn't provide data
-                    rd03d_targets = [[0, 0, 0, 0]] * 3
-                    PacketParser._logger.error('LD2420 has no data')
-                else:
-                    rd03d_values = list(map(int, sections[1].split(',')))
-                    rd03d_targets = [rd03d_values[i:i+4] for i in range(0, len(rd03d_values), 4)]
-
-                # Parse LD2420
-                if sections[2].startswith('!'): # If LD2420 sensor doesn't provide data
-                    ld2420_array = [[0] * 16] * 20
-                else:
-                    ld2420_values = list(map(int, sections[2].split(',')))
-                    ld2420_array = [ld2420_values[i:i+16] for i in range(0, len(ld2420_values), 16)]
+            # Parse LD2420
+            if not sections[3].startswith('!'):
+                ld2420_values = list(map(int, sections[3].split(',')))
+                ld2420_array = [ld2420_values[i:i+16] for i in range(0, len(ld2420_values), 16)]
+                PacketParser._ld2420_error = 0
+            else:
+                if is_recording or PacketParser._ld2420_error > 10:
+                    PacketParser._ld2420_error = 0
+                    PacketParser._logger.error('LD2420 might be disconnected or too fast request')
+                
+                PacketParser._ld2420_error += 1
+                ld2420_valid = False
+                ld2420_array = [[0] * 16] * 20 # Default to empty array if no data from sensor
 
             # Return parsed components
-            if data_set == 0:
-                return [data_set, rx_timestamp, rssi, channel, raw_csi]
-            elif data_set == 1:
-                return [
-                    data_set, rx_timestamp, rssi, channel,
-                    rd03d_targets[0], rd03d_targets[1], rd03d_targets[2]
-                ]
-            elif data_set == 2:
-                return [
-                    data_set,
-                    rd03d_targets[0], rd03d_targets[1], rd03d_targets[2],
-                    ld2420_array[0], ld2420_array[1], ld2420_array[2],
-                    ld2420_array[3], ld2420_array[4], ld2420_array[5],
-                    ld2420_array[6], ld2420_array[7], ld2420_array[8],
-                    ld2420_array[9], ld2420_array[10], ld2420_array[11],
-                    ld2420_array[12], ld2420_array[13], ld2420_array[14],
-                    ld2420_array[15], ld2420_array[16], ld2420_array[17],
-                    ld2420_array[18], ld2420_array[19]
-                ]
+            return [
+                rd03d_valid, ld2420_valid,
+                rx_timestamp, rssi, channel,
+                raw_csi,
+                rd03d_targets[0], rd03d_targets[1], rd03d_targets[2],
+                ld2420_array[0], ld2420_array[1], ld2420_array[2],
+                ld2420_array[3], ld2420_array[4], ld2420_array[5],
+                ld2420_array[6], ld2420_array[7], ld2420_array[8],
+                ld2420_array[9], ld2420_array[10], ld2420_array[11],
+                ld2420_array[12], ld2420_array[13], ld2420_array[14],
+                ld2420_array[15], ld2420_array[16], ld2420_array[17],
+                ld2420_array[18], ld2420_array[19]
+            ]
             
         except (ValueError, IndexError) as e:
             PacketParser._logger.error(f'Error parsing CSI data: {e}')

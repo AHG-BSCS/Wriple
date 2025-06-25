@@ -102,7 +102,7 @@ class FileManager:
             # Create file with column names as headers
             with open(self._csv_file_path, mode='w', newline='') as file:
                 writer = csv.writer(file)
-                writer.writerow(FileConfiguration.MMWAVE_COLUMNS)
+                writer.writerow(FileConfiguration.CSV_COLUMNS)
             
             return True
         except Exception as e:

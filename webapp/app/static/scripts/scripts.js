@@ -652,6 +652,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (isMonitoring && isDatasetActive) {
         stopMonitoring();
         setHeaderTextToDefault();
+        clearInterval(radarVisualizerInterval)
         targetRadarBtn.disabled = false;
       }
       targetRadarBtn.style.backgroundColor = btnDefaultColor;
@@ -673,7 +674,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   function startAmplitudeHeatmap() {
-    fetch('/request_csi_data', { method: "POST" });
     amplitudeHeatmapBtn.style.backgroundColor = btnActiveColor;
     amplitudeHeatmapContainer.classList.remove('hidden');
     isAmpitudeHeatmapVisible = true;
@@ -681,9 +681,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function stopAmplitudeHeatmap() {
-    if (!isPhaseHeatmapVisible)
-      fetch('/stop_csi_request', { method: "POST" });
-
     amplitudeHeatmapBtn.style.backgroundColor = btnDefaultColor;
     amplitudeHeatmapContainer.classList.add('hidden');
     clearInterval(amplitudeHeatmapInterval);
@@ -699,7 +696,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   function startPhaseHeatmap() {
-    fetch('/request_csi_data', { method: "POST" });
     phaseHeatmapBtn.style.backgroundColor = btnActiveColor;
     phaseHeatmapContainer.classList.remove('hidden');
     isPhaseHeatmapVisible = true;
@@ -707,9 +703,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function stopPhaseHeatmap() {
-    if (!isAmpitudeHeatmapVisible)
-      fetch('/stop_csi_request', { method: "POST" });
-
     phaseHeatmapBtn.style.backgroundColor = btnDefaultColor;
     phaseHeatmapContainer.classList.add('hidden');
     clearInterval(phaseHeatmapInterval);

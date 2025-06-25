@@ -6,14 +6,12 @@ class NetworkConfiguration:
     AP_PASSWORD: str = 'Wr!ple@ESP32'
     TX_ESP32_IP: str = '192.168.4.1'
     TX_UDP_PORT: int = 5000
-    TX_CSI_PAYLOAD: str = 'CSI'         # 85 frame length
-    TX_MONITOR_PAYLOAD: str = 'RD03D'     # 87 frame length
-    TX_RECORD_PAYLOAD: str = 'LD2420'   # 88 frame length
-    TX_CSI_INTERVAL: float = 0.05
-    TX_MONITOR_INTERVAL: float = 0.1
-    TX_RECORD_INTERVAL: float = 0.5
+    TX_PAYLOAD: str = 'Wriple' # 88 frame length
+    # TX_MONITOR_INTERVAL: float = 0.1
+    TX_MONITOR_INTERVAL: float = 0.333
+    TX_RECORD_INTERVAL: float = 0.333
     RX_ESP32_PORT: int = 5001
-    RX_SOCKET_TIMEOUT: float = 1
+    RX_SOCKET_TIMEOUT: float = 0.5
     RX_BUFFER_SIZE: int = 4096
 
 
@@ -22,8 +20,8 @@ class RecordingConfiguration:
     Configuration for CSI data recording
     Packet and queue limits are based on TX interval
     """
-    MONITOR_QUEUE_LIMIT: int = 20
-    RECORD_PACKET_LIMIT: int = 20
+    MONITOR_QUEUE_LIMIT: int = 10
+    RECORD_PACKET_LIMIT: int = 30
     # 0: Class, 1: Target, 2: Angle, 4: Distance
     RECORD_PARAMETERS: list = [None, None, None, None, None]
 
@@ -37,15 +35,6 @@ class FileConfiguration:
         'Presence', 'Target_Count', 'Angle', 'Distance',
         'Transmit_Timestamp', 'Received_Timestamp', 'RSSI', 'Channel',
         'Raw_CSI',
-        'RD03D_Target_1', 'RD03D_Target_2', 'RD03D_Target_3',
-        'LD2420_Doppler_1', 'LD2420_Doppler_2', 'LD2420_Doppler_3', 'LD2420_Doppler_4',
-        'LD2420_Doppler_5', 'LD2420_Doppler_6', 'LD2420_Doppler_7', 'LD2420_Doppler_8',
-        'LD2420_Doppler_9', 'LD2420_Doppler_10', 'LD2420_Doppler_11', 'LD2420_Doppler_12',
-        'LD2420_Doppler_13', 'LD2420_Doppler_14', 'LD2420_Doppler_15', 'LD2420_Doppler_16',
-        'LD2420_Doppler_17', 'LD2420_Doppler_18', 'LD2420_Doppler_19', 'LD2420_Doppler_20'
-    ]
-    MMWAVE_COLUMNS: list = [
-        'Presence', 'Target_Count', 'Angle', 'Distance',
         'RD03D_Target_1', 'RD03D_Target_2', 'RD03D_Target_3',
         'LD2420_Doppler_1', 'LD2420_Doppler_2', 'LD2420_Doppler_3', 'LD2420_Doppler_4',
         'LD2420_Doppler_5', 'LD2420_Doppler_6', 'LD2420_Doppler_7', 'LD2420_Doppler_8',
@@ -68,7 +57,13 @@ class VisualizerConfiguration:
     D3_VISUALIZER_SCALE: tuple = (-10, 10)
     # 0: RSSI, 1: Target 1, 2: Target 2, 3: Target 3
     RADAR_DATA: list = [0, [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
-
+    # 20 * doppler with 16 gates
+    MMWAVE_DATA: list = [[0] * 16, [0] * 16, [0] * 16, [0] * 16,
+                        [0] * 16, [0] * 16, [0] * 16, [0] * 16,
+                        [0] * 16, [0] * 16, [0] * 16, [0] * 16,
+                        [0] * 16, [0] * 16, [0] * 16, [0] * 16]
+    GATE_THRESHOLDS = [60000, 30000, 400, 300, 250, 250, 250, 250,
+                   300, 250, 250, 250, 250, 200, 200, 200]
 
 class ModelConfiguration:
     """Configuration for machine learning models directories and paths"""
