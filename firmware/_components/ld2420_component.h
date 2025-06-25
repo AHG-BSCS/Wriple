@@ -2,7 +2,7 @@
 #define LD2420_RADAR_COMPONENT_H
 
 #define LD2420_UART_PORT     UART_NUM_2
-#define LD2420_UART_WAIT     100 / portTICK_PERIOD_MS // 10 ms (Keep it low for low latency read)
+#define LD2420_UART_WAIT     1 / portTICK_PERIOD_MS // 1 ms (Keep it low for low latency read)
 #define LD2420_BAUD_RATE     115200
 #define LD2420_TX_PIN        19
 #define LD2420_RX_PIN        18
@@ -25,7 +25,7 @@
 #define DOPPLER_BINS  20
 #define GATES         16
 
-#define LD2420_TIMER_INTERVAL  500 // LD2420 debug mode only updates every 500 ms
+#define LD2420_TIMER_INTERVAL  333 // LD2420 updates every 300 ms in debug mode
 #define LD2420_TAG "LD2420"
 
 static TimerHandle_t ld2420_timer;

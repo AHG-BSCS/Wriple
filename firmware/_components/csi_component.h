@@ -37,12 +37,6 @@ void led_timer_callback(TimerHandle_t xTimer) {
 void _wifi_csi_callback(void *ctx, wifi_csi_info_t *data) {
     if ((data[0].rx_ctrl.sig_len == 85)) {  // Payload 85 bytes long for CSI data request
         if ((data[0].rx_ctrl.cwb != 1)) return; // 40Mhz Channel Bandwidth / 128 Subcarrier
-        
-        if (sock == -1) {
-            ESP_LOGE(CSI_TAG, "Unable to create socket");
-            vTaskDelete(NULL);
-        }
-
         xSemaphoreTake(mutex, portMAX_DELAY);
         
         std::stringstream ss;
@@ -60,11 +54,6 @@ void _wifi_csi_callback(void *ctx, wifi_csi_info_t *data) {
         xSemaphoreGive(mutex);
     }
     else if ((data[0].rx_ctrl.sig_len == 87)) { // Payload 87 bytes long for RD03D data request
-        if (sock == -1) {
-            ESP_LOGE(CSI_TAG, "Unable to create socket");
-            vTaskDelete(NULL);
-        }
-
         xSemaphoreTake(mutex, portMAX_DELAY);
         
         std::stringstream ss;
@@ -79,11 +68,6 @@ void _wifi_csi_callback(void *ctx, wifi_csi_info_t *data) {
         xSemaphoreGive(mutex);
     }
     else if ((data[0].rx_ctrl.sig_len == 88)) { // Payload 89 bytes long for LD2420 data request
-        if (sock == -1) {
-            ESP_LOGE(CSI_TAG, "Unable to create socket");
-            vTaskDelete(NULL);
-        }
-
         xSemaphoreTake(mutex, portMAX_DELAY);
         
         std::stringstream ss;

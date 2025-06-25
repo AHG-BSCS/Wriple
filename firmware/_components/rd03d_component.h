@@ -2,7 +2,7 @@
 #define RD03D_RADAR_COMPONENT_H
 
 #define RD03D_UART_PORT      UART_NUM_1
-#define RD03D_UART_WAIT      50 / portTICK_PERIOD_MS // 5 ms (Keep it low for low latency read)
+#define RD03D_UART_WAIT      1 / portTICK_PERIOD_MS // 1 ms (Keep it low for low latency read)
 #define RD03D_BAUD_RATE      256000
 #define RD03D_UART_BUF_SIZE  256
 #define RD03D_TX_PIN         17
@@ -18,10 +18,10 @@
 
 #define RD03D_HEADER_LEN  4
 #define RD03D_TAIL_LEN    2
-#define RD03D_FRAME_SIZE 30 // 4 bytes header + 8 * 3 bytes target data + 2 bytes tail
-#define RD03D_BUF_SIZE   128
+#define RD03D_FRAME_SIZE  30 // 4 bytes header + 8 * 3 bytes target data + 2 bytes tail
+#define RD03D_BUF_SIZE    64
 
-#define RD03D_TIMER_INTERVAL 100
+#define RD03D_TIMER_INTERVAL 100 // RD03D updates every 100 ms in multi-target mode
 #define RD03D_TAG "RD03D"
 
 static TimerHandle_t rd03d_timer;
