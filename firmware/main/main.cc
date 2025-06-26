@@ -85,6 +85,8 @@ extern "C" void app_main() {
     config_print();
     wifi_init_softap();
 
+    // Add a delay for sensor to initialize
+    vTaskDelay(pdMS_TO_TICKS(1000));
     rd03d_init();
     ld2420_init();
     csi_init();

@@ -21,7 +21,7 @@
 #define RD03D_FRAME_SIZE  30 // 4 bytes header + 8 * 3 bytes target data + 2 bytes tail
 #define RD03D_BUF_SIZE    128
 
-#define RD03D_TIMER_INTERVAL 100 // RD03D updates every 100 ms in multi-target mode
+#define RD03D_TIMER_INTERVAL 333 // RD03D updates every 100 ms in multi-target mode
 #define RD03D_TAG "RD03D"
 
 static TimerHandle_t rd03d_timer;
@@ -83,7 +83,7 @@ std::string get_rd03d_data() {
             return ss.str();
         }
     }
-
+    
     ESP_LOGW(RD03D_TAG, "No valid data frame found in %d bytes", len);
     return "!";
 }
