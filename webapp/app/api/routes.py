@@ -74,6 +74,25 @@ def create_api_routes(app, detection_system):
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
+    @app.route('/get_mmwave_heatmap_data', methods=['POST'])
+    def mmwave_heatmap():
+        raw = detection_system.mmwave_data
+        heatmap = []
+        THRESHOLDS = config.GATE_THRESHOLDS
+
+        for doppler_idx, row in enumerate(raw):
+            for gate_idx, value in enumerate(row):
+                move, still = THRESHOLDS[gate_idx]
+                if value <= still:
+                    norm = 0.0
+                elif value >= move:
+                    norm = 1.0
+                else:
+                    norm = (value - still) / (move - still)
+                heatmap.append([doppler_idx, gate_idx, norm])
+
+        return jsonify({'heatmap': heatmap})
+
     @app.route('/fetch_amplitude_data', methods=['POST'])
     def fetch_amplitude_data():
         """Get latest amplitude data subset"""

@@ -25,6 +25,12 @@
     vertical-align: middle;
 }
 
+#gates-max-slider {
+    writing-mode: vertical-lr;
+    direction: rtl;
+    vertical-align: middle;
+}
+
 input[type="range"]::-webkit-slider-thumb {
     appearance: none;
     width: 15px;

@@ -125,6 +125,7 @@ void rd03d_init() {
     uart_driver_install(RD03D_UART_PORT, RD03D_UART_BUF_SIZE, 0, 0, NULL, 0);
     
     // Send multi-target detection mode command
+    // uint8_t single_target_cmd[12] = {0xFD, 0xFC, 0xFB, 0xFA, 0x02, 0x00, 0x80, 0x00, 0x04, 0x03, 0x02, 0x01};
     uint8_t multi_target_cmd[12] = {0xFD, 0xFC, 0xFB, 0xFA, 0x02, 0x00, 0x90, 0x00, 0x04, 0x03, 0x02, 0x01};
     uart_write_bytes(RD03D_UART_PORT, (const char *)multi_target_cmd, sizeof(multi_target_cmd));
     ESP_LOGI(RD03D_TAG, "RD03D Mode: Multi-target.");

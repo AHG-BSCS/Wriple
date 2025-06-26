@@ -1,5 +1,6 @@
 import threading
 from flask import Flask
+import numpy as np
 
 from config.settings import FlaskConfiguration, RecordingConfiguration, VisualizerConfiguration
 from core.csi_processor import CSIProcessor
@@ -27,7 +28,6 @@ class HumanDetectionSystem:
 
         # Initialize parameters and data storage
         self.radar_data = VisualizerConfiguration.RADAR_DATA
-        self.gate_thresholds = VisualizerConfiguration.GATE_THRESHOLDS
         self.mmwave_data = []
         self.record_parameters = RecordingConfiguration.RECORD_PARAMETERS
         self.logger = setup_logger('HumanDetectionSystem')

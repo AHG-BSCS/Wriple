@@ -73,16 +73,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const targetRadarBtn = document.getElementById('target-radar-btn');
   const amplitudeHeatmapBtn = document.getElementById('amplitude-heatmap-btn');
   const phaseHeatmapBtn = document.getElementById('phase-heatmap-btn');
+  const gatesHeatmapBtn = document.getElementById('gates-heatmap-btn');
   const rssiChartBtn = document.getElementById('rssi-histogram-btn');
   const d3PlotBtn = document.getElementById('3d-plot-btn');
 
   const amplitudeHeatmapContainer = document.getElementById('amplitude-heatmap-container');
   const phaseHeatmapContainer = document.getElementById('phase-heatmap-container');
+  const gatesHeatmapContainer = document.getElementById('gates-heatmap-container');
   const rssiChartContainer = document.getElementById('rssi-chart-container');
   const d3PlotContainer = document.getElementById('3d-plot-container');
 
   const amplitudeCanvas = document.getElementById('amplitude-heatmap');
   const phaseCanvas = document.getElementById('phase-heatmap');
+  const gatesCanvas = document.getElementById('gates-heatmap');
   const rssiCanvasCtx = document.getElementById('rssi-chart').getContext('2d');
   let rssiChart;
 
@@ -90,12 +93,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const amplitudeMaxValue = document.getElementById("amplitude-max-value");
   const phaseMaxSlider = document.getElementById("phase-max-slider");
   const phaseMaxValue = document.getElementById("phase-max-value");
+  const gatesMaxSlider = document.getElementById("gates-max-slider");
+  const gatesMaxValue = document.getElementById("gates-max-value");
 
   // Buttons States
   let isRecording = false;
   let isMonitoring = false;
   let isAmpitudeHeatmapVisible = false;
   let isPhaseHeatmapVisible = false;
+  let isGateHeatmapVisible = false;
   let isRSSIChartVisible = false;
   let isRadarVisible = false;
   let is3DPlotVisible = false;
@@ -104,11 +110,13 @@ document.addEventListener('DOMContentLoaded', () => {
   let radarVisualizerInterval;
   let amplitudeHeatmapInterval;
   let phaseHeatmapInterval;
+  let gatesHeatmapInterval;
   // let rssiHistogramInterval;
   const d3PlotRefreshRate = 1000;
   const radarRefreshRate = 100;
   const recordingDelay = 1000;
   const heatmapRefreshRate = 100;
+  const gatesHeatmapRefreshRate = 333;
   const systemStatusInterval = 8000;
   
   var btnDefaultColor = '#1F2937';
@@ -118,8 +126,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const amplitudeHeatmap = simpleheat(amplitudeCanvas);
   const phaseHeatmap = simpleheat(phaseCanvas);
+  const gatesHeatmap = simpleheat(gatesCanvas);
   const SUBCARRIER_COUNT = 21;
   const MAX_COLS = 160;
+  const DOPPLER_BINS = 20;
+  const RANGE_GATES = 16;
 
   const MAX_RSSI_POINTS = 120; // 30 seconds of data at 1Hz
   const RSSI_TICK_INTERVAL = 10; // seconds
@@ -598,6 +609,7 @@ document.addEventListener('DOMContentLoaded', () => {
     clearInterval(d3PlotVisualizerInterval);
     clearInterval(amplitudeHeatmapInterval);
     clearInterval(phaseHeatmapInterval);
+    stopGatesHeatmap();
 
     isMonitoring = false;
     isRadarVisible = false;
@@ -715,6 +727,35 @@ document.addEventListener('DOMContentLoaded', () => {
   phaseHeatmapBtn.addEventListener('click', () => {
     if (isPhaseHeatmapVisible) stopPhaseHeatmap();
     else startPhaseHeatmap();
+  });
+
+  async function fetchMMWaveData() {
+    const res = await fetch('/get_mmwave_heatmap_data', { method: 'POST' });
+    const { heatmap } = await res.json();
+    gatesHeatmap.clear();
+    gatesHeatmap.data(heatmap).draw();
+  }
+
+  function startGatesHeatmap() {
+    gatesHeatmapBtn.style.backgroundColor = btnActiveColor;
+    gatesHeatmapContainer.classList.remove('hidden');
+    isGateHeatmapVisible = true;
+    gatesHeatmapInterval = setInterval(fetchMMWaveData, gatesHeatmapRefreshRate);
+  }
+
+  function stopGatesHeatmap() {
+    gatesHeatmapBtn.style.backgroundColor = btnDefaultColor;
+    gatesHeatmapContainer.classList.add('hidden');
+    clearInterval(gatesHeatmapInterval);
+    setTimeout(() => {}, gatesHeatmapRefreshRate);
+    // phaseBuffer = Array.from({ length: SUBCARRIER_COUNT }, () => []);
+    gatesHeatmap.clear().draw();
+    isGateHeatmapVisible = false;
+  }
+
+  gatesHeatmapBtn.addEventListener('click', () => {
+    if (isGateHeatmapVisible) stopGatesHeatmap();
+    else startGatesHeatmap();
   });
 
   d3PlotBtn.addEventListener('click', () => {
@@ -900,6 +941,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function hideVisualizers() {
     amplitudeHeatmapContainer.classList.add('hidden');
     phaseHeatmapContainer.classList.add('hidden');
+    gatesHeatmapContainer.classList.add('hidden');
     rssiChartContainer.classList.add('hidden');
     d3PlotContainer.classList.add('hidden');
   }
@@ -909,12 +951,16 @@ document.addEventListener('DOMContentLoaded', () => {
     amplitudeHeatmap.max(40);
     phaseHeatmap.radius(1, 0);
     phaseHeatmap.max(10);
+    gatesHeatmap.radius(1, 0);
+    gatesHeatmap.max(1);
 
     // Crop the heatmaps to canvas
     amplitudeCanvas.height = SUBCARRIER_COUNT - 1;
     amplitudeCanvas.width = MAX_COLS - 1;
     phaseCanvas.height = SUBCARRIER_COUNT - 1;
     phaseCanvas.width = MAX_COLS - 1;
+    gatesCanvas.height = RANGE_GATES - 1;
+    gatesCanvas.width = DOPPLER_BINS - 1;
     
     // Prevent RSSI line chart from exceeding the layout size
     rssiCanvasCtx.canvas.width = 680;
@@ -939,6 +985,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const newMax = parseFloat(e.target.value);
     phaseMaxValue.textContent = newMax;
     phaseHeatmap.max(newMax).draw();
+  });
+
+  gatesMaxSlider.addEventListener("input", (e) => {
+    const newMax = parseFloat(e.target.value);
+    gatesMaxValue.textContent = newMax;
+    gatesHeatmap.max(newMax).draw();
   });
 
   function initializeRSSIChart() {
