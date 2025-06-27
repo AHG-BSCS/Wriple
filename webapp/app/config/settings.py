@@ -7,8 +7,8 @@ class NetworkConfiguration:
     TX_ESP32_IP: str = '192.168.4.1'
     TX_UDP_PORT: int = 5000
     TX_PAYLOAD: str = 'Wriple' # 88 frame length
-    # TX_MONITOR_INTERVAL: float = 0.1
-    TX_MONITOR_INTERVAL: float = 0.333
+    TX_MONITOR_INTERVAL: float = 0.1
+    # TX_MONITOR_INTERVAL: float = 0.333
     TX_RECORD_INTERVAL: float = 0.333
     RX_ESP32_PORT: int = 5001
     RX_SOCKET_TIMEOUT: float = 0.5
@@ -32,7 +32,7 @@ class FileConfiguration:
     CSV_FILE_PATTERN: str = r'^MMWAVE_DATA_.*$'
     CSV_FILE_PREFIX: str = 'MMWAVE_DATA_'
     CSV_COLUMNS: list = [
-        'Presence', 'Target_Count', 'Angle', 'Distance',
+        'Presence', 'Target_Count', 'Obstructed', 'Angle', 'Distance',
         'Transmit_Timestamp', 'Received_Timestamp', 'RSSI', 'Channel',
         'Raw_CSI',
         'RD03D_Target_1', 'RD03D_Target_2', 'RD03D_Target_3',

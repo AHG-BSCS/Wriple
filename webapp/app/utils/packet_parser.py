@@ -51,7 +51,7 @@ class PacketParser:
                 ld2420_array = [ld2420_values[i:i+16] for i in range(0, len(ld2420_values), 16)]
                 PacketParser._ld2420_error = 0
             else:
-                if is_recording or PacketParser._ld2420_error > 15:
+                if is_recording or PacketParser._ld2420_error > 30:
                     PacketParser._ld2420_error = 0
                     PacketParser._logger.error('LD2420 might be disconnected or too fast request')
                 

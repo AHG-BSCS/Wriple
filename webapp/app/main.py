@@ -190,7 +190,8 @@ class HumanDetectionSystem:
             self.record_parameters = [
                 params['class_label'],
                 params['target_count'],
-                float(params['angle']) - float(params['line_of_sight']),
+                int(params['obstructed']),
+                float(params['angle']),
                 float(params['distance_t1'])
             ]
             self.logger.info(f'Recording parameters set')

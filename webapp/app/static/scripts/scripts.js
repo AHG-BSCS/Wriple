@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let presenceClass;
   const targetGroup = document.querySelectorAll('.group-target-btn');
   let targetClass;
-  const losInput = document.getElementById('los-input');
+  const obstructed = document.getElementById('obstruct-input');
   const angleInput = document.getElementById('angle-input');
   const distanceInput = document.getElementById('distance-input');
 
@@ -540,7 +540,7 @@ document.addEventListener('DOMContentLoaded', () => {
       body: JSON.stringify({
         class_label: presenceClass,
         target_count: targetClass,
-        line_of_sight: losInput.value,
+        obstructed: obstructed.value,
         angle: angleInput.value,
         distance_t1: distanceInput.value
       })

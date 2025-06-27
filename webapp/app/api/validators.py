@@ -19,7 +19,7 @@ def validate_recording_parameters(params) -> bool:
     """
     try:
         # Check required fields exist
-        required_fields = ['class_label', 'target_count', 'line_of_sight', 'angle', 'distance_t1']
+        required_fields = ['class_label', 'target_count', 'obstructed', 'angle', 'distance_t1']
         
         for field in required_fields:
             if field not in params:
@@ -38,7 +38,7 @@ def validate_recording_parameters(params) -> bool:
             return False
         
         # Validate numeric fields
-        numeric_fields = ['line_of_sight', 'angle', 'distance_t1']
+        numeric_fields = ['obstructed', 'angle', 'distance_t1']
         for field in numeric_fields:
             value = params.get(field)
             if not isinstance(value, (int, float, str)):
