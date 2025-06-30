@@ -415,7 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
           // Stop displaying radar data if no targets are detected by the model
           // else if (data.presence == 1) {
           if (true) { // Temporary for debugging
-            presenceStatus.textContent = "Yes";
+            presenceStatus.textContent = data.presence;
             if (data.target1[1] != '0') {
               target1Dist.textContent = calculateDistance(data.target1[0], data.target1[1]).toFixed(2) + "m";
             }

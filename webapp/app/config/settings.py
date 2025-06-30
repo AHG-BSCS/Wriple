@@ -7,8 +7,8 @@ class NetworkConfiguration:
     TX_ESP32_IP: str = '192.168.4.1'
     TX_UDP_PORT: int = 5000
     TX_PAYLOAD: str = 'Wriple' # 88 frame length
-    TX_MONITOR_INTERVAL: float = 0.1
-    # TX_MONITOR_INTERVAL: float = 0.333
+    # TX_MONITOR_INTERVAL: float = 0.1
+    TX_MONITOR_INTERVAL: float = 0.333
     TX_RECORD_INTERVAL: float = 0.333
     RX_ESP32_PORT: int = 5001
     RX_SOCKET_TIMEOUT: float = 0.5
@@ -21,7 +21,8 @@ class RecordingConfiguration:
     Packet and queue limits are based on TX interval
     """
     MONITOR_QUEUE_LIMIT: int = 10
-    RECORD_PACKET_LIMIT: int = 30
+    RECORD_PACKET_LIMIT: int = 60
+    MMWAVE_QUEUE_LIMIT: int = 12
     # 0: Class, 1: Target, 2: Angle, 4: Distance
     RECORD_PARAMETERS: list = [None, None, None, None, None]
 
@@ -72,14 +73,17 @@ class VisualizerConfiguration:
 class ModelConfiguration:
     """Configuration for machine learning models directories and paths"""
     MODEL_DIR: str = 'model'
-    SCALER_PATH: str = 'model/wriple_v2-std.pkl'
-    PCA_PATH: str = 'model/wriple_v2-lg.pkl'
-    LOGREG_PATH: str = 'model/wriple_v2-pca.pkl'
+    LOGREG_PATH: str = 'model/wriple_v3_LogReg.pkl'
+    RANDFOR_PATH: str = 'model/wriple_v3_RandFor.pkl'
+    ADABOOST_PATH: str = 'model/wriple_v3_AdaBoost.pkl'
+    CONVLSTM_PATH: str = 'model/wriple_v3_ConvLSTM.keras'
+    TCN_PATH: str = 'model/wriple_v3_TCN.keras'
+    THRESHOLD_PATH: str = 'model/wriple_v3_Threshold.json'
 
 
 class PredictionConfiguration:
     """Configuration for data preprocessing and prediction"""
-    SIGNAL_WINDOW: int = 5
+    SIGNAL_WINDOW: int = 7
 
 
 class FlaskConfiguration:

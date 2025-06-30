@@ -29,6 +29,7 @@ class HumanDetectionSystem:
         # Initialize parameters and data storage
         self.radar_data = VisualizerConfiguration.RADAR_DATA
         self.mmwave_data = []
+        self.mmwave_queue_limit = RecordingConfiguration.MMWAVE_QUEUE_LIMIT
         self.record_parameters = RecordingConfiguration.RECORD_PARAMETERS
         self.logger = setup_logger('HumanDetectionSystem')
     
@@ -60,8 +61,12 @@ class HumanDetectionSystem:
         if parsed_data[0]: # If rd03d data is valid
             self.radar_data = [parsed_data[3], parsed_data[6], parsed_data[7], parsed_data[8]]
         
+        # Remove oldest mmwave data if it exceeds the limit
+        while len(self.mmwave_data) > self.mmwave_queue_limit:
+            self.mmwave_data.pop(0)
+
         if parsed_data[1]: # If ld24020 data is valid
-            self.mmwave_data = parsed_data[9:]
+            self.mmwave_data.append(parsed_data[18:21])
         
     def record_received_data(self, raw_data: bytes, tx_timestamp: int):
         """
@@ -130,10 +135,10 @@ class HumanDetectionSystem:
             int: Presence prediction (1 for presence, 0 for absence)
         """
         if self.model_manager.model_loaded:
-            features = self.csi_processor.get_amplitude_window()
+            features = self.mmwave_data
             return self.model_manager.predict(features)
         else:
-            return 0
+            return 'No'
     
     def get_system_status(self) -> dict:
         """
