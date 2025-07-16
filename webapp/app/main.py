@@ -66,7 +66,7 @@ class HumanDetectionSystem:
             self.mmwave_data.pop(0)
 
         if parsed_data[1]: # If ld24020 data is valid
-            self.mmwave_data.append(parsed_data[18:21])
+            self.mmwave_data.append(parsed_data[9:])
         
     def record_received_data(self, raw_data: bytes, tx_timestamp: int):
         """
@@ -135,7 +135,11 @@ class HumanDetectionSystem:
             int: Presence prediction (1 for presence, 0 for absence)
         """
         if self.model_manager.model_loaded:
-            features = self.mmwave_data
+            features = []
+
+            for data in self.mmwave_data:
+                features.append(data[9:12])
+
             return self.model_manager.predict(features)
         else:
             return 'No'

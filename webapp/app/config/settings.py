@@ -63,12 +63,6 @@ class VisualizerConfiguration:
                         [0] * 16, [0] * 16, [0] * 16, [0] * 16,
                         [0] * 16, [0] * 16, [0] * 16, [0] * 16,
                         [0] * 16, [0] * 16, [0] * 16, [0] * 16]
-    GATE_THRESHOLDS = [
-        (60000, 40000), (30000, 20000), (400, 200), (300, 250),
-        (250, 150), (250, 150), (250, 150), (250, 150),
-        (300, 150), (250, 150), (250, 150), (250, 150),
-        (250, 100), (200, 100), (200, 100), (200, 100)
-    ]
 
 class ModelConfiguration:
     """Configuration for machine learning models directories and paths"""
@@ -79,6 +73,7 @@ class ModelConfiguration:
     CONVLSTM_PATH: str = 'model/wriple_v3_ConvLSTM.keras'
     TCN_PATH: str = 'model/wriple_v3_TCN.keras'
     THRESHOLD_PATH: str = 'model/wriple_v3_Threshold.json'
+    MMWAVE_THRESHOLD_PATH: str = 'model/wriple_v3_Threshold_2.json'
 
 
 class PredictionConfiguration:

@@ -22,6 +22,7 @@ class ModelManager:
         self._mode = 1
         self._presence_model = None
         self.thresholds = None
+        self.mmWave_thresholds = None
         self.signal_window = PredictionConfiguration.SIGNAL_WINDOW
         self._logger = setup_logger('ModelManager')
         self.load_models(self._mode)
@@ -49,6 +50,9 @@ class ModelManager:
 
             with open(ModelConfiguration.THRESHOLD_PATH, 'r') as file:
                     self.thresholds = json.load(file)
+            
+            with open(ModelConfiguration.MMWAVE_THRESHOLD_PATH, 'r') as file:
+                    self.mmWave_thresholds = json.load(file)
 
             self._model_loaded = True
             self._logger.info('Models loaded successfully')
@@ -112,7 +116,7 @@ class ModelManager:
             str: Presence prediction
         """
         try:
-            if len(data) < self.signal_window or not self._model_loaded:
+            if len(data) < self.signal_window:
                 return 'No'
 
             thresholded_data = self.apply_thresholds(data, self.thresholds)
