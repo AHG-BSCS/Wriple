@@ -121,8 +121,8 @@
                     </div>
                     <div class="border-l border-slate-400 h-8"></div>
                     <div class="space-x-1">
-                        <label class="font-semibold">RSSI:</label>
-                        <span id="rssi-value" class="font-bold text-3xl">0</span>
+                        <label class="font-semibold">EXP:</label>
+                        <span id="exp-value" class="font-bold text-3xl">0</span>
                     </div>
                 </div>
                 <!-- Right Header -->
@@ -199,8 +199,8 @@
                         </div>
                     </div>
                     <!-- Line Chart -->
-                    <div id="rssi-chart-container" class="w-fit h-fit m-auto my-6 dataset-hidden">
-                        <canvas id="rssi-chart" class="rounded shadow"></canvas>
+                    <div id="exp-chart-container" class="w-fit h-fit m-auto my-6 dataset-hidden">
+                        <canvas id="exp-chart" class="rounded shadow"></canvas>
                     </div>
                     <!-- 3D Plot -->
                     <div id="3d-plot-container" class="flex justify-center items-center my-6 dataset-hidden">
@@ -353,10 +353,10 @@
                         Range Gates Heatmap
                     </span>
                 </button>
-                <button id="rssi-histogram-btn" class="bg-gray-800 p-2 hover:scale-110 transition relative group rounded-2xl dataset-hidden">
+                <button id="exp-line-chart-btn" class="bg-gray-800 p-2 hover:scale-110 transition relative group rounded-2xl dataset-hidden">
                     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#f5f5f5" viewBox="0 0 256 256" data-darkreader-inline-fill="" style="--darkreader-inline-fill: var(--darkreader-background-f5f5f5, #1e2021);"><path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM200,176a8,8,0,0,1,0,16H56a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v62.92l34.88-29.07a8,8,0,0,1,9.56-.51l43,28.69,43.41-36.18a8,8,0,0,1,10.24,12.3l-48,40a8,8,0,0,1-9.56.51l-43-28.69L64,155.75V176Z"></path></svg>
                     <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-gray-700 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                        RSSI Line Chart
+                        Exp Line Chart
                     </span>
                 </button>
                 <button id="3d-plot-btn" class="bg-gray-800 p-2 hover:scale-110 transition relative group rounded-2xl cursor-pointer dataset-hidden">

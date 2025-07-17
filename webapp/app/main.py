@@ -59,7 +59,8 @@ class HumanDetectionSystem:
         self.csi_processor.buffer_amplitude_phase(parsed_data[5])
 
         if parsed_data[0]: # If rd03d data is valid
-            self.radar_data = [parsed_data[3], parsed_data[6], parsed_data[7], parsed_data[8]]
+            # Get Range Gate Amplitude Instead
+            self.radar_data = [parsed_data[20][3], parsed_data[6], parsed_data[7], parsed_data[8]]
         
         # Remove oldest mmwave data if it exceeds the limit
         while len(self.mmwave_data) > self.mmwave_queue_limit:
@@ -176,7 +177,7 @@ class HumanDetectionSystem:
             'target2': self.radar_data[2],
             'target3': self.radar_data[3],
             'totalPacket': self.network_manager.packet_count,
-            'rssi': self.radar_data[0],
+            'exp': self.radar_data[0],
             'modeStatus': mode_status
         }
     

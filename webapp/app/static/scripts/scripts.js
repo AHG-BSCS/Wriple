@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const targetDetected = document.getElementById("target-detected")
   const target1Dist = document.getElementById("target-1-distance")
   const packetCount = document.getElementById("packets-count")
-  const rssiValue = document.getElementById("rssi-value")
+  const experimentalValue = document.getElementById("exp-value")
 
   const esp32Status = document.getElementById("esp32-status")
   const apStatus = document.getElementById("ap-status")
@@ -74,20 +74,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const amplitudeHeatmapBtn = document.getElementById('amplitude-heatmap-btn');
   const phaseHeatmapBtn = document.getElementById('phase-heatmap-btn');
   const gatesHeatmapBtn = document.getElementById('gates-heatmap-btn');
-  const rssiChartBtn = document.getElementById('rssi-histogram-btn');
+  const expChartBtn = document.getElementById('exp-line-chart-btn');
   const d3PlotBtn = document.getElementById('3d-plot-btn');
 
   const amplitudeHeatmapContainer = document.getElementById('amplitude-heatmap-container');
   const phaseHeatmapContainer = document.getElementById('phase-heatmap-container');
   const gatesHeatmapContainer = document.getElementById('gates-heatmap-container');
-  const rssiChartContainer = document.getElementById('rssi-chart-container');
+  const expChartContainer = document.getElementById('exp-chart-container');
   const d3PlotContainer = document.getElementById('3d-plot-container');
 
   const amplitudeCanvas = document.getElementById('amplitude-heatmap');
   const phaseCanvas = document.getElementById('phase-heatmap');
   const gatesCanvas = document.getElementById('gates-heatmap');
-  const rssiCanvasCtx = document.getElementById('rssi-chart').getContext('2d');
-  let rssiChart;
+  const expCanvasCtx = document.getElementById('exp-chart').getContext('2d');
+  let expChart;
 
   const amplitudeMaxSlider = document.getElementById("amplitude-max-slider");
   const amplitudeMaxValue = document.getElementById("amplitude-max-value");
@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let isAmpitudeHeatmapVisible = false;
   let isPhaseHeatmapVisible = false;
   let isGateHeatmapVisible = false;
-  let isRSSIChartVisible = false;
+  let isExpChartVisible = false;
   let isRadarVisible = false;
   let is3DPlotVisible = false;
 
@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let amplitudeHeatmapInterval;
   let phaseHeatmapInterval;
   let gatesHeatmapInterval;
-  // let rssiHistogramInterval;
+  // let expHistogramInterval;
   const d3PlotRefreshRate = 1000;
   const radarRefreshRate = 100;
   const recordingDelay = 1000;
@@ -132,8 +132,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const DOPPLER_BINS = 20;
   const RANGE_GATES = 16;
 
-  const MAX_RSSI_POINTS = 120; // 30 seconds of data at 1Hz
-  const RSSI_TICK_INTERVAL = 10; // seconds
+  const MAX_EXP_POINTS = 120; // 30 seconds of data at 1Hz
+  const EXP_TICK_INTERVAL = 10; // seconds
 
   let amplitudeBuffer = Array.from({ length: SUBCARRIER_COUNT }, () => []);
   let phaseBuffer = Array.from({ length: SUBCARRIER_COUNT }, () => []);
@@ -303,7 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
     targetDetected.textContent = "0";
     target1Dist.textContent = "0.00m";
     packetCount.textContent = "0";
-    rssiValue.textContent = "0";
+    experimentalValue.textContent = "0";
   }
 
   function setAsideTextToDefault() {
@@ -388,16 +388,16 @@ document.addEventListener('DOMContentLoaded', () => {
     return targetCount;
   }
 
-  function visualizeRSSI(rssi) {
-    if (rssiChart.data.labels.length >= MAX_RSSI_POINTS) {
-      rssiChart.data.labels.shift();
-      rssiChart.data.datasets[0].data.shift();
+  function visualizeExperimental(exp) {
+    if (expChart.data.labels.length >= MAX_EXP_POINTS) {
+      expChart.data.labels.shift();
+      expChart.data.datasets[0].data.shift();
     }
     
     if (tick % 5 == 0) {
-      rssiChart.data.labels.push(tick / 10);
-      rssiChart.data.datasets[0].data.push(rssi);
-      rssiChart.update();
+      expChart.data.labels.push(tick / 10);
+      expChart.data.datasets[0].data.push(exp);
+      expChart.update();
     }
     tick++;
   }
@@ -407,11 +407,11 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(response => response.json())
       .then(data => {
         if (data.modeStatus != -1) {
-          if (parseInt(data.rssi) > -60) {
-            setHeaderTextToDefault();
-            setAsideTextToDefault();
-            presenceStatus.textContent = "Too Close";
-          }
+          // if (parseInt(data.rssi) > -60) {
+          //   setHeaderTextToDefault();
+          //   setAsideTextToDefault();
+          //   presenceStatus.textContent = "Too Close";
+          // }
           // Stop displaying radar data if no targets are detected by the model
           // else if (data.presence == 1) {
           if (true) { // Temporary for debugging
@@ -447,7 +447,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
 
           // This data must be updated
-          if (isRSSIChartVisible) visualizeRSSI(data.rssi);
+          if (isExpChartVisible) visualizeExperimental(data.exp);
           if (isRadarVisible) {
             pointsContainer.innerHTML = ''; // Clear previous points
             visualizeRadarData(data.target1);
@@ -455,7 +455,7 @@ document.addEventListener('DOMContentLoaded', () => {
             visualizeRadarData(data.target3);
           }
           packetCount.textContent = data.totalPacket;
-          rssiValue.textContent = data.rssi;
+          experimentalValue.textContent = data.exp;
         }
         else stopRecording();
       })
@@ -942,7 +942,7 @@ document.addEventListener('DOMContentLoaded', () => {
     amplitudeHeatmapContainer.classList.add('hidden');
     phaseHeatmapContainer.classList.add('hidden');
     gatesHeatmapContainer.classList.add('hidden');
-    rssiChartContainer.classList.add('hidden');
+    expChartContainer.classList.add('hidden');
     d3PlotContainer.classList.add('hidden');
   }
 
@@ -962,9 +962,9 @@ document.addEventListener('DOMContentLoaded', () => {
     gatesCanvas.height = RANGE_GATES - 1;
     gatesCanvas.width = DOPPLER_BINS - 1;
     
-    // Prevent RSSI line chart from exceeding the layout size
-    rssiCanvasCtx.canvas.width = 680;
-    rssiCanvasCtx.canvas.height = 200;
+    // Prevent Experimental Line Chart from exceeding the layout size
+    expCanvasCtx.canvas.width = 680;
+    expCanvasCtx.canvas.height = 200;
     
     // // Disable visualizer buttons
     d3PlotBtn.disabled = true;
@@ -993,15 +993,15 @@ document.addEventListener('DOMContentLoaded', () => {
     gatesHeatmap.max(newMax).draw();
   });
 
-  function initializeRSSIChart() {
-    rssiCanvasCtx.canvas.width = 680;
-    rssiCanvasCtx.canvas.height = 200;
-    rssiChart = new Chart(rssiCanvasCtx, {
+  function initializeExpChart() {
+    expCanvasCtx.canvas.width = 680;
+    expCanvasCtx.canvas.height = 200;
+    expChart = new Chart(expCanvasCtx, {
       type: 'line',
       data: {
         labels: [],
         datasets: [{
-          label: 'RSSI (dBm)',
+          label: 'Amplitude',
           data: [],
           borderColor: 'rgb(31, 41, 55)',
           backgroundColor: 'rgba(148, 163, 183, 0.1)',
@@ -1018,12 +1018,12 @@ document.addEventListener('DOMContentLoaded', () => {
             ticks: {
               callback: function (val, index) {
                 // Show label every 5 seconds
-                return index % RSSI_TICK_INTERVAL === 0 ? this.getLabelForValue(val) : '';
+                return index % EXP_TICK_INTERVAL === 0 ? this.getLabelForValue(val) : '';
               }
             }
           },
           y: {
-            title: { display: true, text: 'RSSI (dBm)' },
+            title: { display: true, text: 'Ampltitude' },
             suggestedMin: -80,
             suggestedMax: -20
           }
@@ -1037,22 +1037,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  rssiChartBtn.addEventListener('click', () => {
-    if (isRSSIChartVisible) {
-      rssiChartBtn.style.backgroundColor = btnDefaultColor;
-      rssiChartContainer.classList.add('hidden');
-      isRSSIChartVisible = false;
+  expChartBtn.addEventListener('click', () => {
+    if (isExpChartVisible) {
+      expChartBtn.style.backgroundColor = btnDefaultColor;
+      expChartContainer.classList.add('hidden');
+      isExpChartVisible = false;
 
-      rssiCanvasCtx.clearRect(0, 0, rssiCanvasCtx.canvas.width, rssiCanvasCtx.canvas.height);
-      rssiChart.data.labels = [];
-      rssiChart.data.datasets[0].data = [];
+      expCanvasCtx.clearRect(0, 0, expCanvasCtx.canvas.width, expCanvasCtx.canvas.height);
+      expChart.data.labels = [];
+      expChart.data.datasets[0].data = [];
       tick = 0;
     } else {
-      rssiChartBtn.style.backgroundColor = btnActiveColor;
-      rssiChartContainer.classList.remove('hidden');
-      if (rssiChart === undefined) initializeRSSIChart();
-      rssiChart.update();
-      isRSSIChartVisible = true;
+      expChartBtn.style.backgroundColor = btnActiveColor;
+      expChartContainer.classList.remove('hidden');
+      if (expChart === undefined) initializeExpChart();
+      expChart.update();
+      isExpChartVisible = true;
     }
   });
 
