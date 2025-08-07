@@ -13,7 +13,7 @@ class NetworkConfiguration:
     TX_ESP32_IP: str = '192.168.11.163' # IP address assigned by AP to ESP32
     TX_UDP_PORT: int = 5000             # Keep the port open using firewall
     TX_PAYLOAD: str = 'Wriple'          # Frame length of 88
-    TX_CAPTURE_INTERVAL: float = 0.025  # Adjusted to meet the 30 packets per second
+    TX_CAPTURE_INTERVAL: float = 0.015  # Adjusted to meet the 30 packets per second
     RECORD_PACKET_LIMIT: int = 150      # 5 seconds of data per recording
     RX_SOCKET_TIMEOUT: float = 0.25     # Timeout used to stop listening
     RX_BUFFER_SIZE: int = 4096          # Adjusted based on ESP32 CSI and sensor data size
@@ -27,8 +27,7 @@ class RecordingConfiguration:
     MONITOR_QUEUE_LIMIT: int = 60
     RECORD_PACKET_LIMIT: int = 300
     MMWAVE_QUEUE_LIMIT: int = 12
-    # 0: Class, 1: Target, 2: Angle, 4: Distance
-    RECORD_PARAMETERS: list = [None, None, None, None, None]
+    RECORD_PARAMETERS: list = [None, None, None, None, None, None, None]
 
 
 class FileConfiguration:
@@ -37,7 +36,8 @@ class FileConfiguration:
     CSV_FILE_PATTERN: str = r'^WRIPLE_DATA_.*$'
     CSV_FILE_PREFIX: str = 'WRIPLE_DATA_'
     CSV_COLUMNS: list = [
-        'Presence', 'Target_Count', 'Obstructed', 'Angle', 'Distance',
+        'Presence', 'Target_Count', 'Angle', 'Distance',
+        'Obstructed', 'Obstruction', 'Spacing',
         'Transmit_Timestamp', 'Received_Timestamp', 'RSSI', 'Channel',
         'Raw_CSI',
         'RD03D_Target_1', 'RD03D_Target_2', 'RD03D_Target_3',
