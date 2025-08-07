@@ -24,6 +24,7 @@
 #define RD03D_TIMER_INTERVAL 333 // RD03D updates every 100 ms in multi-target mode
 #define RD03D_TAG "RD03D"
 
+static int64_t last_rd03d_read_time = 0;
 static TimerHandle_t rd03d_timer;
 static TaskHandle_t rd03d_task_handle = NULL;
 static uint8_t rd03d_buffer[RD03D_BUF_SIZE];
@@ -47,6 +48,11 @@ void parse_single_target(const uint8_t* buf, bool& is_updated, int16_t& x, int16
 }
 
 std::string get_rd03d_data() {
+    int64_t current_time = esp_timer_get_time();
+    // Read data only if at least 100 ms have passed since the last read
+    if (current_time - last_rd03d_read_time < 100000) return "!";
+    last_rd03d_read_time = current_time;
+
     int len = uart_read_bytes(RD03D_UART_PORT, rd03d_buffer, RD03D_BUF_SIZE, RD03D_UART_WAIT);
 
     if (len < RD03D_FRAME_SIZE) {

@@ -28,6 +28,7 @@
 #define LD2420_TIMER_INTERVAL  333 // LD2420 updates every 300 ms in debug mode
 #define LD2420_TAG "LD2420"
 
+static int64_t last_ld2420_read_time = 0;
 static TimerHandle_t ld2420_timer;
 static TaskHandle_t ld2420_task_handle = NULL;
 static uint8_t ld2420_buffer[LD2420_BUF_SIZE];
@@ -37,6 +38,11 @@ uint16_t ld242_distance_mm    = 0;
 uint16_t ld242_energy[16]     = {0};
 
 std::string get_ld2420_data() {
+    int64_t current_time = esp_timer_get_time();
+    // Read data only if at least 333 ms have passed since the last read
+    if (current_time - last_ld2420_read_time < 333000) return "!";
+    last_ld2420_read_time = current_time;
+
     int len = uart_read_bytes(LD2420_UART_PORT, ld2420_buffer, LD2420_BUF_SIZE, LD2420_UART_WAIT);
 
     if (len < LD2420_FRAME_SIZE) {
@@ -76,7 +82,6 @@ std::string get_ld2420_data() {
                 }
             }
 
-            // ESP_LOGI(LD2420_TAG, "RDMAP data parsed at index %d", i);
             return ss.str();
         }
     }
