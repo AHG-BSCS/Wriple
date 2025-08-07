@@ -4,15 +4,19 @@ class NetworkConfiguration:
     """Configuration for network settings"""
     AP_SSID: str = 'Wriple'
     AP_PASSWORD: str = 'Wr!ple@ESP32'
-    TX_ESP32_IP: str = '192.168.4.1'
-    TX_UDP_PORT: int = 5000
-    TX_PAYLOAD: str = 'Wriple' # 88 frame length
-    # TX_MONITOR_INTERVAL: float = 0.1
-    TX_MONITOR_INTERVAL: float = 0.333
-    TX_RECORD_INTERVAL: float = 0.333
-    RX_ESP32_PORT: int = 5001
-    RX_SOCKET_TIMEOUT: float = 0.5
-    RX_BUFFER_SIZE: int = 4096
+    AP_INTERFACE: str = 'Wi-Fi'
+    AP_STATIC_IP: str = '192.168.11.222'
+    AP_SUBNET_MASK: str = '255.255.255.0'
+    AP_GATEWAY: str = '192.168.11.236'
+    AP_DNS: str = '8.8.8.8'
+
+    TX_ESP32_IP: str = '192.168.11.163' # IP address assigned by AP to ESP32
+    TX_UDP_PORT: int = 5000             # Keep the port open using firewall
+    TX_PAYLOAD: str = 'Wriple'          # Frame length of 88
+    TX_CAPTURE_INTERVAL: float = 0.025  # Adjusted to meet the 30 packets per second
+    RECORD_PACKET_LIMIT: int = 150      # 5 seconds of data per recording
+    RX_SOCKET_TIMEOUT: float = 0.25     # Timeout used to stop listening
+    RX_BUFFER_SIZE: int = 4096          # Adjusted based on ESP32 CSI and sensor data size
 
 
 class RecordingConfiguration:
@@ -20,8 +24,8 @@ class RecordingConfiguration:
     Configuration for CSI data recording
     Packet and queue limits are based on TX interval
     """
-    MONITOR_QUEUE_LIMIT: int = 10
-    RECORD_PACKET_LIMIT: int = 60
+    MONITOR_QUEUE_LIMIT: int = 60
+    RECORD_PACKET_LIMIT: int = 300
     MMWAVE_QUEUE_LIMIT: int = 12
     # 0: Class, 1: Target, 2: Angle, 4: Distance
     RECORD_PARAMETERS: list = [None, None, None, None, None]
@@ -30,8 +34,8 @@ class RecordingConfiguration:
 class FileConfiguration:
     """Configuration for CSV file and its columns"""
     CSV_DIRECTORY: str = 'data/recorded'
-    CSV_FILE_PATTERN: str = r'^MMWAVE_DATA_.*$'
-    CSV_FILE_PREFIX: str = 'MMWAVE_DATA_'
+    CSV_FILE_PATTERN: str = r'^WRIPLE_DATA_.*$'
+    CSV_FILE_PREFIX: str = 'WRIPLE_DATA_'
     CSV_COLUMNS: list = [
         'Presence', 'Target_Count', 'Obstructed', 'Angle', 'Distance',
         'Transmit_Timestamp', 'Received_Timestamp', 'RSSI', 'Channel',
@@ -50,8 +54,8 @@ class VisualizerConfiguration:
     AVERAGED: bool = True
     AVERAGED_WINDOWS: list = [(0, 10), (10, -1)]
     SUBCARRIER_COUNT: int = 306
-    AMP_HEATMAP_START = 127
-    AMP_HEATMAP_END = 148
+    AMP_HEATMAP_START = 3
+    AMP_HEATMAP_END = 88
     PHASE_HEATMAP_START = 6
     PHASE_HEATMAP_END = 27
     D3_STD_THRESHOLD: float = 1.75
@@ -64,6 +68,7 @@ class VisualizerConfiguration:
                         [0] * 16, [0] * 16, [0] * 16, [0] * 16,
                         [0] * 16, [0] * 16, [0] * 16, [0] * 16]
 
+
 class ModelConfiguration:
     """Configuration for machine learning models directories and paths"""
     MODEL_DIR: str = 'model'
@@ -72,8 +77,8 @@ class ModelConfiguration:
     ADABOOST_PATH: str = 'model/wriple_v3_AdaBoost.pkl'
     CONVLSTM_PATH: str = 'model/wriple_v3_ConvLSTM.keras'
     TCN_PATH: str = 'model/wriple_v3_TCN.keras'
-    THRESHOLD_PATH: str = 'model/wriple_v3_Threshold.json'
-    MMWAVE_THRESHOLD_PATH: str = 'model/wriple_v3_Threshold_2.json'
+    THRESHOLD_MODEL_PATH: str = 'model/wriple_v3_Thres_Model.json'
+    THRESHOLD_MMWAVE_VIZ_PATH: str = 'model/wriple_v3_Thres_Visual.json'
 
 
 class PredictionConfiguration:
@@ -83,6 +88,6 @@ class PredictionConfiguration:
 
 class FlaskConfiguration:
     """Configuration for Flask application"""
-    DEBUG: bool = True
+    DEBUG: bool = False
     HOST: str = '0.0.0.0'
-    PORT: int = 5000
+    PORT: int = 3000

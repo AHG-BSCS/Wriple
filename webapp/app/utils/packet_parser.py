@@ -7,6 +7,7 @@ class PacketParser:
     """Utility class for parsing received packet data"""
 
     _logger = setup_logger('PacketParser')
+    _rd03d_error = 0
     _ld2420_error = 0
     
     @staticmethod
@@ -40,8 +41,12 @@ class PacketParser:
             if not sections[2].startswith('!'):
                 rd03d_values = list(map(int, sections[2].split(',')))
                 rd03d_targets = [rd03d_values[i:i+4] for i in range(0, len(rd03d_values), 4)]
+                PacketParser._rd03d_error = 0
             else:
-                PacketParser._logger.error('RD03D might be disconnected')
+                if PacketParser._rd03d_error > 10:
+                    PacketParser._logger.error('RD03D is disconnected')
+
+                PacketParser._rd03d_error += 1
                 rd03d_valid = False
                 rd03d_targets = [[0, 0, 0, 0]] * 3 # Default to empty targets if no data from sensor
 
@@ -51,9 +56,8 @@ class PacketParser:
                 ld2420_array = [ld2420_values[i:i+16] for i in range(0, len(ld2420_values), 16)]
                 PacketParser._ld2420_error = 0
             else:
-                if is_recording or PacketParser._ld2420_error > 30:
-                    PacketParser._ld2420_error = 0
-                    PacketParser._logger.error('LD2420 might be disconnected or too fast request')
+                if PacketParser._ld2420_error > 30:
+                    PacketParser._logger.error('LD2420 is disconnected')
                 
                 PacketParser._ld2420_error += 1
                 ld2420_valid = False

@@ -26,9 +26,9 @@ def create_api_routes(app, detection_system):
     def start_recording(mode):
         """Start recording or monitoring mode"""
         if mode == 'recording':
-            detection_system.start_recording_mode()
+            detection_system.start_capturing(True)
         elif mode == 'monitoring':
-            detection_system.start_monitoring_mode()
+            detection_system.start_capturing(False)
         else:
             return jsonify({'status': 'error',
                             'error': 'Invalid mode'}), 400

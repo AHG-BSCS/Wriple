@@ -25,7 +25,16 @@ class ModelManager:
         self.mmWave_thresholds = None
         self.signal_window = PredictionConfiguration.SIGNAL_WINDOW
         self._logger = setup_logger('ModelManager')
-        self.load_models(self._mode)
+
+        self.load_threshold()
+        # self.load_models(self._mode)
+    
+    def load_threshold(self):
+        try:
+            with open(ModelConfiguration.THRESHOLD_MMWAVE_VIZ_PATH, 'r') as file:
+                    self.mmWave_thresholds = json.load(file)
+        except Exception as e:
+            self._logger.error(f'Error loading mmWave thresholds: {e}')
     
     def load_models(self, mode: int):
         """
@@ -48,12 +57,9 @@ class ModelManager:
             else:
                 raise Exception
 
-            with open(ModelConfiguration.THRESHOLD_PATH, 'r') as file:
+            with open(ModelConfiguration.THRESHOLD_MODEL_PATH, 'r') as file:
                     self.thresholds = json.load(file)
             
-            with open(ModelConfiguration.MMWAVE_THRESHOLD_PATH, 'r') as file:
-                    self.mmWave_thresholds = json.load(file)
-
             self._model_loaded = True
             self._logger.info('Models loaded successfully')
         except Exception as e:

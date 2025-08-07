@@ -24,12 +24,12 @@ class NetworkManager:
         # Transmitter related variables
         self._is_transmitting = False
         self._tx_timestamps = []
-        self._tx_monitor_interval = NetworkConfiguration.TX_MONITOR_INTERVAL
-        self._tx_record_interval = NetworkConfiguration.TX_RECORD_INTERVAL
+        self._tx_capture_interval = NetworkConfiguration.TX_CAPTURE_INTERVAL
+        self._record_packet_limit = NetworkConfiguration.RECORD_PACKET_LIMIT
         self._tx_buffer_size = NetworkConfiguration.RX_BUFFER_SIZE
         self._udp_packet = IP(dst=NetworkConfiguration.TX_ESP32_IP) / \
                          UDP(sport=NetworkConfiguration.TX_UDP_PORT, 
-                             dport=NetworkConfiguration.RX_ESP32_PORT) / \
+                             dport=NetworkConfiguration.TX_UDP_PORT) / \
                          Raw(load=NetworkConfiguration.TX_PAYLOAD)
         
         self._ap_ssid = NetworkConfiguration.AP_SSID
@@ -75,13 +75,13 @@ class NetworkManager:
             self._logger.error(f'Error setting up socket: {e}')
             return False
     
-    def start_listening(self, parse_received_data, record_packet_limit=None):
+    def start_listening(self, parse_received_data, is_recording):
         """
         Start listening for UDP packets from ESP32
         
         Args:
             parse_received_data: Function to call when data is received
-            record_packet_limit: Maximum number of packets to receive (None for unlimited)
+            is_recording: Current mode
         """
         if not self.setup_socket():
             return
@@ -92,6 +92,7 @@ class NetworkManager:
         while self._is_listening:
             try:
                 data, addr = self._socket.recvfrom(self._tx_buffer_size)
+                # Monitor Packet Count for automatic stopping during recording
                 self._packet_count += 1
                 
                 # Process data in separate thread
@@ -102,7 +103,7 @@ class NetworkManager:
                     daemon=True
                 ).start()
                 
-                if record_packet_limit and self._packet_count >= record_packet_limit:
+                if is_recording and self._packet_count >= self._record_packet_limit:
                     self._logger.info(f'Recording completed with {self._packet_count} packets')
                     break
                     
@@ -116,6 +117,7 @@ class NetworkManager:
                 continue
         
         self.stop_listening()
+        self.stop_transmitting()
     
     def stop_listening(self):
         """Stop listening for packets"""
@@ -138,7 +140,7 @@ class NetworkManager:
         except Exception as e:
             self._logger.error(f'Error sending packet: {e}')
     
-    def request_monitor_data(self):
+    def request_captured_data(self):
         """Start continuous packet transmission at specified intervals"""
         self._is_transmitting = True
         
@@ -147,21 +149,7 @@ class NetworkManager:
                 self.send_single_packet()
                 
                 # Schedule next transmission
-                threading.Timer(self._tx_monitor_interval, _transmit).start()
-        
-        _transmit()
-        self._logger.info('Started packet transmission')
-
-    def request_record_data(self):
-        """Start continuous packet transmission at specified intervals"""
-        self._is_transmitting = True
-        
-        def _transmit():
-            if self._is_transmitting:
-                self.send_single_packet()
-                
-                # Schedule next transmission
-                threading.Timer(self._tx_record_interval, _transmit).start()
+                threading.Timer(self._tx_capture_interval, _transmit).start()
         
         _transmit()
         self._logger.info('Started packet transmission')

@@ -6,6 +6,7 @@ import re
 import threading
 
 from config.settings import FileConfiguration
+from config.settings import NetworkConfiguration
 from utils.logger import setup_logger
 
 class FileManager:
@@ -15,6 +16,8 @@ class FileManager:
             self._csv_file_path = None
             self._selected_csv_file = None
             self._csv_directory = FileConfiguration.CSV_DIRECTORY
+            self._csv_buffer = []
+            self._csv_buffer_limit = NetworkConfiguration.RECORD_PACKET_LIMIT
             self._lock = threading.Lock()
             self._logger = setup_logger('FileManager')
             
@@ -120,18 +123,29 @@ class FileManager:
         Returns: 
             bool: True if write was successful, False otherwise
         """
-        if not self._csv_file_path:
-            self._logger.warning('CSV file path is not set. Preparing new file.')
-            self.init_new_csv()
-            return False
-        
         try:
             with self._lock:
-                with open(self._csv_file_path, mode='a', newline='') as file:
-                    writer = csv.writer(file)
-                    writer.writerow(data_row)
+                self._csv_buffer.append(data_row)
+                if len(self._csv_buffer) >= self._csv_buffer_limit:
+                    self.flush_buffer()
             return True
-            
         except Exception as e:
             self._logger.error(f'Error writing to CSV file: {e}')
             return False
+
+    def flush_buffer(self):
+        if not self._csv_buffer:
+            return
+        
+        try:
+            self.init_new_csv()
+            with open(self._csv_file_path, mode='a', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerows(self._csv_buffer)
+            self._csv_buffer.clear()
+        except Exception as e:
+            self._logger.error(f'Error flushing buffer to CSV file: {e}')
+
+    def close(self):
+        with self._lock:
+            self.flush_buffer()

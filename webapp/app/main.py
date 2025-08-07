@@ -1,6 +1,5 @@
 import threading
 from flask import Flask
-import numpy as np
 
 from config.settings import FlaskConfiguration, RecordingConfiguration, VisualizerConfiguration
 from core.csi_processor import CSIProcessor
@@ -56,66 +55,40 @@ class HumanDetectionSystem:
         """
         # Extract radar and CSI data from parsed data
         parsed_data = PacketParser.parse_csi_data(raw_data)
-        self.csi_processor.buffer_amplitude_phase(parsed_data[5])
 
-        if parsed_data[0]: # If rd03d data is valid
-            # Get Range Gate Amplitude Instead
-            self.radar_data = [parsed_data[20][3], parsed_data[6], parsed_data[7], parsed_data[8]]
-        
-        # Remove oldest mmwave data if it exceeds the limit
-        while len(self.mmwave_data) > self.mmwave_queue_limit:
-            self.mmwave_data.pop(0)
+        if self.is_monitoring:
+            self.csi_processor.buffer_amplitude_phase(parsed_data[5])
 
-        if parsed_data[1]: # If ld24020 data is valid
-            self.mmwave_data.append(parsed_data[9:])
-        
-    def record_received_data(self, raw_data: bytes, tx_timestamp: int):
-        """
-        Process data received from ESP32
-        
-        Args:
-            raw_data: Raw data bytes received from ESP32 including the data from other sensors
-            tx_timestamp: Timestamp of the transmitted packet
-        """
-        # Extract radar and CSI data from parsed data
-        parsed_data = PacketParser.parse_csi_data(raw_data, self.is_recording)
+            if parsed_data[0]: # If rd03d data is valid
+                # Change the index 0 for experimental data
+                # RSSI = parsed_data[3]
+                # RG 10 = parsed_data[20][3]
+                self.radar_data = [parsed_data[3], parsed_data[6], parsed_data[7], parsed_data[8]]
+            
+            # Remove oldest mmwave data if it exceeds the limit
+            while len(self.mmwave_data) > self.mmwave_queue_limit:
+                self.mmwave_data.pop(0)
+
+            if parsed_data[1]: # If ld24020 data is valid
+                self.mmwave_data.append(parsed_data[9:])
         
         # Record data to csv file if recording
-        if self.is_recording and parsed_data[0] and parsed_data[1]:
+        if self.is_recording:
             self.record_data_packet(parsed_data[2:], tx_timestamp)
-        else:
-            print('Missing data. Packet was skipped')
     
-    def start_recording_mode(self):
+    def start_capturing(self, is_recording: bool):
         """Start recording Wi-Fi CSI data into CSV file"""
         if not self.network_manager.check_wifi_connection():
-            self.logger.error('Not connected to ESP32 AP, cannot start recording')
+            self.logger.error('Not connected to AP. Cannot capture packet')
             return
         
-        self.is_recording = True
-        self.file_manager.init_new_csv()
-        self.csi_processor.set_max_packets(0)
-        self.network_manager.request_record_data()
+        if is_recording: self.is_recording = True
+        else: self.is_monitoring = True
+        self.network_manager.request_captured_data()
 
         threading.Thread(
             target=self.network_manager.start_listening,
-            args=(self.record_received_data, RecordingConfiguration.RECORD_PACKET_LIMIT),
-            daemon=True
-        ).start()
-    
-    def start_monitoring_mode(self):
-        """Start monitoring WI-Fi CSI data without recording"""
-        if not self.network_manager.check_wifi_connection():
-            self.logger.error('Not connected to ESP32 AP, cannot start monitoring')
-            return
-        
-        self.is_monitoring = True
-        self.csi_processor.set_max_packets(0)
-        self.network_manager.request_monitor_data()
-
-        threading.Thread(
-            target=self.network_manager.start_listening,
-            args=(self.parse_received_data,),
+            args=(self.parse_received_data, self.is_recording),
             daemon=True
         ).start()
     
@@ -123,10 +96,11 @@ class HumanDetectionSystem:
         """Stop all recording/monitoring operations"""
         self.is_recording = False
         self.is_monitoring = False
-        
+
         self.network_manager.stop_transmitting()
         self.network_manager.stop_listening()
         self.csi_processor.clear_queues()
+        self.file_manager.close()
     
     def predict_presence(self) -> int:
         """

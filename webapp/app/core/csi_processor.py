@@ -17,7 +17,7 @@ class CSIProcessor:
         self._std_threshold = VisualizerConfiguration.D3_STD_THRESHOLD
         # Use a scaler model based from dataset to avoid fit_transform()
         self._mm_scaler = MinMaxScaler(VisualizerConfiguration.D3_VISUALIZER_SCALE)
-        self._max_packets = 0
+        self._max_packets = RecordingConfiguration.MONITOR_QUEUE_LIMIT
         self._logger = setup_logger('CSIProcessor')
     
     def compute_amplitude_phase(self, csi_data: list) -> tuple[list, list]:
@@ -223,20 +223,6 @@ class CSIProcessor:
         self._amplitude_queue.clear()
         self._phase_queue.clear()
         self._logger.info('Cleared amplitude and phase queues.')
-    
-    def set_max_packets(self, value: int):
-        """
-        Set maximum number of packets to keep in queues
-
-        Args:
-            value: 1 for recording mode, 0 for monitoring mode
-        """
-        if value == 1:
-            self._max_packets = RecordingConfiguration.RECORD_PACKET_LIMIT
-        elif value == 0:
-            self._max_packets = RecordingConfiguration.MONITOR_QUEUE_LIMIT
-        else:
-            self._logger.error('Invalid max packets value. Must be 0 or 1.')
 
     @property
     def max_packets(self) -> int:
