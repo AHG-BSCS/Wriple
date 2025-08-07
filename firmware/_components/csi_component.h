@@ -21,7 +21,7 @@ static int total_packet_count = 0;
 
 static int sock = -1;
 static sockaddr_in client_addr;
-static const char *target_ip = "192.168.4.2"; // IP address of the station
+static const char *target_ip = "192.168.11.222"; // IP address of the station
 
 void led_timer_callback(TimerHandle_t xTimer) {
     if (connected && total_packet_count > 100) {
@@ -34,8 +34,10 @@ void led_timer_callback(TimerHandle_t xTimer) {
 }
 
 void _wifi_csi_callback(void *ctx, wifi_csi_info_t *data) {
+    // ESP_LOGI(CSI_TAG, "%d bytes", data[0].rx_ctrl.sig_len);
+    // ESP_LOGI(CSI_TAG, "%d channel", data[0].rx_ctrl.cwb);
     // If from 40Mhz Channel with payload specific to station packet
-    if (data[0].rx_ctrl.cwb == 1 && data[0].rx_ctrl.sig_len == 88) {
+    if (data[0].rx_ctrl.cwb == 0 && data[0].rx_ctrl.sig_len == 88) {
         xSemaphoreTake(mutex, portMAX_DELAY);
         
         std::stringstream ss;
@@ -72,24 +74,23 @@ void configure_led() {
 }
 
 void csi_init() {
-    ESP_ERROR_CHECK(esp_wifi_set_csi(1));
+    wifi_csi_config_t csi_config;
+    csi_config.lltf_en = 1;
+    csi_config.htltf_en = 1;
+    csi_config.stbc_htltf2_en = 1;
+    csi_config.ltf_merge_en = 1;
+    csi_config.channel_filter_en = 0;
+    csi_config.manu_scale = 0;
+
     configure_led();
-
-    wifi_csi_config_t configuration_csi;
-    configuration_csi.lltf_en = 1;
-    configuration_csi.htltf_en = 1;
-    configuration_csi.stbc_htltf2_en = 1;
-    configuration_csi.ltf_merge_en = 1;
-    configuration_csi.channel_filter_en = 0;
-    configuration_csi.manu_scale = 0;
-
     led_timer = xTimerCreate("LedTimer", pdMS_TO_TICKS(1000), pdTRUE, (void *)0, led_timer_callback);
     if (led_timer != NULL) {
         xTimerStart(led_timer, 0);
     }
 
-    ESP_ERROR_CHECK(esp_wifi_set_csi_config(&configuration_csi));
+    ESP_ERROR_CHECK(esp_wifi_set_csi_config(&csi_config));
     ESP_ERROR_CHECK(esp_wifi_set_csi_rx_cb(&_wifi_csi_callback, NULL));
+    ESP_ERROR_CHECK(esp_wifi_set_csi(1));
 
     client_addr.sin_family = AF_INET;
     client_addr.sin_port = htons(5000);
