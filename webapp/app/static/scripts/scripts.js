@@ -47,13 +47,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const radarContainer = document.getElementById('radar-container');
   const pointsContainer = document.getElementById('points');
 
-  const presenceGroup = document.querySelectorAll('.group-presence-btn');
-  let presenceClass;
-  const targetGroup = document.querySelectorAll('.group-target-btn');
-  let targetClass;
-  const obstructed = document.getElementById('obstruct-input');
-  const angleInput = document.getElementById('angle-input');
-  const distanceInput = document.getElementById('distance-input');
+  const classSelect = document.getElementById('class-select');
+  const targetSelect = document.getElementById('target-select');
+  const angleSelect = document.getElementById('angle-select');
+  const distanceSelect = document.getElementById('distance-select');
+  const obstructedSelect = document.getElementById('obstructed-select');
+  const obstructionSelect = document.getElementById('obstruction-select');
+  const spacingSelect = document.getElementById('spacing-select');
+
+  let selectedClass = classSelect ? classSelect.value : undefined;
+  let selectedTargetCount = targetSelect ? targetSelect.value : undefined;
+  let selectedAngle = angleSelect ? angleSelect.value : undefined;
+  let selectedDistance = distanceSelect ? distanceSelect.value : undefined;
+  let selectedObstructed = obstructedSelect ? obstructedSelect.value : undefined;
+  let selectedObstruction = obstructionSelect ? obstructionSelect.value : undefined;
+  let selectedSpacing = spacingSelect ? spacingSelect.value : undefined;
 
   const target1Angle = document.getElementById('target1-angle');
   const target2Angle = document.getElementById('target2-angle');
@@ -538,11 +546,13 @@ document.addEventListener('DOMContentLoaded', () => {
       method: "POST",
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        class_label: presenceClass,
-        target_count: targetClass,
-        obstructed: obstructed.value,
-        angle: angleInput.value,
-        distance_t1: distanceInput.value
+        class_label: selectedClass,
+        target_count: selectedTargetCount,
+        angle: selectedAngle,
+        distance_t1: selectedDistance,
+        obstructed: selectedObstructed,
+        obstruction: selectedObstruction,
+        spacing: selectedSpacing
       })
     })
     const data = await response.json();
@@ -1060,30 +1070,42 @@ document.addEventListener('DOMContentLoaded', () => {
   /* Initial Loading */
 
 
-  presenceGroup.forEach(button => {
-    button.addEventListener('click', () => {
-      // Remove the active button
-      presenceGroup.forEach(btn => btn.classList.remove('bg-amber-800'));
-      
-      // Set the active button
-      button.classList.add('bg-amber-800');
-
-      if (button.textContent === "Presence") presenceClass = 1;
-      else presenceClass = 0;
+  if (classSelect) {
+    classSelect.addEventListener('change', (e) => {
+      selectedClass = e.target.value;
     });
-  });
-
-  targetGroup.forEach(button => {
-    button.addEventListener('click', () => {
-      // Remove the active button
-      targetGroup.forEach(btn => btn.classList.remove('bg-amber-800'));
-      
-      // Set the active button
-      button.classList.add('bg-amber-800');
-      targetClass = button.textContent;
+  }
+  if (targetSelect) {
+    targetSelect.addEventListener('change', (e) => {
+      selectedTargetCount = e.target.value;
     });
-  });
-  
+  }
+  if (angleSelect) {
+    angleSelect.addEventListener('change', (e) => {
+      selectedAngle = e.target.value;
+    });
+  }
+  if (distanceSelect) {
+    distanceSelect.addEventListener('change', (e) => {
+      selectedDistance = e.target.value;
+    });
+  }
+  if (obstructedSelect) {
+    obstructedSelect.addEventListener('change', (e) => {
+      selectedObstructed = e.target.value;
+    });
+  }
+  if (obstructionSelect) {
+    obstructionSelect.addEventListener('change', (e) => {
+      selectedObstruction = e.target.value;
+    });
+  }
+  if (spacingSelect) {
+    spacingSelect.addEventListener('change', (e) => {
+      selectedSpacing = e.target.value;
+    });
+  }
+
   list_csv_files();
   checkSystemStatus();
   setInterval(checkSystemStatus, systemStatusInterval);

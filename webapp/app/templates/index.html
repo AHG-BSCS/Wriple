@@ -211,36 +211,87 @@
                 </main>
 
                 <!-- Aside Section -->
-                <aside class="w-5/12">
-                    <!-- Dataset -->
+                <aside class="w-5/12 overflow-y-auto max-h-full">
+                    <!-- Data Collection -->
                     <div class="monitor-hidden">
                         <div class="p-4 space-y-4 history-hidden">
                             <div>
-                                <label class=" font-semibold mb-1">Class:</label>
-                                <div class="flex gap-2">
-                                    <button id="presence-select" class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-amber-800 group-presence-btn">Presence</button>
-                                    <button id="no-presence-select" class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-amber-800 group-presence-btn">No Presence</button>
-                                </div>
+                                <label class="font-semibold mb-1">Class Type:</label>
+                                <select id="class-select" class="w-full border rounded px-2 py-1 mt-1 group-class-select">
+                                    <option value="0">Absence</option>
+                                    <option value="1">Presence</option>
+                                </select>
                             </div>
                             <div>
-                                <label class="font-semibold mb-1">Target:</label>
-                                <div class="flex gap-2">
-                                    <button id="1-select" class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-amber-800 group-target-btn">1</button>
-                                    <button id="2-select" class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-amber-800 group-target-btn">2</button>
-                                    <button id="3-select" class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-amber-800 group-target-btn">3</button>
-                                </div>
-                            </div>  
-                            <div >
-                                <label class="font-semibold">Is Obstructed:</label>
-                                <input type="text" id="obstruct-input" class="w-full border rounded px-2 py-1 mt-1" />
+                                <label class="font-semibold mb-1">Target Count:</label>
+                                <select id="target-select" class="w-full border rounded px-2 py-1 mt-1 group-target-select">
+                                    <option value="0">0</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                </select>
                             </div>
                             <div>
-                                <label class="font-semibold">Angle (°):</label>
-                                <input type="text" id="angle-input" class="w-full border rounded px-2 py-1 mt-1" />
+                                <label class="font-semibold mb-1">Angle of Target (°):</label>
+                                <select id="angle-select" class="w-full border rounded px-2 py-1 mt-1 group-angle-select">
+                                    <option value="360">360</option>
+                                    <option value="-45">-45</option>
+                                    <option value="-30">-30</option>
+                                    <option value="-15">-15</option>
+                                    <option value="0">0</option>
+                                    <option value="15">15</option>
+                                    <option value="30">30</option>
+                                    <option value="45">45</option>
+                                </select>
                             </div>
                             <div>
-                                <label class="font-semibold">Distance (m):</label>
-                                <input type="text" id="distance-input" class="w-full border rounded px-2 py-1 mt-1" />
+                                <label class="font-semibold mb-1">Distance of Target (m):</label>
+                                <select id="distance-select" class="w-full border rounded px-2 py-1 mt-1 group-distance-select">
+                                    <option value="-1">-1</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                    <option value="6">6</option>
+                                    <option value="7">7</option>
+                                    <option value="8">8</option>
+                                    <option value="9">9</option>
+                                    <option value="10">10</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="font-semibold mb-1">Is Obstructed:</label>
+                                <select id="obstructed-select" class="w-full border rounded px-2 py-1 mt-1 group-obstructed-select">
+                                    <option value="0">No</option>
+                                    <option value="1">Yes</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="font-semibold mb-1">Obstruction Type:</label>
+                                <select id="obstruction-select" class="w-full border rounded px-2 py-1 mt-1 group-obstruction-select">
+                                    <option value="1">None</option>
+                                    <option value="2">Plastic</option>
+                                    <option value="3">Wood</option>
+                                    <option value="4">Glass</option>
+                                    <option value="5">Concrete</option>
+                                    <option value="6">Metal</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="font-semibold mb-1">AP and ESP32 Spacing (m):</label>
+                                <select id="spacing-select" class="w-full border rounded px-2 py-1 mt-1 group-spacing-select">
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                    <option value="6">6</option>
+                                    <option value="7">7</option>
+                                    <option value="8">8</option>
+                                    <option value="9">9</option>
+                                    <option value="10">10</option>
+                                    <option value="11">11</option>
+                                    <option value="12">12</option>
+                                </select>
                             </div>
                         </div>
                     </div>
