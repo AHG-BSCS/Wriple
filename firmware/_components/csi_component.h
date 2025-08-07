@@ -10,13 +10,13 @@
 #include "ld2420_component.h"
 
 #define LED_GPIO_PIN GPIO_NUM_2
+#define LED_PACKET_COUNT_BLINK 30
 
-#define CSI_TAG "ESP32"
+#define CSI_TAG "CSI"
 
 SemaphoreHandle_t mutex = xSemaphoreCreateMutex();
 TimerHandle_t led_timer;
 
-static bool connected = false;
 static int total_packet_count = 0;
 
 static int sock = -1;
@@ -24,7 +24,7 @@ static sockaddr_in client_addr;
 static const char *target_ip = "192.168.11.222"; // IP address of the station
 
 void led_timer_callback(TimerHandle_t xTimer) {
-    if (connected && total_packet_count > 100) {
+    if (total_packet_count > LED_PACKET_COUNT_BLINK) {
         gpio_set_level(LED_GPIO_PIN, 1);
         total_packet_count = 0;
     }
