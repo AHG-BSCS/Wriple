@@ -150,7 +150,8 @@ class HumanDetectionSystem:
             'target1': self.radar_data[1],
             'target2': self.radar_data[2],
             'target3': self.radar_data[3],
-            'totalPacket': self.network_manager.packet_count,
+            'totalPacket': self.network_manager.packet_received_count,
+            'packetLoss': self.network_manager.get_packet_loss_rate(),
             'exp': self.radar_data[0],
             'modeStatus': mode_status
         }

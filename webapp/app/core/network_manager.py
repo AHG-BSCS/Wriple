@@ -19,7 +19,8 @@ class NetworkManager:
         # Receiver related variables
         self._is_listening = False
         self._socket = None
-        self._packet_count = 0
+        self._packet_transmit_count = 0
+        self._packet_received_count = 0
 
         # Transmitter related variables
         self._is_transmitting = False
@@ -99,7 +100,7 @@ class NetworkManager:
             try:
                 data, addr = self._socket.recvfrom(self._tx_buffer_size)
                 # Monitor Packet Count for automatic stopping during recording
-                self._packet_count += 1
+                self._packet_received_count += 1
                 
                 # Process data in separate thread
                 threading.Thread(
@@ -109,8 +110,8 @@ class NetworkManager:
                     daemon=True
                 ).start()
                 
-                if is_recording and self._packet_count >= self._record_packet_limit:
-                    self._logger.info(f'Recording completed with {self._packet_count} packets')
+                if is_recording and self._packet_received_count >= self._record_packet_limit:
+                    self._logger.info(f'Recording completed with {self._packet_received_count} packets')
                     break
                     
             # Implement a timeout to avoid continuous listening
@@ -128,7 +129,7 @@ class NetworkManager:
     def stop_listening(self):
         """Stop listening for packets"""
         self._is_listening = False
-        self._packet_count = 0
+        self._packet_received_count = 0
         if self._socket:
             self._socket.close()
             self._socket = None
@@ -143,6 +144,7 @@ class NetworkManager:
             tx_time = time.time()
             tx_time = int(tx_time * 1_000_000) % 1_000_000_000
             self._tx_timestamps.append(tx_time)
+            self._packet_transmit_count += 1
         except Exception as e:
             self._logger.error(f'Error sending request packet: {e}')
     
@@ -171,8 +173,22 @@ class NetworkManager:
         """Stop continuous packet transmission"""
         self._is_transmitting = False
         self._requesting_csi = False
+        self._packet_transmit_count = 0
         self.transmit_stop_request_packet()
         self._logger.info('Stopped packet transmission')
+
+    def get_packet_loss_rate(self) -> int:
+        """
+        Calculate packet loss rate based on transmitted and received packets
+        
+        Returns:
+            float: Packet loss rate as a percentage (rounded to two decimal places)
+        """
+        if self._packet_transmit_count == 0:
+            return 0.0
+        
+        loss = (self._packet_transmit_count - self._packet_received_count) / self._packet_transmit_count
+        return int(loss * 100)
 
     @property
     def is_listening(self) -> bool:
@@ -184,10 +200,10 @@ class NetworkManager:
         return self._is_listening
 
     @property
-    def packet_count(self) -> int:
+    def packet_received_count(self) -> int:
         """
         Get the current packet count
         Returns:
             int: Number of packets received
         """
-        return self._packet_count
+        return self._packet_received_count

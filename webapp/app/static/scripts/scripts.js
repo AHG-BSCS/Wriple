@@ -15,14 +15,13 @@ import {
 } from "./d3-3d-1.0.0/index.js";
 
 document.addEventListener('DOMContentLoaded', () => {
-  const collapseBtn = document.getElementById("collapse-btn")
-
-  const dashboardBtn = document.getElementById("dashboard-btn")
-  const historyBtn = document.getElementById("history-btn")
-  const datasetBtn = document.getElementById("dataset-btn")
-  // const settingBtn = document.getElementById("setting-btn")
-  // const infoBtn = document.getElementById("info-btn")
-  // const darkModeSwitch = document.getElementById("dark-mode-switch")
+  const collapseBtn = document.getElementById("collapse-btn");
+  const dashboardBtn = document.getElementById("dashboard-btn");
+  const historyBtn = document.getElementById("history-btn");
+  const datasetBtn = document.getElementById("dataset-btn");
+  // const settingBtn = document.getElementById("setting-btn");
+  // const infoBtn = document.getElementById("info-btn");
+  // const darkModeSwitch = document.getElementById("dark-mode-switch");
 
   // Sidebar Buttons States
   let isMonitorActive = false;
@@ -30,17 +29,17 @@ document.addEventListener('DOMContentLoaded', () => {
   let isDatasetActive = false;
 
   const presenceStatus = document.getElementById('presence-status');
-  const targetDetected = document.getElementById("target-detected")
-  const target1Dist = document.getElementById("target-1-distance")
-  const packetCount = document.getElementById("packets-count")
-  const experimentalValue = document.getElementById("exp-value")
+  const target1Dist = document.getElementById("target-1-distance");
+  const packetCount = document.getElementById("packets-count");
+  const packetLoss = document.getElementById("packet-loss");
+  const experimentalValue = document.getElementById("exp-value");
 
-  const esp32Status = document.getElementById("esp32-status")
-  const apStatus = document.getElementById("ap-status")
-  const rd03dStatus = document.getElementById("radar-status")
-  const flaskStatus = document.getElementById("flask-status")
-  const portStatus = document.getElementById("port-status")
-  const modelStatus = document.getElementById("model-status")
+  const esp32Status = document.getElementById("esp32-status");
+  const apStatus = document.getElementById("ap-status");
+  const rd03dStatus = document.getElementById("radar-status");
+  const flaskStatus = document.getElementById("flask-status");
+  const portStatus = document.getElementById("port-status");
+  const modelStatus = document.getElementById("model-status");
 
   const datasetList = document.getElementById('dataset-list');
 
@@ -308,9 +307,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function setHeaderTextToDefault() {
     presenceStatus.textContent = "No";
-    targetDetected.textContent = "0";
     target1Dist.textContent = "0.00m";
     packetCount.textContent = "0";
+    packetLoss.textContent = "0%";
     experimentalValue.textContent = "0";
   }
 
@@ -429,9 +428,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             else target1Dist.textContent = "0m";
 
-            const targetCount = countTarget(data);
-            targetDetected.textContent = targetCount;
-
             if (isMonitoring) {
               target1Angle.textContent = calculateAngle(data.target1[0], data.target1[1]).toFixed(2) + "°";
               target2Angle.textContent = calculateAngle(data.target2[0], data.target2[1]).toFixed(2) + "°";
@@ -463,6 +459,7 @@ document.addEventListener('DOMContentLoaded', () => {
             visualizeRadarData(data.target3);
           }
           packetCount.textContent = data.totalPacket;
+          packetLoss.textContent = `${data.packetLoss}%`;
           experimentalValue.textContent = data.exp;
         }
         else stopRecording();
