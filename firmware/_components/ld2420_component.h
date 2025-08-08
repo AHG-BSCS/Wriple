@@ -26,7 +26,7 @@
 #define GATES         16
 
 #define LD2420_TIMER_INTERVAL  333 // LD2420 updates every 300 ms in debug mode
-#define LD2420_READ_INTERVAL   3330000
+#define LD2420_READ_INTERVAL   333000
 #define LD2420_TAG "LD2420"
 
 static int64_t last_ld2420_read_time = 0;

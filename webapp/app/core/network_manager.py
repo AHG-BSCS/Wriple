@@ -27,10 +27,16 @@ class NetworkManager:
         self._tx_capture_interval = NetworkConfiguration.TX_CAPTURE_INTERVAL
         self._record_packet_limit = NetworkConfiguration.RECORD_PACKET_LIMIT
         self._tx_buffer_size = NetworkConfiguration.RX_BUFFER_SIZE
-        self._udp_packet = IP(dst=NetworkConfiguration.TX_ESP32_IP) / \
+
+        self._csi_req_packet = IP(dst=NetworkConfiguration.TX_ESP32_IP) / \
                          UDP(sport=NetworkConfiguration.TX_UDP_PORT, 
                              dport=NetworkConfiguration.TX_UDP_PORT) / \
-                         Raw(load=NetworkConfiguration.TX_PAYLOAD)
+                         Raw(load=NetworkConfiguration.TX_CSI_REQ_PAYLOAD)
+        
+        self._stop_req_packet = IP(dst=NetworkConfiguration.TX_ESP32_IP) / \
+                         UDP(sport=NetworkConfiguration.TX_UDP_PORT, 
+                             dport=NetworkConfiguration.TX_UDP_PORT) / \
+                         Raw(load=NetworkConfiguration.TX_STOP_REQ_PAYLOAD)
         
         self._ap_ssid = NetworkConfiguration.AP_SSID
         self._logger = setup_logger('NetworkManager')
@@ -130,15 +136,22 @@ class NetworkManager:
     
     # Transmitter
 
-    def send_single_packet(self):
-        """Send a single UDP packet"""
+    def transmit_csi_request_packet(self):
+        """Send a single UDP packet to generate CSI data"""
         try:
-            send(self._udp_packet, verbose=False)
+            send(self._csi_req_packet, verbose=False)
             tx_time = time.time()
             tx_time = int(tx_time * 1_000_000) % 1_000_000_000
             self._tx_timestamps.append(tx_time)
         except Exception as e:
-            self._logger.error(f'Error sending packet: {e}')
+            self._logger.error(f'Error sending request packet: {e}')
+    
+    def transmit_stop_request_packet(self):
+        """Send a single UDP packet to signal ESP32 to stop CSI request"""
+        try:
+            send(self._stop_req_packet, verbose=False)
+        except Exception as e:
+            self._logger.error(f'Error sending stop packet: {e}')
     
     def request_captured_data(self):
         """Start continuous packet transmission at specified intervals"""
@@ -146,7 +159,7 @@ class NetworkManager:
         
         def _transmit():
             if self._is_transmitting:
-                self.send_single_packet()
+                self.transmit_csi_request_packet()
                 
                 # Schedule next transmission
                 threading.Timer(self._tx_capture_interval, _transmit).start()
@@ -158,11 +171,8 @@ class NetworkManager:
         """Stop continuous packet transmission"""
         self._is_transmitting = False
         self._requesting_csi = False
+        self.transmit_stop_request_packet()
         self._logger.info('Stopped packet transmission')
-
-    def stop_csi_request(self):
-        self._requesting_csi = False
-        self._logger.info('Stopped CSI request')
 
     @property
     def is_listening(self) -> bool:

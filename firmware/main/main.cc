@@ -40,7 +40,7 @@ static void event_handler(void* arg, esp_event_base_t event_base,
                           int32_t event_id, void* event_data) {
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
         esp_wifi_connect();
-        ESP_LOGI(MAIN_TAG, "Connected to the AP");
+        ESP_LOGI(MAIN_TAG, "Station Mode Active");
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
         ESP_LOGI(MAIN_TAG, "Reconnecting to the AP");
         esp_wifi_connect();
@@ -76,6 +76,7 @@ extern "C" void app_main() {
     nvs_init();
     config_print();
     station_init();
+    esp_log_level_set("wifi", ESP_LOG_ERROR);
 
     // Add a delay for sensor to initialize
     vTaskDelay(pdMS_TO_TICKS(1000));

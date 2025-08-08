@@ -10,7 +10,7 @@
 #include "ld2420_component.h"
 
 #define LED_GPIO_PIN GPIO_NUM_2
-#define LED_PACKET_COUNT_BLINK 30
+#define LED_PACKET_COUNT_BLINK 15
 
 #define CSI_TAG "CSI"
 
@@ -18,18 +18,17 @@ SemaphoreHandle_t mutex = xSemaphoreCreateMutex();
 TimerHandle_t led_timer;
 
 static int total_packet_count = 0;
-
 static int sock = -1;
 static sockaddr_in client_addr;
 static const char *target_ip = "192.168.11.222"; // IP address of the station
 
-void led_timer_callback(TimerHandle_t xTimer) {
-    if (total_packet_count > LED_PACKET_COUNT_BLINK) {
-        gpio_set_level(LED_GPIO_PIN, 1);
-        total_packet_count = 0;
-    }
-    else {
-        gpio_set_level(LED_GPIO_PIN, 0);
+bool is_led_high = false;
+
+void blink_led() {
+    if (total_packet_count == 0) {
+        is_led_high = !is_led_high;
+        gpio_set_level(LED_GPIO_PIN, is_led_high);
+        total_packet_count = LED_PACKET_COUNT_BLINK;
     }
 }
 
@@ -63,14 +62,16 @@ void _wifi_csi_callback(void *ctx, wifi_csi_info_t *data) {
 
         // Send the CSI data to the station
         sendto(sock, ss.str().c_str(), strlen(ss.str().c_str()), 0, (struct sockaddr *)&client_addr, sizeof(client_addr));
-        total_packet_count++;
+
+        blink_led();
+        total_packet_count--;
         xSemaphoreGive(mutex);
     }
-}
-
-void configure_led() {
-    gpio_reset_pin(LED_GPIO_PIN);
-    gpio_set_direction(LED_GPIO_PIN, GPIO_MODE_OUTPUT);
+    else if (data[0].rx_ctrl.sig_len == 86) {
+        is_led_high = false;
+        gpio_set_level(LED_GPIO_PIN, is_led_high);
+        total_packet_count = 0;
+    }
 }
 
 void csi_init() {
@@ -82,11 +83,9 @@ void csi_init() {
     csi_config.channel_filter_en = 0;
     csi_config.manu_scale = 0;
 
-    configure_led();
-    led_timer = xTimerCreate("LedTimer", pdMS_TO_TICKS(1000), pdTRUE, (void *)0, led_timer_callback);
-    if (led_timer != NULL) {
-        xTimerStart(led_timer, 0);
-    }
+    // Configure LED
+    gpio_reset_pin(LED_GPIO_PIN);
+    gpio_set_direction(LED_GPIO_PIN, GPIO_MODE_OUTPUT);
 
     ESP_ERROR_CHECK(esp_wifi_set_csi_config(&csi_config));
     ESP_ERROR_CHECK(esp_wifi_set_csi_rx_cb(&_wifi_csi_callback, NULL));
