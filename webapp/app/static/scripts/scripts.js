@@ -993,9 +993,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function tempConfigUI() {
     amplitudeHeatmap.radius(1, 0);
-    amplitudeHeatmap.max(40);
+    amplitudeHeatmap.max(amplitudeMaxSlider.value);
     phaseHeatmap.radius(1, 0);
-    phaseHeatmap.max(10);
+    phaseHeatmap.max(phaseMaxSlider.value);
     gatesHeatmap.radius(1, 0);
     gatesHeatmap.max(1);
 

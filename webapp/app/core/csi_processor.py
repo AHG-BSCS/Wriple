@@ -5,6 +5,7 @@ import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 from config.settings import VisualizerConfiguration, PredictionConfiguration, RecordingConfiguration
 from utils.logger import setup_logger
+from scipy.signal import butter, filtfilt
 
 
 class CSIProcessor:
@@ -13,11 +14,24 @@ class CSIProcessor:
     def __init__(self):
         self._amplitude_queue = []
         self._phase_queue = []
-        self._signal_window = PredictionConfiguration.SIGNAL_WINDOW
-        self._std_threshold = VisualizerConfiguration.D3_STD_THRESHOLD
+
+        self._heat_amp_start = VisualizerConfiguration.HEAT_AMP_START_SUB
+        self._heat_amp_end = VisualizerConfiguration.HEAT_AMP_END_SUB
+        self._heat_phase_start = VisualizerConfiguration.HEAT_PHASE_START_SUB
+        self._heat_phase_end = VisualizerConfiguration.HEAT_PHASE_END_SUB
+        self._heat_signal_window = VisualizerConfiguration.HEAT_SIGNAL_WINDOW
+        self._heat_penalty_factor = VisualizerConfiguration.HEAT_PENALTY_FACTOR
+        self._heat_diff_threshold = VisualizerConfiguration.HEAT_DIFF_THRESHOLD
         # Use a scaler model based from dataset to avoid fit_transform()
-        self._mm_scaler = MinMaxScaler(VisualizerConfiguration.D3_VISUALIZER_SCALE)
-        self._max_packets = RecordingConfiguration.MONITOR_QUEUE_LIMIT
+        self._d3_std_threshold = VisualizerConfiguration.D3_STD_THRESHOLD
+        self._d3_scaler = MinMaxScaler(VisualizerConfiguration.D3_VISUALIZER_SCALE)
+
+        self._cutoff = VisualizerConfiguration.CUTOFF
+        self._fs = VisualizerConfiguration.FS
+        self._order = VisualizerConfiguration.ORDER
+        
+        self._pred_signal_window = PredictionConfiguration.PRED_SIGNAL_WINDOW
+        self._queue_max_packets = RecordingConfiguration.MONITOR_QUEUE_LIMIT
         self._logger = setup_logger('CSIProcessor')
     
     def compute_amplitude_phase(self, csi_data: list) -> tuple[list, list]:
@@ -45,18 +59,27 @@ class CSIProcessor:
         
         return amplitudes, phases
     
-    def buffer_amplitude_phase(self, parsed_data: list):
+    def butter_lowpass_filter(self, data):
+        nyquist = 0.5 * self._fs
+        normal_cutoff = self._cutoff / nyquist
+        b, a = butter(self._order, normal_cutoff, btype='low', analog=False)
+        y = filtfilt(b, a, data, axis=0)
+        return y
+    
+    def queue_amplitude_phase(self, parsed_data: list):
         """
         Add amplitude and phase data to processing queues
         
         Args:
             parsed_data: Separated and validated Wi-Fi CSI data from ESP32
         """
-
         amplitudes, phases = self.compute_amplitude_phase(parsed_data)
+        amplitudes = self.butter_lowpass_filter(np.array(amplitudes)).tolist()
+        phases = np.unwrap(phases).tolist()
+        phases = self.butter_lowpass_filter(np.array(phases)).tolist()
         
         # Remove old signals if queue exceeds limit
-        while len(self._amplitude_queue) >= self._max_packets:
+        while len(self._amplitude_queue) >= self._queue_max_packets:
             self._amplitude_queue.pop(0)
             self._phase_queue.pop(0)
         
@@ -79,8 +102,8 @@ class CSIProcessor:
             mean = np.mean(column)
             std_dev = np.std(column)
             
-            lower_threshold.append(mean - self._std_threshold * std_dev)
-            upper_threshold.append(mean + self._std_threshold * std_dev)
+            lower_threshold.append(mean - self._d3_std_threshold * std_dev)
+            upper_threshold.append(mean + self._d3_std_threshold * std_dev)
 
         self._logger.debug(f'Lower thresholds: {lower_threshold}')
         self._logger.debug(f'Upper thresholds: {upper_threshold}')
@@ -136,8 +159,8 @@ class CSIProcessor:
         phases_transposed = list(map(list, zip(*self._phase_queue)))
         
         # Scale data for visualization
-        scaled_amplitudes = self._mm_scaler.fit_transform(amps_transposed).T
-        scaled_phases = self._mm_scaler.fit_transform(phases_transposed).T
+        scaled_amplitudes = self._d3_scaler.fit_transform(amps_transposed).T
+        scaled_phases = self._d3_scaler.fit_transform(phases_transposed).T
         
         # Get thresholds
         amp_lower, amp_upper = self.get_subcarrier_threshold(scaled_amplitudes.T)
@@ -162,41 +185,70 @@ class CSIProcessor:
         
         return signal_coordinates
     
-    def get_latest_amplitude(self, start_subcarrier: int, end_subcarrier: int) -> list:
+    def get_latest_amplitude(self) -> list:
         """
-        Get subset of latest amplitude data
-
-        Args:
-            start_idx: Starting subcarrier for amplitude data
-            end_idx: Ending subcarrier for amplitude data
-
+        Get the latest amplitude data, preprocessed by subtracting the rolling mean for each subcarrier,
+        and apply a penalty to values far from the mean to improve heatmap contrast.
+    
         Returns:
-            list: Amplitudes containing specific subcarriers. The 0 is the permanent y axis in heatmap
+            list: Highlighted amplitudes
         """
         if not self._amplitude_queue:
             self._logger.warning('Amplitude queue is empty.')
             return []
-        
-        latest_amplitudes = self._amplitude_queue[-1][start_subcarrier:end_subcarrier]
-        return latest_amplitudes
+        if len(self._amplitude_queue) < self._heat_signal_window:
+            self._logger.warning(f'Not enough packets for rolling mean (window_size={self._heat_signal_window})')
+            return self._amplitude_queue[-1][self._heat_amp_start:self._heat_amp_end]
     
-    def get_latest_phase(self, start_subcarrier:int, end_subcarrier: int) -> list:
+        # Stack the last window_size packets
+        window = np.array(self._amplitude_queue[-self._heat_signal_window:])
+        mean_per_subcarrier = np.mean(window[:, self._heat_amp_start:self._heat_amp_end], axis=0)
+        # Subtract mean to highlight outliers
+        latest_amplitudes = np.array(self._amplitude_queue[-1][self._heat_amp_start:self._heat_amp_end])
+        diff = latest_amplitudes - mean_per_subcarrier
+    
+        # Apply penalty: suppress small differences, amplify large ones
+        highlighted = []
+        for d in diff:
+            if abs(d) < self._heat_diff_threshold:
+                highlighted.append(0.0)
+            else:
+                # Amplify outliers (e.g., square the difference and keep the sign)
+                highlighted.append(np.sign(d) * (abs(d) ** self._heat_penalty_factor))
+        return highlighted
+    
+    def get_latest_phase(self) -> list:
         """
-        Get subset of latest phase data
-
-        Args:
-            start_idx: Starting subcarrier for phase data
-            end_idx: Ending subcarrier for phase data
-
+        Get the latest phases data, preprocessed by subtracting the rolling mean for each subcarrier,
+        and apply a penalty to values far from the mean to improve heatmap contrast.
+        
         Returns:
-            list: Phases containing specific subcarriers. The 0 is the permanent y axis in heatmap.
+            list: Highlighted phases
         """
         if not self._phase_queue:
             self._logger.warning('Phase queue is empty.')
             return []
         
-        latest_phases = self._phase_queue[-1][start_subcarrier:end_subcarrier]
-        return latest_phases
+        if len(self._phase_queue) < self._heat_signal_window:
+            self._logger.warning(f'Not enough packets for rolling mean (window_size={self._heat_signal_window})')
+            return self._phase_queue[-1][self._heat_phase_start:self._heat_phase_end]
+        
+        # Stack the last window_size packets
+        window = np.array(self._phase_queue[-self._heat_signal_window:])
+        mean_per_subcarrier = np.mean(window[:, self._heat_phase_start:self._heat_phase_end], axis=0)
+        # Subtract mean to highlight outliers
+        latest_phases = np.array(self._phase_queue[-1][self._heat_phase_start:self._heat_phase_end])
+        diff = latest_phases - mean_per_subcarrier
+
+        # Apply penalty: suppress small differences, amplify large ones
+        highlighted = []
+        for d in diff:
+            if abs(d) < self._heat_diff_threshold:
+                highlighted.append(0.0)
+            else:
+                # Amplify outliers (e.g., square the difference and keep the sign)
+                highlighted.append(np.sign(d) * (abs(d) ** self._heat_penalty_factor))
+        return highlighted
     
     def get_amplitude_window(self) -> list:
         """
@@ -205,10 +257,11 @@ class CSIProcessor:
         Returns:
             list: Amplitude data for the current signal window, or None if not enough data
         """
-        if (len(self._amplitude_queue) >= self._signal_window * 2):
-            return self._amplitude_queue[:self._signal_window]
+        if (len(self._amplitude_queue) >= self._pred_signal_window * 2):
+            return self._amplitude_queue[:self._pred_signal_window]
         else:
             return None
+    
     def get_queue_size(self) -> int:
         """
         Get current queue size
@@ -232,4 +285,4 @@ class CSIProcessor:
         Returns:
             int: Maximum packets limit
         """
-        return self._max_packets
+        return self._queue_max_packets

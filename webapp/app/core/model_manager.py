@@ -23,7 +23,7 @@ class ModelManager:
         self._presence_model = None
         self.thresholds = None
         self.mmWave_thresholds = None
-        self.signal_window = PredictionConfiguration.SIGNAL_WINDOW
+        self.signal_window = PredictionConfiguration.PRED_SIGNAL_WINDOW
         self._logger = setup_logger('ModelManager')
 
         self.load_threshold()

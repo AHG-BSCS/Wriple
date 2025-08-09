@@ -57,7 +57,7 @@ class HumanDetectionSystem:
         parsed_data = PacketParser.parse_csi_data(raw_data)
 
         if self.is_monitoring:
-            self.csi_processor.buffer_amplitude_phase(parsed_data[5])
+            self.csi_processor.queue_amplitude_phase(parsed_data[5])
 
             if parsed_data[0]: # If rd03d data is valid
                 # Change the index 0 for experimental data

@@ -2,7 +2,6 @@
 
 from flask import jsonify, request, render_template
 from .validators import validate_recording_parameters, validate_class, validate_obstruction
-from config.settings import VisualizerConfiguration as config
 
 
 def create_api_routes(app, detection_system):
@@ -99,10 +98,7 @@ def create_api_routes(app, detection_system):
     def fetch_amplitude_data():
         """Get latest amplitude data subset"""
         try:
-            latest_amplitudes = detection_system.csi_processor.get_latest_amplitude(
-                                    config.AMP_HEATMAP_START, 
-                                    config.AMP_HEATMAP_END
-                               )
+            latest_amplitudes = detection_system.csi_processor.get_latest_amplitude()
             return jsonify({'latestAmplitudes': latest_amplitudes})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
@@ -111,10 +107,7 @@ def create_api_routes(app, detection_system):
     def fetch_phase_data():
         """Get latest phase data subset"""
         try:
-            latest_phases = detection_system.csi_processor.get_latest_phase(
-                                config.PHASE_HEATMAP_START, 
-                                config.PHASE_HEATMAP_END
-                           )
+            latest_phases = detection_system.csi_processor.get_latest_phase()
             return jsonify({'latestPhases': latest_phases})
         except Exception as e:
             return jsonify({'error': str(e)}), 500

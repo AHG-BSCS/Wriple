@@ -25,8 +25,7 @@ class RecordingConfiguration:
     Configuration for CSI data recording
     Packet and queue limits are based on TX interval
     """
-    MONITOR_QUEUE_LIMIT: int = 60
-    RECORD_PACKET_LIMIT: int = 300
+    MONITOR_QUEUE_LIMIT: int = 90
     MMWAVE_QUEUE_LIMIT: int = 12
     RECORD_PARAMETERS: list = [None, None, None, None, None, None, None]
 
@@ -54,13 +53,23 @@ class VisualizerConfiguration:
     """Configuration for data visualizers"""
     AVERAGED: bool = True
     AVERAGED_WINDOWS: list = [(0, 10), (10, -1)]
-    SUBCARRIER_COUNT: int = 306
-    AMP_HEATMAP_START = 3
-    AMP_HEATMAP_END = 88
-    PHASE_HEATMAP_START = 6
-    PHASE_HEATMAP_END = 27
+    SUBCARRIER_COUNT: int = 192
+
+    HEAT_SIGNAL_WINDOW: int = 10
+    HEAT_AMP_START_SUB:int = 3
+    HEAT_AMP_END_SUB:int = 88
+    HEAT_PHASE_START_SUB:int = 6
+    HEAT_PHASE_END_SUB:int = 27
+    HEAT_PENALTY_FACTOR: int = 1.0
+    HEAT_DIFF_THRESHOLD: int = 3
+
+    CUTOFF:float = 0.1
+    FS:int = 1
+    ORDER:int = 5
+
     D3_STD_THRESHOLD: float = 1.75
     D3_VISUALIZER_SCALE: tuple = (-10, 10)
+
     # 0: RSSI, 1: EXP, 2: Target 1, 3: Target 2, 4: Target 3
     RADAR_DATA: list = [0, 0, [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
     # 20 * doppler with 16 gates
@@ -78,13 +87,14 @@ class ModelConfiguration:
     ADABOOST_PATH: str = 'model/wriple_v3_AdaBoost.pkl'
     CONVLSTM_PATH: str = 'model/wriple_v3_ConvLSTM.keras'
     TCN_PATH: str = 'model/wriple_v3_TCN.keras'
+
     THRESHOLD_MODEL_PATH: str = 'model/wriple_v3_Thres_Model.json'
     THRESHOLD_MMWAVE_VIZ_PATH: str = 'model/wriple_v3_Thres_Visual.json'
 
 
 class PredictionConfiguration:
     """Configuration for data preprocessing and prediction"""
-    SIGNAL_WINDOW: int = 7
+    PRED_SIGNAL_WINDOW: int = 7
 
 
 class FlaskConfiguration:

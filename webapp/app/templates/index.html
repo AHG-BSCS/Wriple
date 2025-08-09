@@ -162,7 +162,7 @@
 
             <div class="flex flex-1 overflow-hidden">
                 <!-- Main Section -->
-                <main class="py-4 px-16 overflow-scroll">
+                <main class="pt-4 px-16 pb-12 overflow-scroll">
                     <!-- Radar -->
                     <div id="radar-container" class="rounded shadow relative inline-block">
                         <img src="static/images/radar-bg.png"/>
@@ -171,8 +171,8 @@
                     <!-- Amplitude Heatmap -->
                     <div id="amplitude-heatmap-container" class="flex justify-center mt-4 dataset-hidden">
                         <div class="flex flex-col items-center mr-4">
-                            <span id="amplitude-max-value" class="font-semibold text-gray-800">40</span>
-                            <input id="amplitude-max-slider" type="range" min="10" max="99" step="1" value="40" class="w-4 h-44 bg-slate-400 rounded-lg appearance-none"/>
+                            <span id="amplitude-max-value" class="font-semibold text-gray-800">20</span>
+                            <input id="amplitude-max-slider" type="range" min="-30" max="50" step="1" value="20" class="w-4 h-44 bg-slate-400 rounded-lg appearance-none"/>
                         </div>
                         <div class="w-2/4">
                             <canvas id="amplitude-heatmap" class="w-full h-52 rounded-t shadow"></canvas>
