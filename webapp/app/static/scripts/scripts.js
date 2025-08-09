@@ -46,21 +46,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const radarContainer = document.getElementById('radar-container');
   const pointsContainer = document.getElementById('points');
 
-  const classSelect = document.getElementById('class-select');
-  const targetSelect = document.getElementById('target-select');
-  const angleSelect = document.getElementById('angle-select');
-  const distanceSelect = document.getElementById('distance-select');
-  const obstructedSelect = document.getElementById('obstructed-select');
-  const obstructionSelect = document.getElementById('obstruction-select');
-  const spacingSelect = document.getElementById('spacing-select');
-
-  let selectedClass = classSelect ? classSelect.value : undefined;
-  let selectedTargetCount = targetSelect ? targetSelect.value : undefined;
-  let selectedAngle = angleSelect ? angleSelect.value : undefined;
-  let selectedDistance = distanceSelect ? distanceSelect.value : undefined;
-  let selectedObstructed = obstructedSelect ? obstructedSelect.value : undefined;
-  let selectedObstruction = obstructionSelect ? obstructionSelect.value : undefined;
-  let selectedSpacing = spacingSelect ? spacingSelect.value : undefined;
+  const classSelection = document.getElementById('class-select');
+  const targetSelection = document.getElementById('target-select');
+  const angleSelection = document.getElementById('angle-select');
+  const distanceSelection = document.getElementById('distance-select');
+  const obstructedSelection = document.getElementById('obstructed-select');
+  const obstructionSelection = document.getElementById('obstruction-select');
+  const spacingSelection = document.getElementById('spacing-select');
 
   const target1Angle = document.getElementById('target1-angle');
   const target2Angle = document.getElementById('target2-angle');
@@ -145,6 +137,66 @@ document.addEventListener('DOMContentLoaded', () => {
   let amplitudeBuffer = Array.from({ length: SUBCARRIER_COUNT }, () => []);
   let phaseBuffer = Array.from({ length: SUBCARRIER_COUNT }, () => []);
   let tick = 0;
+
+  const OPTIONS = {
+    class: [
+      { value: '0', label: 'Absence' },
+      { value: '1', label: 'Presence' }
+    ],
+    target: [
+      { value: '0', label: 'No Target' },
+      { value: '1', label: '1' },
+      { value: '2', label: '2' },
+      { value: '3', label: '3' }
+    ],
+    angle: [
+      { value: '360', label: 'No Target' },
+      { value: '-45', label: '-45°' },
+      { value: '-30', label: '-30°' },
+      { value: '-15', label: '-15°' },
+      { value: '0', label: '0°' },
+      { value: '15', label: '15°' },
+      { value: '30', label: '30°' },
+      { value: '45', label: '45°' }
+    ],
+    distance: [
+      { value: '-1', label: 'No Target' },
+      { value: '1', label: '1m' },
+      { value: '2', label: '2m' },
+      { value: '3', label: '3m' },
+      { value: '4', label: '4m' },
+      { value: '5', label: '5m' },
+      { value: '6', label: '6m' },
+      { value: '7', label: '7m' },
+      { value: '8', label: '8m' },
+      { value: '9', label: '9m' },
+      { value: '10', label: '10m' }
+    ],
+    obstructed: [
+      { value: '0', label: 'No' },
+      { value: '1', label: 'Yes' }
+    ],
+    obstruction: [
+      { value: '0', label: 'None' },
+      { value: '1', label: 'Plastic' },
+      { value: '2', label: 'Wood' },
+      { value: '3', label: 'Glass' },
+      { value: '4', label: 'Concrete' },
+      { value: '5', label: 'Metal' }
+    ],
+    spacing: [
+      { value: '3', label: '3m' },
+      { value: '4', label: '4m' },
+      { value: '5', label: '5m' },
+      { value: '6', label: '6m' },
+      { value: '7', label: '7m' },
+      { value: '8', label: '8m' },
+      { value: '9', label: '9m' },
+      { value: '10', label: '10m' },
+      { value: '11', label: '11m' },
+      { value: '12', label: '12m' }
+    ]
+  };
   
 
   /* Visualizer Functions */
@@ -529,13 +581,13 @@ document.addEventListener('DOMContentLoaded', () => {
       method: "POST",
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        class_label: selectedClass,
-        target_count: selectedTargetCount,
-        angle: selectedAngle,
-        distance_t1: selectedDistance,
-        obstructed: selectedObstructed,
-        obstruction: selectedObstruction,
-        spacing: selectedSpacing
+        class_label: classSelection.value,
+        target_count: targetSelection.value,
+        angle: angleSelection.value,
+        distance_t1: distanceSelection.value,
+        obstructed: obstructedSelection.value,
+        obstruction: obstructionSelection.value,
+        spacing: spacingSelection.value
       })
     })
     const data = await response.json();
@@ -1021,11 +1073,7 @@ document.addEventListener('DOMContentLoaded', () => {
             suggestedMax: -20
           }
         },
-        plugins: {
-          legend: {
-            display: false
-          }
-        }
+        plugins: { legend: { display: false } }
       }
     });
   }
@@ -1050,45 +1098,59 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 
+  function populateSelect(select, options, allowedValues = null) {
+    select.innerHTML = '';
+    options.forEach(opt => {
+      if (!allowedValues || allowedValues.includes(opt.value)) {
+        const option = document.createElement('option');
+        option.value = opt.value;
+        option.textContent = opt.label;
+        select.appendChild(option);
+      }
+    });
+  }
+
+  function updateOptionsForClass(classValue) {
+    if (classValue === '0') { // Absence
+      // Only the first option for each (index 0)
+      populateSelect(targetSelection, OPTIONS.target, [OPTIONS.target[0].value]);
+      populateSelect(angleSelection, OPTIONS.angle, [OPTIONS.angle[0].value]);
+      populateSelect(distanceSelection, OPTIONS.distance, [OPTIONS.distance[0].value]);
+    } else if (classValue === '1') { // Presence
+      // All except the first option for each (index 1+)
+      populateSelect(targetSelection, OPTIONS.target, OPTIONS.target.slice(1).map(opt => opt.value));
+      populateSelect(angleSelection, OPTIONS.angle, OPTIONS.angle.slice(1).map(opt => opt.value));
+      populateSelect(distanceSelection, OPTIONS.distance, OPTIONS.distance.slice(1).map(opt => opt.value));
+    }
+  }
+  
+  // Update obstruction options based on obstructed selection
+  function updateObstructionOptions(obstructedValue) {
+    if (obstructedValue === '0') { // Not obstructed, only show "None"
+      populateSelect(obstructionSelection, OPTIONS.obstruction, [OPTIONS.obstruction[0].value]);
+    } else { // Obstructed, show all except "None"
+      populateSelect(obstructionSelection, OPTIONS.obstruction, OPTIONS.obstruction.slice(1).map(opt => opt.value));
+    }
+  }
+
+  classSelection.addEventListener('change', (e) => { updateOptionsForClass(e.target.value); });
+  obstructedSelection.addEventListener('change', (e) => { updateObstructionOptions(e.target.value); });
+
+
   /* Initial Loading */
 
 
-  if (classSelect) {
-    classSelect.addEventListener('change', (e) => {
-      selectedClass = e.target.value;
-    });
-  }
-  if (targetSelect) {
-    targetSelect.addEventListener('change', (e) => {
-      selectedTargetCount = e.target.value;
-    });
-  }
-  if (angleSelect) {
-    angleSelect.addEventListener('change', (e) => {
-      selectedAngle = e.target.value;
-    });
-  }
-  if (distanceSelect) {
-    distanceSelect.addEventListener('change', (e) => {
-      selectedDistance = e.target.value;
-    });
-  }
-  if (obstructedSelect) {
-    obstructedSelect.addEventListener('change', (e) => {
-      selectedObstructed = e.target.value;
-    });
-  }
-  if (obstructionSelect) {
-    obstructionSelect.addEventListener('change', (e) => {
-      selectedObstruction = e.target.value;
-    });
-  }
-  if (spacingSelect) {
-    spacingSelect.addEventListener('change', (e) => {
-      selectedSpacing = e.target.value;
-    });
-  }
+  populateSelect(classSelection, OPTIONS.class);
+  populateSelect(targetSelection, OPTIONS.target);
+  populateSelect(angleSelection, OPTIONS.angle);
+  populateSelect(distanceSelection, OPTIONS.distance);
+  populateSelect(obstructedSelection, OPTIONS.obstructed);
+  populateSelect(obstructionSelection, OPTIONS.obstruction);
+  populateSelect(spacingSelection, OPTIONS.spacing);
 
+  updateOptionsForClass(classSelection.value);
+  updateObstructionOptions(obstructedSelection.value);
+  
   list_csv_files();
   checkSystemStatus();
   setInterval(checkSystemStatus, systemStatusInterval);

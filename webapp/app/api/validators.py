@@ -89,14 +89,14 @@ def validate_recording_parameters(params) -> bool:
             logger.error(f'Invalid obstructed value: {obstructed}')
             return False
 
-        # Validate obstruction: must be integer 1-6 (None, Plastic, Wood, Glass, Concrete, Metal)
+        # Validate obstruction: must be integer 0-5 (None, Plastic, Wood, Glass, Concrete, Metal)
         obstruction = params.get('obstruction')
         try:
             obstruction_int = int(obstruction)
         except (ValueError, TypeError):
             logger.error(f'Invalid obstruction type: {obstruction}')
             return False
-        if obstruction_int < 1 or obstruction_int > 6:
+        if obstruction_int < 0 or obstruction_int > 5:
             logger.error(f'Invalid obstruction value: {obstruction}')
             return False
 
@@ -167,11 +167,18 @@ def validate_obstruction(params) -> bool:
         obstruction = int(params.get('obstruction'))
 
         if obstructed == 0:
-            # If not obstructed, obstruction should be 1 (None)
-            if obstruction == 1:
+            # If not obstructed, obstruction should be 1
+            if obstruction == 0:
                 return True
             else:
                 logger.error(f'Invalid obstruction type when not obstructed.')
+                return False
+        # If obstructed, obstruction should not be 1
+        elif obstructed == 1:
+            if obstruction in [1, 2, 3, 4, 5]:
+                return True
+            else:
+                logger.error(f'Invalid obstruction type when obstructed.')
                 return False
     except (ValueError, TypeError) as e:
         logger.error(f'Error validating obstruction type: {e}')
