@@ -61,8 +61,8 @@ class VisualizerConfiguration:
     PHASE_HEATMAP_END = 27
     D3_STD_THRESHOLD: float = 1.75
     D3_VISUALIZER_SCALE: tuple = (-10, 10)
-    # 0: RSSI, 1: Target 1, 2: Target 2, 3: Target 3
-    RADAR_DATA: list = [0, [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+    # 0: RSSI, 1: EXP, 2: Target 1, 3: Target 2, 4: Target 3
+    RADAR_DATA: list = [0, 0, [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
     # 20 * doppler with 16 gates
     MMWAVE_DATA: list = [[0] * 16, [0] * 16, [0] * 16, [0] * 16,
                         [0] * 16, [0] * 16, [0] * 16, [0] * 16,

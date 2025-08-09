@@ -414,40 +414,26 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(response => response.json())
       .then(data => {
         if (data.modeStatus != -1) {
-          // if (parseInt(data.rssi) > -60) {
-          //   setHeaderTextToDefault();
-          //   setAsideTextToDefault();
-          //   presenceStatus.textContent = "Too Close";
-          // }
-          // Stop displaying radar data if no targets are detected by the model
-          // else if (data.presence == 1) {
-          if (true) { // Temporary for debugging
-            presenceStatus.textContent = data.presence;
-            if (data.target1[1] != '0') {
-              target1Dist.textContent = calculateDistance(data.target1[0], data.target1[1]).toFixed(2) + "m";
-            }
-            else target1Dist.textContent = "0m";
+          if (parseInt(data.rssi) > -60) presenceStatus.textContent = "Too Close";
+          else presenceStatus.textContent = data.presence;
 
-            if (isMonitoring) {
-              target1Angle.textContent = calculateAngle(data.target1[0], data.target1[1]).toFixed(2) + "°";
-              target2Angle.textContent = calculateAngle(data.target2[0], data.target2[1]).toFixed(2) + "°";
-              target3Angle.textContent = calculateAngle(data.target3[0], data.target3[1]).toFixed(2) + "°";
-              target1Distance.textContent = calculateDistance(data.target1[0], data.target1[1]).toFixed(2) + "m";
-              target2Distance.textContent = calculateDistance(data.target2[0], data.target2[1]).toFixed(2) + "m";
-              target3Distance.textContent = calculateDistance(data.target3[0], data.target3[1]).toFixed(2) + "m";
-              target1Speed.textContent = data.target1[2] + "cm/s";
-              target2Speed.textContent = data.target2[2] + "cm/s";
-              target3Speed.textContent = data.target3[2] + "cm/s";
-              target1DistRes.textContent = data.target1[3];
-              target2DistRes.textContent = data.target2[3];
-              target3DistRes.textContent = data.target3[3];
-            }
-          }
-          else {
-            presenceStatus.textContent = "No";
-            setHeaderTextToDefault();
-            setAsideTextToDefault();
-            pointsContainer.innerHTML = '';
+          if (data.target1[1] != '0')
+            target1Dist.textContent = calculateDistance(data.target1[0], data.target1[1]).toFixed(2) + "m";
+          else target1Dist.textContent = "0m";
+
+          if (isMonitoring) {
+            target1Angle.textContent = calculateAngle(data.target1[0], data.target1[1]).toFixed(2) + "°";
+            target2Angle.textContent = calculateAngle(data.target2[0], data.target2[1]).toFixed(2) + "°";
+            target3Angle.textContent = calculateAngle(data.target3[0], data.target3[1]).toFixed(2) + "°";
+            target1Distance.textContent = calculateDistance(data.target1[0], data.target1[1]).toFixed(2) + "m";
+            target2Distance.textContent = calculateDistance(data.target2[0], data.target2[1]).toFixed(2) + "m";
+            target3Distance.textContent = calculateDistance(data.target3[0], data.target3[1]).toFixed(2) + "m";
+            target1Speed.textContent = data.target1[2] + "cm/s";
+            target2Speed.textContent = data.target2[2] + "cm/s";
+            target3Speed.textContent = data.target3[2] + "cm/s";
+            target1DistRes.textContent = data.target1[3];
+            target2DistRes.textContent = data.target2[3];
+            target3DistRes.textContent = data.target3[3];
           }
 
           // This data must be updated
@@ -460,7 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
           packetCount.textContent = data.totalPacket;
           packetLoss.textContent = `${data.packetLoss}%`;
-          experimentalValue.textContent = data.exp;
+          experimentalValue.textContent = data.rssi;
         }
         else stopRecording();
       })

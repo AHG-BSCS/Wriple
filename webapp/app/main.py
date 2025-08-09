@@ -63,7 +63,7 @@ class HumanDetectionSystem:
                 # Change the index 0 for experimental data
                 # RSSI = parsed_data[3]
                 # RG 10 = parsed_data[20][3]
-                self.radar_data = [parsed_data[3], parsed_data[6], parsed_data[7], parsed_data[8]]
+                self.radar_data = [parsed_data[3], parsed_data[20][3], parsed_data[6], parsed_data[7], parsed_data[8]]
             
             # Remove oldest mmwave data if it exceeds the limit
             while len(self.mmwave_data) > self.mmwave_queue_limit:
@@ -147,12 +147,13 @@ class HumanDetectionSystem:
         
         return {
             'presence': presence_prediction,
-            'target1': self.radar_data[1],
-            'target2': self.radar_data[2],
-            'target3': self.radar_data[3],
+            'target1': self.radar_data[2],
+            'target2': self.radar_data[3],
+            'target3': self.radar_data[4],
             'totalPacket': self.network_manager.packet_received_count,
             'packetLoss': self.network_manager.get_packet_loss_rate(),
-            'exp': self.radar_data[0],
+            'rssi': self.radar_data[0],
+            'exp': self.radar_data[1],
             'modeStatus': mode_status
         }
     
