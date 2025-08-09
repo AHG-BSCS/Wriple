@@ -176,6 +176,8 @@ class HumanDetectionSystem:
             self.record_parameters = [
                 int(params['class_label']),
                 int(params['target_count']),
+                int(params['state']),
+                int(params['activity']),
                 int(params['angle']),
                 int(params['distance_t1']),
                 int(params['obstructed']),

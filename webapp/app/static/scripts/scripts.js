@@ -48,6 +48,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const classSelection = document.getElementById('class-select');
   const targetSelection = document.getElementById('target-select');
+  const stateSelection = document.getElementById('state-select');
+  const activitySelection = document.getElementById('activity-select');
   const angleSelection = document.getElementById('angle-select');
   const distanceSelection = document.getElementById('distance-select');
   const obstructedSelection = document.getElementById('obstructed-select');
@@ -149,8 +151,20 @@ document.addEventListener('DOMContentLoaded', () => {
       { value: '2', label: '2' },
       { value: '3', label: '3' }
     ],
+    state: [
+      { value: '0', label: 'No State' },
+      { value: '1', label: 'Motionless' },
+      { value: '2', label: 'Moving' }
+    ],
+    activity: [
+      { value: '0', label: 'No Activity' },
+      { value: '1', label: 'Stand' },
+      { value: '2', label: 'Sit' },
+      { value: '3', label: 'Walking' },
+      { value: '4', label: 'Running' },
+    ],
     angle: [
-      { value: '360', label: 'No Target' },
+      { value: '360', label: 'No Angle' },
       { value: '-45', label: '-45°' },
       { value: '-30', label: '-30°' },
       { value: '-15', label: '-15°' },
@@ -160,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
       { value: '45', label: '45°' }
     ],
     distance: [
-      { value: '-1', label: 'No Target' },
+      { value: '-1', label: 'No Distance' },
       { value: '1', label: '1m' },
       { value: '2', label: '2m' },
       { value: '3', label: '3m' },
@@ -583,6 +597,8 @@ document.addEventListener('DOMContentLoaded', () => {
       body: JSON.stringify({
         class_label: classSelection.value,
         target_count: targetSelection.value,
+        state: stateSelection.value,
+        activity: activitySelection.value,
         angle: angleSelection.value,
         distance_t1: distanceSelection.value,
         obstructed: obstructedSelection.value,
@@ -1114,11 +1130,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (classValue === '0') { // Absence
       // Only the first option for each (index 0)
       populateSelect(targetSelection, OPTIONS.target, [OPTIONS.target[0].value]);
+      populateSelect(stateSelection, OPTIONS.state, [OPTIONS.state[0].value]);
+      populateSelect(activitySelection, OPTIONS.activity, [OPTIONS.activity[0].value]);
       populateSelect(angleSelection, OPTIONS.angle, [OPTIONS.angle[0].value]);
       populateSelect(distanceSelection, OPTIONS.distance, [OPTIONS.distance[0].value]);
     } else if (classValue === '1') { // Presence
       // All except the first option for each (index 1+)
       populateSelect(targetSelection, OPTIONS.target, OPTIONS.target.slice(1).map(opt => opt.value));
+      populateSelect(stateSelection, OPTIONS.state, OPTIONS.state.slice(1).map(opt => opt.value));
+      populateSelect(activitySelection, OPTIONS.activity, [OPTIONS.activity[1].value, OPTIONS.activity[2].value]);
       populateSelect(angleSelection, OPTIONS.angle, OPTIONS.angle.slice(1).map(opt => opt.value));
       populateSelect(distanceSelection, OPTIONS.distance, OPTIONS.distance.slice(1).map(opt => opt.value));
     }
@@ -1133,8 +1153,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function updateActivityOptions(stateValue) {
+    if (stateValue === '0') { // No State
+      populateSelect(activitySelection, OPTIONS.activity, [OPTIONS.activity[0].value]);
+    } else if (stateValue === '1') { // Motionless
+      populateSelect(activitySelection, OPTIONS.activity, [OPTIONS.activity[1].value, OPTIONS.activity[2].value]);
+    } else if (stateValue === '2') { // Moving
+      populateSelect(activitySelection, OPTIONS.activity, OPTIONS.activity.slice(1).map(opt => opt.value));
+    }
+  }
+
   classSelection.addEventListener('change', (e) => { updateOptionsForClass(e.target.value); });
   obstructedSelection.addEventListener('change', (e) => { updateObstructionOptions(e.target.value); });
+  stateSelection.addEventListener('change', (e) => { updateActivityOptions(e.target.value); });
 
 
   /* Initial Loading */
@@ -1142,6 +1173,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   populateSelect(classSelection, OPTIONS.class);
   populateSelect(targetSelection, OPTIONS.target);
+  populateSelect(stateSelection, OPTIONS.state);
+  populateSelect(activitySelection, OPTIONS.activity);
   populateSelect(angleSelection, OPTIONS.angle);
   populateSelect(distanceSelection, OPTIONS.distance);
   populateSelect(obstructedSelection, OPTIONS.obstructed);

@@ -22,6 +22,8 @@ def validate_recording_parameters(params) -> bool:
         required_fields = [
             'class_label',
             'target_count',
+            'state',
+            'activity',
             'angle',
             'distance_t1',
             'obstructed',
@@ -54,6 +56,28 @@ def validate_recording_parameters(params) -> bool:
             return False
         if target_int < 0 or target_int > 3:
             logger.error(f'Invalid target_count value: {target}')
+            return False
+        
+        # Validate state : must be integer 0-2 (No State, Motionless, Moving)
+        state = params.get('state')
+        try:
+            state_int = int(state)
+        except (ValueError, TypeError):
+            logger.error(f'Invalid state type: {state}')
+            return False
+        if state_int < 0 or state_int > 2:
+            logger.error(f'Invalid state value: {state}')
+            return False
+        
+        # Validate activity: must be integer 0-4 (No Activity, Stand, Sit, Walking, Running)
+        activity = params.get('activity')
+        try:
+            activity_int = int(activity)
+        except (ValueError, TypeError):
+            logger.error(f'Invalid activity type: {activity}')
+            return False
+        if activity_int < 0 or activity_int > 4:
+            logger.error(f'Invalid activity value: {activity}')
             return False
 
         # Validate angle: must be one of -45, -30, -15, 0, 15, 30, 45
@@ -118,7 +142,8 @@ def validate_recording_parameters(params) -> bool:
         return False
 
 def validate_class(params) -> bool:
-    """Validate target count based on class label
+    """
+    Validate target count based on class label
     
     Args:
         params (dict): Recording parameters
@@ -154,7 +179,7 @@ def validate_class(params) -> bool:
 
 def validate_obstruction(params) -> bool:
     """
-    Validate obstruction type
+    Validate obstruction type based on obstructed state
     
     Args:
         params (dict): Recording parameters
@@ -182,6 +207,45 @@ def validate_obstruction(params) -> bool:
                 return False
     except (ValueError, TypeError) as e:
         logger.error(f'Error validating obstruction type: {e}')
+        return False
+    
+def validate_activity(params) -> bool:
+    """
+    Validate activity type based on state
+    
+    Args:
+        params (dict): Recording parameters
+        
+    Returns:
+        bool: True if valid, False otherwise
+    """
+    try:
+        state = int(params.get('state'))
+        activity = int(params.get('activity'))
+
+        if state == 0:
+            # No state means no activity
+            if activity == 0:
+                return True
+            else:
+                logger.error(f'Invalid activity type when state is No State.')
+                return False
+        elif state == 1:
+            # Motionless state allows only Stand or Sit
+            if activity in [1, 2]:
+                return True
+            else:
+                logger.error(f'Invalid activity type when state is Motionless.')
+                return False
+        elif state == 2:
+            # Moving state allows Stand, Sit, Walking or Running
+            if activity in [1, 2, 3, 4]:
+                return True
+            else:
+                logger.error(f'Invalid activity type when state is Moving.')
+                return False
+    except (ValueError, TypeError) as e:
+        logger.error(f'Error validating activity type: {e}')
         return False
 
 def validate_filename(filename) -> bool:

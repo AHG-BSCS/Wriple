@@ -27,7 +27,7 @@ class RecordingConfiguration:
     """
     MONITOR_QUEUE_LIMIT: int = 90
     MMWAVE_QUEUE_LIMIT: int = 12
-    RECORD_PARAMETERS: list = [None, None, None, None, None, None, None]
+    RECORD_PARAMETERS: list = [None, None, None, None, None, None, None, None, None]
 
 
 class FileConfiguration:
@@ -36,10 +36,10 @@ class FileConfiguration:
     CSV_FILE_PATTERN: str = r'^WRIPLE_DATA_.*$'
     CSV_FILE_PREFIX: str = 'WRIPLE_DATA_'
     CSV_COLUMNS: list = [
-        'Presence', 'Target_Count', 'Angle', 'Distance',
+        'Presence', 'Target_Count', 'State', 'Activity', 'Angle', 'Distance',
         'Obstructed', 'Obstruction', 'Spacing',
-        'Transmit_Timestamp', 'Received_Timestamp', 'RSSI', 'Channel',
-        'Raw_CSI',
+        'Transmit_Timestamp', 'Received_Timestamp',
+        'RSSI', 'Channel', 'Raw_CSI',
         'RD03D_Target_1', 'RD03D_Target_2', 'RD03D_Target_3',
         'LD2420_Doppler_1', 'LD2420_Doppler_2', 'LD2420_Doppler_3', 'LD2420_Doppler_4',
         'LD2420_Doppler_5', 'LD2420_Doppler_6', 'LD2420_Doppler_7', 'LD2420_Doppler_8',
