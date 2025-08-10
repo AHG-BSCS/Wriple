@@ -83,23 +83,11 @@ class PacketParser:
             return []
     
     @staticmethod
-    def extract_radar_data(rssi: int, target_1: list, target_2: list, target_3: list) -> list:
-        """
-        Extract radar coordinates and metrics from parsed data
-        
-        Args:
-            parsed_data: Parsed CSI data list
-            
-        Returns:
-            list: Radar data components including:
-            - RSSI: RSSI value of AP
-            - X: X coordinates of targets
-            - Y: Y coordinates of targets
-            - Speed: Speed of targets
-            - Resolution: Resolution of X and Y coordinates
-        """
-        try:
-            return [rssi, target_1, target_2, target_3]
-        except (IndexError, TypeError) as e:
-            PacketParser._logger.error(f'Error extracting radar data: {e}')
-            return []
+    def is_rd03d_active() -> bool:
+        """Check if RD03D sensor is active"""
+        return PacketParser._rd03d_error < 10
+    
+    @staticmethod
+    def is_ld2420_active() -> bool:
+        """Check if LD2420 sensor is active"""
+        return PacketParser._ld2420_error < 30

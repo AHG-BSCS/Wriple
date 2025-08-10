@@ -95,6 +95,23 @@ class NetworkManager:
         except Exception as e:
             self._logger.error(f'Error checking AP connection: {e}')
             return False
+        
+    def check_esp32(self) -> bool:
+        """
+        Check if ESP32 is reachable by pinging its IP address
+        
+        Returns:
+            bool: True if ESP32 is reachable, False otherwise
+        """
+        try:
+            result = subprocess.run(
+                ['ping', '-n', '1', NetworkConfiguration.TX_ESP32_IP],
+                capture_output=True, text=True
+            )
+            return 'TTL=' in result.stdout
+        except Exception as e:
+            self._logger.error(f'Error pinging ESP32: {e}')
+            return False
     
     # Receiver
 

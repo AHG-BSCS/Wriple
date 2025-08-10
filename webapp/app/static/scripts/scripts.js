@@ -34,10 +34,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const packetLoss = document.getElementById("packet-loss");
   const experimentalValue = document.getElementById("exp-value");
 
-  const esp32Status = document.getElementById("esp32-status");
   const apStatus = document.getElementById("ap-status");
-  const rd03dStatus = document.getElementById("radar-status");
   const flaskStatus = document.getElementById("flask-status");
+  const esp32Status = document.getElementById("esp32-status");
+  const ld2420Status = document.getElementById("ld2420-status");
+  const rd03dStatus = document.getElementById("rd03d-status");
   const portStatus = document.getElementById("port-status");
   const modelStatus = document.getElementById("model-status");
 
@@ -118,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const recordingDelay = 1000;
   const heatmapRefreshRate = 100;
   const gatesHeatmapRefreshRate = 333;
-  const systemStatusInterval = 8000;
+  const systemStatusInterval = 2000;
   
   var btnDefaultColor = '#1F2937';
   var btnActiveColor = '#78350F';
@@ -574,20 +575,33 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch('/check_system_status', { method: "POST" })
       .then(response => response.json())
       .then(data => {
-        if (data.ap == "0") esp32Status.style.fill = "brown";
-        else esp32Status.style.fill = "limegreen";
+        if (data.ap) apStatus.style.fill = "limegreen";
+        else apStatus.style.fill = "brown";
+        
+        flaskStatus.style.fill = "limegreen";
 
-        if (data.ap == "0") apStatus.style.fill = "brown";
-        else apStatus.style.fill = "limegreen";
+        if (data.esp32) esp32Status.style.fill = "limegreen";
+        else esp32Status.style.fill = "brown";
+        
+        if (data.ld2420) ld2420Status.style.fill = "limegreen";
+        else ld2420Status.style.fill = "brown";
 
-        if (data.ap == "0") rd03dStatus.style.fill = "brown";
-        else rd03dStatus.style.fill = "limegreen";
+        if (data.rd03d) rd03dStatus.style.fill = "limegreen";
+        else rd03dStatus.style.fill = "brown";
 
-        if (data.port == "0") portStatus.style.fill = "brown";
+        if (data.port) portStatus.style.fill = "limegreen";
+        else portStatus.style.fill = "brown";
 
-        if (data.model == "0") modelStatus.style.fill = "brown";
-        else modelStatus.style.fill = "limegreen";
+        if (data.model) modelStatus.style.fill = "limegreen";
+        else modelStatus.style.fill = "brown";
       })
+      .catch(err => {
+        flaskStatus.style.fill = "brown";
+        esp32Status.style.fill = "brown";
+        ld2420Status.style.fill = "brown";
+        rd03dStatus.style.fill = "brown";
+        modelStatus.style.fill = "brown";
+      });
   }
 
   async function setRecordParameter() {

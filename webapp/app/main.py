@@ -24,6 +24,9 @@ class HumanDetectionSystem:
         # Application state and counter
         self.is_recording = False
         self.is_monitoring = False
+        self._is_rd03d_active = True
+        self._is_ld2420_active = True
+        self._is_esp32_active = True
 
         # Initialize parameters and data storage
         self.radar_data = VisualizerConfiguration.RADAR_DATA
@@ -126,10 +129,20 @@ class HumanDetectionSystem:
         Returns:
             dict: Dictionary with status of each system component
         """
+        if self.network_manager.check_esp32():
+            self._is_esp32_active = True
+            self._is_rd03d_active = True
+            self._is_ld2420_active = True
+        else:
+            self._is_esp32_active = False
+            self._is_rd03d_active = False
+            self._is_ld2420_active = False
+
         return {
-            'esp32': 1,  # Temporary placeholder for ESP32 status
             'ap': self.network_manager.check_wifi_connection(),
-            'rd03d': 1,  # Temporary placeholder for RD03D status
+            'esp32': self._is_esp32_active,
+            'ld2420': PacketParser.is_ld2420_active(),
+            'rd03d': PacketParser.is_rd03d_active(),
             'port': self.network_manager.is_udp_port_opened,
             'model': self.model_manager.model_loaded
         }
