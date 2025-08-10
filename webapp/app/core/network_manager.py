@@ -41,6 +41,39 @@ class NetworkManager:
         
         self._ap_ssid = NetworkConfiguration.AP_SSID
         self._logger = setup_logger('NetworkManager')
+        self._udp_port_opened = self.open_esp32_udp_port()
+
+    def open_esp32_udp_port(self) -> bool:
+        """
+        Open UDP port for communication with ESP32 if not already open
+        
+        Returns:
+            bool: True if port opened successfully or already exists, False otherwise
+        """
+        esp32_port = NetworkConfiguration.TX_UDP_PORT
+        rule_name = "ESP32 UDP Port"
+        try:
+            # Check if rule already exists
+            result = subprocess.run([
+                'netsh', 'advfirewall', 'firewall', 'show', 'rule',
+                f'name={rule_name}'
+            ], capture_output=True, text=True)
+            if f"{esp32_port}" in result.stdout and "UDP" in result.stdout:
+                return True
+
+            # Add rule if not found
+            subprocess.run([
+                'netsh', 'advfirewall', 'firewall', 'add', 'rule',
+                f'name={rule_name}',
+                'dir=in',
+                'action=allow',
+                'protocol=UDP',
+                f'localport={esp32_port}'
+            ], check=True)
+            return True
+        except subprocess.CalledProcessError as e:
+            self._logger.error(f'Failed to open port {esp32_port}: {e}')
+            return False
 
     def check_wifi_connection(self) -> bool:
         """
@@ -207,3 +240,12 @@ class NetworkManager:
             int: Number of packets received
         """
         return self._packet_received_count
+    
+    @property
+    def is_udp_port_opened(self) -> bool:
+        """
+        Check if the UDP port is opened for communication
+        Returns:
+            bool: True if port is opened, False otherwise
+        """
+        return self._udp_port_opened

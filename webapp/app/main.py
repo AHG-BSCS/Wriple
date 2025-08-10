@@ -130,7 +130,7 @@ class HumanDetectionSystem:
             'esp32': 1,  # Temporary placeholder for ESP32 status
             'ap': self.network_manager.check_wifi_connection(),
             'rd03d': 1,  # Temporary placeholder for RD03D status
-            'port': 1,   # Temporary placeholder for port status
+            'port': self.network_manager.is_udp_port_opened,
             'model': self.model_manager.model_loaded
         }
     

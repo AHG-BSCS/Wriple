@@ -7,6 +7,10 @@ from .validators import validate_recording_parameters, validate_class, validate_
 def create_api_routes(app, detection_system):
     """Create and register all API routes with the Flask app"""
     
+    # A trick to explicitly set the detection_system instance variable
+    from main import HumanDetectionSystem
+    detection_system: HumanDetectionSystem = detection_system
+    
     @app.route('/')
     def serve_index():
         """Serve the main HTML page"""
