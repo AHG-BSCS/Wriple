@@ -214,7 +214,7 @@ class CSIProcessor:
                 highlighted.append(0.0)
             else:
                 # Amplify outliers (e.g., square the difference and keep the sign)
-                highlighted.append(np.sign(d) * (abs(d) ** self._heat_penalty_factor))
+                highlighted.append(np.sign(d) * (d) ** self._heat_penalty_factor)
         return highlighted
     
     def get_latest_phase(self) -> list:

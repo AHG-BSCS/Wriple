@@ -60,7 +60,7 @@ class VisualizerConfiguration:
     HEAT_AMP_END_SUB:int = 88
     HEAT_PHASE_START_SUB:int = 6
     HEAT_PHASE_END_SUB:int = 27
-    HEAT_PENALTY_FACTOR: int = 1.0
+    HEAT_PENALTY_FACTOR: int = 1
     HEAT_DIFF_THRESHOLD: int = 3
 
     CUTOFF:float = 0.1

@@ -131,18 +131,18 @@ class HumanDetectionSystem:
         """
         if self.network_manager.check_esp32():
             self._is_esp32_active = True
-            self._is_rd03d_active = True
-            self._is_ld2420_active = True
+            self._is_ld2420_active = PacketParser.is_rd03d_active()
+            self._is_rd03d_active = PacketParser.is_ld2420_active()
         else:
             self._is_esp32_active = False
-            self._is_rd03d_active = False
             self._is_ld2420_active = False
+            self._is_rd03d_active = False
 
         return {
             'ap': self.network_manager.check_wifi_connection(),
             'esp32': self._is_esp32_active,
-            'ld2420': PacketParser.is_ld2420_active(),
-            'rd03d': PacketParser.is_rd03d_active(),
+            'ld2420': self._is_ld2420_active,
+            'rd03d': self._is_rd03d_active,
             'port': self.network_manager.is_udp_port_opened,
             'model': self.model_manager.model_loaded
         }

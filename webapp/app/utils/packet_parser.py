@@ -7,11 +7,11 @@ class PacketParser:
     """Utility class for parsing received packet data"""
 
     _logger = setup_logger('PacketParser')
-    _rd03d_error = 0
-    _ld2420_error = 0
+    _rd03d_error = -1
+    _ld2420_error = -1
     
     @staticmethod
-    def parse_csi_data(raw_data: bytes, is_recording: bool = False) -> list:
+    def parse_csi_data(raw_data: bytes) -> list:
         """
         Parse CSI data from received packet
         
@@ -85,9 +85,9 @@ class PacketParser:
     @staticmethod
     def is_rd03d_active() -> bool:
         """Check if RD03D sensor is active"""
-        return PacketParser._rd03d_error < 10
+        return PacketParser._rd03d_error < 10 or PacketParser._rd03d_error == -1
     
     @staticmethod
     def is_ld2420_active() -> bool:
         """Check if LD2420 sensor is active"""
-        return PacketParser._ld2420_error < 30
+        return PacketParser._ld2420_error < 30 or PacketParser._ld2420_error == -1
