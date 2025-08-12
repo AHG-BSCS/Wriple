@@ -120,11 +120,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const heatmapRefreshRate = 100;
   const gatesHeatmapRefreshRate = 333;
   const systemStatusInterval = 2000;
+
+  const radarMaxDistance = 10_000;
   
-  var btnDefaultColor = '#1F2937';
-  var btnActiveColor = '#78350F';
-  var btnSelectedColor = '#D1D5DB';
-  var btnUnselectedColor = '#94A3B7';
+  // Sidebar Tab
+  const btnSelectedColor = '#D1D5DB';
+  const btnUnselectedColor = '#94A3B7';
+  // Status Bar Icons
+  const statusBarActiveColor = 'limegreen';
+  const statusBarInactiveColor = 'brown';
+  // Floating Buttons
+  const btnDefaultColor = '#1F2937';
+  const btnActiveColor = '#78350F';
 
   const amplitudeHeatmap = simpleheat(amplitudeCanvas);
   const phaseHeatmap = simpleheat(phaseCanvas);
@@ -525,12 +532,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function scaleXToRadar(x, width) {
     x = parseInt(x)
-    return Math.floor((x / 6000) * (width / 2));
+    return Math.floor((x / radarMaxDistance) * (width / 2));
   }
 
   function scaleYToRadar(y, height) {
     y = parseInt(y)
-    return Math.floor((y / 6000) * height);
+    return Math.floor((y / radarMaxDistance) * height);
   }
 
   function list_csv_files() {
@@ -571,36 +578,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* Elements Event Listener */
 
+
   function checkSystemStatus() {
     fetch('/check_system_status', { method: "POST" })
       .then(response => response.json())
       .then(data => {
-        if (data.ap) apStatus.style.fill = "limegreen";
-        else apStatus.style.fill = "brown";
+        if (data.ap) apStatus.style.fill = statusBarActiveColor;
+        else apStatus.style.fill = statusBarInactiveColor;
         
-        flaskStatus.style.fill = "limegreen";
+        flaskStatus.style.fill = statusBarActiveColor;
 
-        if (data.esp32) esp32Status.style.fill = "limegreen";
-        else esp32Status.style.fill = "brown";
+        if (data.esp32) esp32Status.style.fill = statusBarActiveColor;
+        else esp32Status.style.fill = statusBarInactiveColor;
         
-        if (data.ld2420) ld2420Status.style.fill = "limegreen";
-        else ld2420Status.style.fill = "brown";
+        if (data.ld2420) ld2420Status.style.fill = statusBarActiveColor;
+        else ld2420Status.style.fill = statusBarInactiveColor;
 
-        if (data.rd03d) rd03dStatus.style.fill = "limegreen";
-        else rd03dStatus.style.fill = "brown";
+        if (data.rd03d) rd03dStatus.style.fill = statusBarActiveColor;
+        else rd03dStatus.style.fill = statusBarInactiveColor;
 
-        if (data.port) portStatus.style.fill = "limegreen";
-        else portStatus.style.fill = "brown";
+        if (data.port) portStatus.style.fill = statusBarActiveColor;
+        else portStatus.style.fill = statusBarInactiveColor;
 
-        if (data.model) modelStatus.style.fill = "limegreen";
-        else modelStatus.style.fill = "brown";
+        if (data.model) modelStatus.style.fill = statusBarActiveColor;
+        else modelStatus.style.fill = statusBarInactiveColor;
       })
       .catch(err => {
-        flaskStatus.style.fill = "brown";
-        esp32Status.style.fill = "brown";
-        ld2420Status.style.fill = "brown";
-        rd03dStatus.style.fill = "brown";
-        modelStatus.style.fill = "brown";
+        flaskStatus.style.fill = statusBarInactiveColor;
+        esp32Status.style.fill = statusBarInactiveColor;
+        ld2420Status.style.fill = statusBarInactiveColor;
+        rd03dStatus.style.fill = statusBarInactiveColor;
+        modelStatus.style.fill = statusBarInactiveColor;
       });
   }
 

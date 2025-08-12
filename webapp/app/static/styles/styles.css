@@ -1,14 +1,15 @@
 :root {
     --primary-color: #1F2937;
-    --secondary-color: #773512;
+    --secondary-color: #78350F;
     --background-color: #94A3B7;
 }
 
 .point {
-    width: 18px;
-    height: 18px;
-    background-color: maroon;
+    width: 15px;
+    height: 15px;
+    background-color: var(--secondary-color);
     border-radius: 50%;
+    box-shadow: 0px 0px 0px 15px rgba(120, 53, 15, 0.2);
     position: absolute;
     transform: translate(-50%, -50%);
 }
