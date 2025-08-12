@@ -6,13 +6,13 @@ import {
   select,
   selectAll,
   schemeCategory10
-} from "./d3-7.8.5/index.js";
+} from "./vendors/d3-7.8.5/index.js";
 
 import {
   gridPlanes3D,
   lineStrips3D,
   points3D,
-} from "./d3-3d-1.0.0/index.js";
+} from "./vendors/d3-3d-1.0.0/index.js";
 
 document.addEventListener('DOMContentLoaded', () => {
   const collapseBtn = document.getElementById("collapse-btn");
