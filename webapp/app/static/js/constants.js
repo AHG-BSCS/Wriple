@@ -1,4 +1,3 @@
-// constants.js - selectors, options and defaults
 export const SELECTORS = {
   collapseBtn: '#collapse-btn',
   sidebar: '#sidebar',

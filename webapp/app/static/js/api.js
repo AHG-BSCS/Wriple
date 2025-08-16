@@ -1,4 +1,3 @@
-// api.js - wrapper around fetch endpoints
 async function postJson(url, body = {}) {
   const response = await fetch(url, {
     method: 'POST',

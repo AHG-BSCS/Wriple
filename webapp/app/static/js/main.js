@@ -43,7 +43,7 @@ const radar = new RadarVisualizer({
 });
 
 const d3plot = new D3Plot({
-  svg: "d3-plot",
+  svg: "#d3-plot",
   refreshRate: DEFAULTS.d3PlotRefreshRate
 });
 
@@ -297,6 +297,7 @@ function wireFloatingActionButtons() {
       UI.hideUI(UI.nodes.d3PlotContainer);
       UI.setButtonDefault(d3PlotBtn);
       d3plot.stop();
+      d3plot.clear();
     } else {
       UI.showUI(UI.nodes.d3PlotContainer);
       UI.setButtonActive(d3PlotBtn);

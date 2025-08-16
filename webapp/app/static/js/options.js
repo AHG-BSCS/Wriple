@@ -1,7 +1,5 @@
-// options.js
 import { OPTIONS } from './constants.js';
 
-// Internal storage of the current selections
 let currentParams = {
   class_label: null,
   target_count: null,

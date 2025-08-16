@@ -54,7 +54,7 @@ export class D3Plot {
   processData(data, tt) {
     /* ----------- GRID ----------- */
 
-    const xGrid = svg.selectAll("path.grid").data(data[0], key);
+    const xGrid = this.svgSelector.selectAll("path.grid").data(data[0], this.key);
 
     xGrid
       .enter()
@@ -65,30 +65,30 @@ export class D3Plot {
       .attr("stroke-width", 0.3)
       .attr("fill", (d) => (d.ccw ? "#eee" : "#aaa"))
       .attr("fill-opacity", 0.8)
-      .attr("d", grid3d.draw);
+      .attr("d", this.grid3d.draw);
 
     xGrid.exit().remove();
 
     /* ----------- POINTS ----------- */
 
-    const points = svg.selectAll("circle").data(data[1], key);
+    const points = this.svgSelector.selectAll("circle").data(data[1], this.key);
 
     points
       .enter()
       .append("circle")
       .attr("class", "d3-3d")
       .attr("opacity", 0)
-      .attr("cx", posPointX)
-      .attr("cy", posPointY)
+      .attr("cx", this.posPointX)
+      .attr("cy", this.posPointY)
       .merge(points)
       // .transition() // returns a transition with the d3.transition.prototype
       // .duration(tt)
       .attr("r", 3)
-      .attr("stroke", (d) => color(colorScale(d.id)).darker(3))
-      .attr("fill", (d) => colorScale(d.id))
+      .attr("stroke", (d) => color(this.colorScale(d.id)).darker(3))
+      .attr("fill", (d) => this.colorScale(d.id))
       .attr("opacity", 1)
-      .attr("cx", posPointX)
-      .attr("cy", posPointY);
+      .attr("cx", this.posPointX)
+      .attr("cy", this.posPointY);
 
     points.exit().remove();
 
@@ -109,7 +109,7 @@ export class D3Plot {
 
     /* ----------- y-Scale Text ----------- */
 
-    const yText = svg.selectAll("text.yText").data(data[2][0]);
+    const yText = this.svgSelector.selectAll("text.yText").data(data[2][0]);
 
     yText
       .enter()
@@ -126,7 +126,7 @@ export class D3Plot {
 
     yText.exit().remove();
 
-    selectAll(".d3-3d").sort(points3d.sort);
+    selectAll(".d3-3d").sort(this.points3d.sort);
   }
 
   posPointX(d) {
@@ -137,27 +137,29 @@ export class D3Plot {
     return d.projected.y;
   }
 
-  dragStart(event) {
-    mx = event.x;
-    my = event.y;
-  }
-
   dragged(event) {
-    beta = (event.x - mx + mouseX) * (Math.PI / 230) * -1;
-    alpha = (event.y - my + mouseY) * (Math.PI / 230) * -1;
+    if (this.scatter .length === 0) return;
+
+    this.beta = (event.x - this.mx + this.mouseX) * (Math.PI / 230) * -1;
+    this.alpha = (event.y - this.my + this.mouseY) * (Math.PI / 230) * -1;
 
     const data = [
-      grid3d.rotateY(beta + startAngle).rotateX(alpha - startAngle)(xGrid),
-      points3d.rotateY(beta + startAngle).rotateX(alpha - startAngle)(scatter),
-      yScale3d.rotateY(beta + startAngle).rotateX(alpha - startAngle)([yLine]),
+      this.grid3d.rotateY(this.beta + this.startAngle).rotateX(this.alpha - this.startAngle)(this.xGrid),
+      this.points3d.rotateY(this.beta + this.startAngle).rotateX(this.alpha - this.startAngle)(this.scatter),
+      this.yScale3d.rotateY(this.beta + this.startAngle).rotateX(this.alpha - this.startAngle)([this.yLine]),
     ];
 
-    processData(data, 0);
+    this.processData(data, 0);
+  }
+
+  dragStart(event) {
+    this.mx = event.x;
+    this.my = event.y;
   }
 
   dragEnd(event) {
-    mouseX = event.x - mx + mouseX;
-    mouseY = event.y - my + mouseY;
+    this.mouseX = event.x - this.mx + this.mouseX;
+    this.mouseY = event.y - this.my + this.mouseY;
   }
 
   async start() {
@@ -169,6 +171,15 @@ export class D3Plot {
 
   clear() {
     this.svgSelector.selectAll('*').remove();
+    this.xGrid = [];
+    this.scatter = [];
+    this.yLine = [];
+    this.beta = 0;
+    this.alpha = 0;
+    this.mx = 0;
+    this.my = 0;
+    this.mouseX = 0;
+    this.mouseY = 0;
   }
 
   stop() {

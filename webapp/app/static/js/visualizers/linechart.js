@@ -1,5 +1,3 @@
-// visualizers/expchart.js
-
 export class LineChart {
   constructor(canvas) {
     this.ctx = document.querySelector(canvas).getContext('2d');
