@@ -25,24 +25,41 @@ def create_api_routes(app, detection_system):
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
-    @app.route('/start_recording/', methods=['POST'])
-    def start_recording():
-        """Start recording or monitoring mode"""
+    @app.route('/capture_data/monitor', methods=['POST'])
+    def start_monitoring():
+        """Start monitoring mode"""
         if not detection_system.network_manager.check_esp32():
             return jsonify({'message': 'ESP32 is not connected'}), 400
         
-        mode = request.get_json()
-        if mode == 'recording':
-            detection_system.start_capturing(is_recording=True)
-        elif mode == 'monitoring':
-            detection_system.start_capturing(is_recording=False)
-        else:
-            return jsonify({'message': 'Invalid mode'}), 400
-        
-        return jsonify({'message': 'Sucess'}), 200
+        detection_system.start_capturing(is_recording=False)
+        return jsonify({'message': 'Monitoring started'}), 200
     
-    @app.route('/stop_recording', methods=['POST'])
-    def stop_recording():
+    @app.route('/capture_data/record', methods=['POST'])
+    def start_recording():
+        """Start recording mode with parameters"""
+        if not detection_system.network_manager.check_esp32():
+            return jsonify({'message': 'ESP32 is not connected'}), 400
+        
+        params = request.get_json()
+        
+        if not validate_recording_parameters(params):
+            return jsonify({'message': 'Missing required field'}), 400
+        
+        if not validate_class(params):
+            return jsonify({'message': 'Invalid recording class parameter'}), 400
+        
+        if not validate_obstruction(params):
+            return jsonify({'message': 'Invalid recording obstruction parameter'}), 400
+        
+        if not validate_activity(params):
+            return jsonify({'message': 'Invalid recording activity parameter'}), 400
+        
+        detection_system.set_recording_parameters(params)
+        detection_system.start_capturing(is_recording=True)
+        return jsonify({'message': 'Recording started'}), 200
+    
+    @app.route('/capture_data/stop', methods=['POST'])
+    def stop_capturing():
         """Stop recording or monitoring"""
         try:
             # TODO: Log the number of packets captured during stop
@@ -50,30 +67,6 @@ def create_api_routes(app, detection_system):
             return jsonify({'status': 'stopped'})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-    
-    @app.route('/set_record_parameter', methods=['POST'])
-    def set_record_parameter():
-        """Set parameters for recording session"""
-        data = request.get_json()
-        
-        if not validate_recording_parameters(data):
-            return jsonify({'status': 'error',
-                            'message': 'Missing required field'}), 400
-        
-        if not validate_class(data):
-            return jsonify({'status': 'error',
-                            'message': 'Invalid recording class parameter'}), 400
-        
-        if not validate_obstruction(data):
-            return jsonify({'status': 'error',
-                            'message': 'Invalid recording obstruction parameter'}), 400
-        
-        if not validate_activity(data):
-            return jsonify({'status': 'error',
-                            'message': 'Invalid recording activity parameter'}), 400
-        
-        detection_system.set_recording_parameters(data)
-        return jsonify({'status': 'success'})
     
     @app.route('/visualize_3d_plot', methods=['POST'])
     def visualize_3d_plot():

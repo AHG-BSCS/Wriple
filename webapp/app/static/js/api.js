@@ -15,14 +15,17 @@ async function postJson(url, body = {}) {
 
 export const API = {
   checkSystemStatus: () => postJson('/check_system_status'),
-  listCsvFiles: () => postJson('/list_csv_files'),
-  setRecordParameter: (params) => postJson('/set_record_parameter', params),
-  startRecording: (mode) => postJson(`/start_recording`, mode),
-  stopRecording: () => postJson('/stop_recording'),
+  
+  startMonitoring: () => postJson(`/capture_data/monitor`),
+  startRecording: (params) => postJson(`/capture_data/record`, params),
+  stopCapturing: () => postJson('/capture_data/stop'),
+  
   fetchAmplitudeData: () => postJson('/fetch_amplitude_data'),
   fetchPhaseData: () => postJson('/fetch_phase_data'),
   getRadarData: () => postJson('/get_radar_data'),
   getMMWaveHeatmap: () => postJson('/get_mmwave_heatmap_data'),
   visualize3d: () => postJson('/visualize_3d_plot'),
-  loadCsvFile: (filename) => postJson('/visualize_csv_file', filename)
+  
+  listCsvFiles: () => postJson('/list_csv_files'),
+  loadCsvFile: (filename) => postJson('/visualize_csv_file', filename),
 };

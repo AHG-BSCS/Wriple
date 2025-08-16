@@ -74,18 +74,18 @@ function stopVisualizers() {
   d3plot.stop();
 
   UI.setButtonDefault(UI.nodes.targetRadarBtn);
+  UI.setHeaderDefault();
+  UI.setAsidesDefault();
 
-  // Wait for visualizers interval to finished
+  // Ensure to remove the status bar and asides update from interval if mistimed
   setTimeout(() => {
     UI.setHeaderDefault();
     UI.setAsidesDefault();
-  }, 500);
+  }, DEFAULTS.radarRefreshRate);
 }
 
 async function startRecording(recordModeBtn) {
-  // TODO: Merge the API call
-  await API.setRecordParameter(OptionsUI.getSelectedParameters());
-  await API.startRecording('recording');
+  await API.startRecording(OptionsUI.getSelectedParameters());
   
   UI.setButtonActive(recordModeBtn);
   UI.setButtonActive(UI.nodes.targetRadarBtn);
@@ -93,7 +93,7 @@ async function startRecording(recordModeBtn) {
 }
 
 function stopMonitoring() {
-  API.stopRecording();
+  API.stopCapturing();
   UI.setButtonDefault(UI.nodes.monitorModeBtn);
   stopVisualizers();
 }
@@ -101,7 +101,7 @@ function stopMonitoring() {
 async function startMonitoring(monitorModeBtn) {
   // Disable the button to prevent multiple clicks during the API call delay
   UI.disableButton(monitorModeBtn);
-  try { await API.startRecording('monitoring'); } 
+  try { await API.startMonitoring(); } 
   catch {
     // If the API call fails, re-enable the button
     UI.enableButton(monitorModeBtn);
@@ -196,7 +196,7 @@ function wireFloatingActionButtons() {
     if (UI.isButtonActive(recordModeBtn)) UI.stopRecording();
     else {
       if (UI.isButtonActive(UI.nodes.monitorModeBtn)) {
-        API.stopRecording();
+        API.stopCapturing();
         radar.stop();
         UI.setHeaderDefault();
 
@@ -227,7 +227,7 @@ function wireFloatingActionButtons() {
       // TODO: Separate the radar to the status bar updates
 
       if (UI.isButtonActive(UI.sidebarNodes.datasetTab)) {
-        try { await API.startRecording('monitoring'); }
+        try { await API.startMonitoring(); }
         catch {
           UI.setButtonDefault(UI.nodes.targetRadarBtn);
           return;

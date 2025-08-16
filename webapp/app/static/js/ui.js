@@ -218,7 +218,7 @@ export const UI = {
 
   stopRecording() {
     const n = this.nodes;
-    API.stopRecording();
+    API.stopCapturing();
     this.list_csv_files();
     n.recordModeBtn.dataset.active = '0';
     n.targetRadarBtn.dataset.active = '0';
