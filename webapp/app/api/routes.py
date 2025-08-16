@@ -25,23 +25,27 @@ def create_api_routes(app, detection_system):
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
-    @app.route('/start_recording/<mode>', methods=['GET'])
-    def start_recording(mode):
+    @app.route('/start_recording/', methods=['POST'])
+    def start_recording():
         """Start recording or monitoring mode"""
-        if mode == 'recording':
-            detection_system.start_capturing(True)
-        elif mode == 'monitoring':
-            detection_system.start_capturing(False)
-        else:
-            return jsonify({'status': 'error',
-                            'error': 'Invalid mode'}), 400
+        if not detection_system.network_manager.check_esp32():
+            return jsonify({'message': 'ESP32 is not connected'}), 400
         
-        return jsonify({'status': 'success'})
+        mode = request.get_json()
+        if mode == 'recording':
+            detection_system.start_capturing(is_recording=True)
+        elif mode == 'monitoring':
+            detection_system.start_capturing(is_recording=False)
+        else:
+            return jsonify({'message': 'Invalid mode'}), 400
+        
+        return jsonify({'message': 'Sucess'}), 200
     
     @app.route('/stop_recording', methods=['POST'])
     def stop_recording():
         """Stop recording or monitoring"""
         try:
+            # TODO: Log the number of packets captured during stop
             detection_system.stop_operations()
             return jsonify({'status': 'stopped'})
         except Exception as e:
@@ -53,16 +57,20 @@ def create_api_routes(app, detection_system):
         data = request.get_json()
         
         if not validate_recording_parameters(data):
-            return jsonify({'status': 'error'}), 400
+            return jsonify({'status': 'error',
+                            'message': 'Missing required field'}), 400
         
         if not validate_class(data):
-            return jsonify({'status': 'error'}), 400
+            return jsonify({'status': 'error',
+                            'message': 'Invalid recording class parameter'}), 400
         
         if not validate_obstruction(data):
-            return jsonify({'status': 'error'}), 400
+            return jsonify({'status': 'error',
+                            'message': 'Invalid recording obstruction parameter'}), 400
         
         if not validate_activity(data):
-            return jsonify({'status': 'error'}), 400
+            return jsonify({'status': 'error',
+                            'message': 'Invalid recording activity parameter'}), 400
         
         detection_system.set_recording_parameters(data)
         return jsonify({'status': 'success'})
@@ -99,7 +107,7 @@ def create_api_routes(app, detection_system):
                     value = 0.0
                 heatmap.append([doppler_idx, gate_idx, value])
         
-        return jsonify({'heatmap': heatmap})
+        return jsonify({'latestDoppler': heatmap})
 
     @app.route('/fetch_amplitude_data', methods=['POST'])
     def fetch_amplitude_data():
@@ -121,7 +129,7 @@ def create_api_routes(app, detection_system):
     
     # CSV File Management Routes
     
-    @app.route('/list_csv_files', methods=['GET'])
+    @app.route('/list_csv_files', methods=['POST'])
     def list_csv_files():
         """List all recorded CSV files"""
         try:
@@ -130,9 +138,10 @@ def create_api_routes(app, detection_system):
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
-    @app.route('/visualize_csv_file/<filename>', methods=['GET'])
+    @app.route('/visualize_csv_file', methods=['POST'])
     def select_csv_file(filename):
         """Set a CSV file for visualization"""
+        filename = request.get_json()
         if (detection_system.file_manager.select_csv_file(filename)):
             detection_system.csi_processor.set_max_packets(0)
             return jsonify({'status': 'success'})
@@ -141,10 +150,10 @@ def create_api_routes(app, detection_system):
     
     # Error Handlers
     
-    @app.errorhandler(404)
-    def not_found(error):
-        return jsonify({'error': 'Endpoint not found'}), 404
+    # @app.errorhandler(404)
+    # def not_found(error):
+    #     return jsonify({'error': 'Endpoint not found'}), 404
     
-    @app.errorhandler(500)
-    def internal_error(error):
-        return jsonify({'error': 'Internal server error'}), 500
+    # @app.errorhandler(500)
+    # def internal_error(error):
+    #     return jsonify({'error': 'Internal server error'}), 500
