@@ -1,11 +1,15 @@
 import { color, drag, range, scaleOrdinal, select, selectAll, schemeCategory10 } from ".././vendors/d3-7.8.5/index.js";
 import { gridPlanes3D, lineStrips3D, points3D } from ".././vendors/d3-3d-1.0.0/index.js";
+import { UI_COLORS } from '../constants.js';
 import { API } from '../api.js';
 
 export class D3Plot {
-  constructor({svg, refreshRate}) {
+  constructor({svg, button, container, refreshRate}) {
+    this.button = button;
+    this.container = container;
     this.interval = null;
     this.running = false;
+    this.visible = false;
     this.refreshRate = refreshRate ?? 1000;
 
     this.origin = { x: 400, y: 200 };
@@ -169,7 +173,22 @@ export class D3Plot {
     this.interval = setInterval(() => this.tick(), this.refreshRate);
   }
 
+  show() {
+    this.container.classList.remove('hidden');
+    this.button.style.backgroundColor = UI_COLORS.btnActiveColor;
+    this.button.dataset.active = '1';
+    this.visible = true;
+  }
+
+  hide() {
+    this.container.classList.add('hidden');
+    this.button.style.backgroundColor = UI_COLORS.btnDefaultColor;
+    this.button.dataset.active = '0';
+    this.visible = false;
+  }
+
   clear() {
+    this.hide();
     this.svgSelector.selectAll('*').remove();
     this.xGrid = [];
     this.scatter = [];

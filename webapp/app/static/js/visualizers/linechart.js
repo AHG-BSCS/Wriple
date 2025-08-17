@@ -1,15 +1,33 @@
+import { UI_COLORS } from '../constants.js';
+
 export class LineChart {
-  constructor(canvas) {
-    this.ctx = document.querySelector(canvas).getContext('2d');
+  constructor({context, button, container}) {
+    this.ctx = document.querySelector(context).getContext('2d');
+    this.button = button;
+    this.container = container;
     this.chart = null;
     this.tick = 0;
-    this.tickInterval = 10;
+    
     this.ctx.canvas.width = 680;
     this.ctx.canvas.height = 200;
   }
 
+  show() {
+    this.container.classList.remove('hidden');
+    this.button.style.backgroundColor = UI_COLORS.btnActiveColor;
+    this.button.dataset.active = '1';
+  }
+
+  hide() {
+    this.container.classList.add('hidden');
+    this.button.style.backgroundColor = UI_COLORS.btnDefaultColor;
+    this.button.dataset.active = '0';
+  }
+
   init() {
+    this.show();
     if (this.chart) return;
+
     this.chart = new Chart(this.ctx, {
       type: 'line',
       data: {
@@ -58,7 +76,9 @@ export class LineChart {
   }
 
   clear() {
+    this.hide();
     if (!this.chart) return;
+    
     this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
     this.chart.data.labels = [];
     this.chart.data.datasets[0].data = [];

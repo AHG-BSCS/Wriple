@@ -1,9 +1,10 @@
 import { API } from '../api.js';
-import { DEFAULTS } from '../constants.js';
+import { DEFAULTS, UI_COLORS } from '../constants.js';
 
 export class RadarVisualizer {
-  constructor({ui, expChart, pointsContainer}) {
+  constructor({ui, button, expChart, pointsContainer}) {
     this.ui = ui; // ui should provide nodes and helper funcs
+    this.button = button;
     this.expChart = expChart;
     this.pointsContainer = pointsContainer;
     this.interval = null;

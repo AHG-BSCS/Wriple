@@ -1,8 +1,11 @@
+import { UI_COLORS } from '../constants.js';
 import { API } from '../api.js';
 
 export class HeatmapVisualizer {
-  constructor({canvas, type, maxValue, maxCols, subcarrierCount, refreshRate}) {
+  constructor({canvas, button, container, type, maxValue, maxCols, subcarrierCount, refreshRate}) {
     this.canvas = canvas;
+    this.button = button;
+    this.container = container;
     this.type = type;
     this.heat = simpleheat(canvas);
     this.maxCols = maxCols;
@@ -19,6 +22,18 @@ export class HeatmapVisualizer {
     this.canvas.width = maxCols - 1;
   }
 
+  show() {
+    this.container.classList.remove('hidden');
+    this.button.style.backgroundColor = UI_COLORS.btnActiveColor;
+    this.button.dataset.active = '1';
+  }
+
+  hide() {
+    this.container.classList.add('hidden');
+    this.button.style.backgroundColor = UI_COLORS.btnDefaultColor;
+    this.button.dataset.active = '0';
+  }
+
   start() {
     if (this.interval) return;
     if (this.type !== 'gates')
@@ -32,6 +47,7 @@ export class HeatmapVisualizer {
     this.interval = null;
     this.buffer = Array.from({length: this.subcarrierCount}, () => []);
     this.heat.clear().draw();
+    this.hide();
   }
 
   stop() {
