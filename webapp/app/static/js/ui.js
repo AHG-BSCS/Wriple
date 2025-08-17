@@ -206,6 +206,10 @@ export const UI = {
     ui.classList.remove('hidden');
   },
 
+  isMonitoring() {
+    return this.nodes.monitorModeBtn.dataset.active === '1';
+  },
+
   hideVisualizers() {
     const n = this.nodes;
     // this.hideUI(n.radarContainer);
@@ -224,7 +228,7 @@ export const UI = {
     n.targetRadarBtn.dataset.active = '0';
     this.setHeaderDefault();
     this.setButtonDefault(n.recordModeBtn);
-    this.setButtonDefault(n.targetRadarBtn);
+    // this.setButtonDefault(n.targetRadarBtn);
     n.pointsContainer.innerHTML = '';
   },
 

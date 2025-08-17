@@ -8,9 +8,8 @@ export class D3Plot {
     this.button = button;
     this.container = container;
     this.interval = null;
-    this.running = false;
     this.visible = false;
-    this.refreshRate = refreshRate ?? 1000;
+    this.refreshRate = refreshRate;
 
     this.origin = { x: 400, y: 200 };
     this.scale = 20;
@@ -21,6 +20,7 @@ export class D3Plot {
     this.scatter = [];
     this.yLine = [];
     this.xGrid = [];
+
     this.beta = 0;
     this.alpha = 0;
     this.mx = 0;
@@ -43,11 +43,13 @@ export class D3Plot {
       .rotateY(this.startAngle)
       .rotateX(-this.startAngle)
       .scale(this.scale);
+
     this.points3d = points3D()
       .origin(this.origin)
       .rotateY(this.startAngle)
       .rotateX(-this.startAngle)
       .scale(this.scale);
+
     this.yScale3d = lineStrips3D()
       .origin(this.origin)
       .rotateY(this.startAngle)
@@ -166,24 +168,15 @@ export class D3Plot {
     this.mouseY = event.y - this.my + this.mouseY;
   }
 
-  async start() {
-    if (this.running) return;
-    this.running = true;
-    await this.tick();
-    this.interval = setInterval(() => this.tick(), this.refreshRate);
-  }
-
   show() {
     this.container.classList.remove('hidden');
     this.button.style.backgroundColor = UI_COLORS.btnActiveColor;
-    this.button.dataset.active = '1';
     this.visible = true;
   }
 
   hide() {
     this.container.classList.add('hidden');
     this.button.style.backgroundColor = UI_COLORS.btnDefaultColor;
-    this.button.dataset.active = '0';
     this.visible = false;
   }
 
@@ -201,10 +194,12 @@ export class D3Plot {
     this.mouseY = 0;
   }
 
+  start() {
+    this.interval = setInterval(() => this.tick(), this.refreshRate);
+  }
+
   stop() {
     clearInterval(this.interval);
-    this.interval = null;
-    this.running = false;
   }
 
   async tick() {

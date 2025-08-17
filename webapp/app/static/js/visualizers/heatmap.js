@@ -6,16 +6,19 @@ export class HeatmapVisualizer {
     this.canvas = canvas;
     this.button = button;
     this.container = container;
+
     this.type = type;
-    this.heat = simpleheat(canvas);
-    this.maxCols = maxCols;
-    this.subcarrierCount = subcarrierCount;
-    this.buffer = Array.from({length: subcarrierCount}, () => []);
+    this.visible = false;
+
     this.interval = null;
     this.refreshRate = refreshRate;
 
+    this.heat = simpleheat(canvas);
     this.heat.radius(1, 0);
     this.heat.max(maxValue);
+    this.maxCols = maxCols;
+    this.subcarrierCount = subcarrierCount;
+    this.buffer = Array.from({length: subcarrierCount}, () => []);
 
     // Crop the heatmaps to canvas
     this.canvas.height = subcarrierCount - 1;
@@ -25,37 +28,32 @@ export class HeatmapVisualizer {
   show() {
     this.container.classList.remove('hidden');
     this.button.style.backgroundColor = UI_COLORS.btnActiveColor;
-    this.button.dataset.active = '1';
+    this.visible = true;
   }
 
   hide() {
     this.container.classList.add('hidden');
     this.button.style.backgroundColor = UI_COLORS.btnDefaultColor;
-    this.button.dataset.active = '0';
+    this.visible = false;
+  }
+
+  clear() {
+    clearInterval(this.interval);
+    this.buffer = Array.from({length: this.subcarrierCount}, () => []);
+    this.heat.clear().draw();
+    this.hide();
   }
 
   start() {
-    if (this.interval) return;
     if (this.type !== 'gates')
       this.interval = setInterval(() => this.fetchAndDrawCsi(), this.refreshRate);
     else
       this.interval = setInterval(() => this.fetchAndDrawMmwave(), this.refreshRate);
   }
 
-  clear() {
-    if (this.interval) clearInterval(this.interval);
-    this.interval = null;
-    this.buffer = Array.from({length: this.subcarrierCount}, () => []);
-    this.heat.clear().draw();
-    this.hide();
-  }
-
   stop() {
     clearInterval(this.interval);
     setTimeout(() => {}, this.refreshRate);
-    this.interval = null;
-    // this.buffer = Array.from({length: this.subcarrierCount}, () => []);
-    // this.heat.clear().draw();
   }
 
   setMaxValue(newMax) {

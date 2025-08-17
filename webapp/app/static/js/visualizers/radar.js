@@ -2,31 +2,43 @@ import { API } from '../api.js';
 import { DEFAULTS, UI_COLORS } from '../constants.js';
 
 export class RadarVisualizer {
-  constructor({ui, button, expChart, pointsContainer}) {
-    this.ui = ui; // ui should provide nodes and helper funcs
+  constructor({ui, button, expChart, container}) {
+    this.ui = ui; // TODO: Remove the dependency to UI
     this.button = button;
     this.expChart = expChart;
-    this.pointsContainer = pointsContainer;
+    this.container = container;
+
     this.interval = null;
-    this.running = false;
+    this.visible = false;
+    
     this.radarMaxDistance = 10_000;
     this.refreshRate = DEFAULTS.radarRefreshRate;
   }
 
+  show() {
+    // this.container.classList.remove('hidden');
+    this.button.style.backgroundColor = UI_COLORS.btnActiveColor;
+    this.visible = true;
+  }
+
+  hide() {
+    // this.container.classList.add('hidden');
+    this.button.style.backgroundColor = UI_COLORS.btnDefaultColor;
+    this.visible = false;
+  }
+
   start() {
-    if (this.running) return;
-    this.running = true;
     this.interval = setInterval(() => this.tick(), this.refreshRate);
+    this.show();
   }
 
   clear() {
-    this.pointsContainer.innerHTML = '';
+    this.container.innerHTML = '';
+    this.hide();
   }
 
   stop() {
     clearInterval(this.interval);
-    this.interval = null;
-    this.running = false;
     this.clear();
   }
 
@@ -83,12 +95,10 @@ export class RadarVisualizer {
       uiNodes.packetLoss.textContent = `${data.packetLoss}%`;
       uiNodes.expValue.textContent = data.rssi;
 
-      if (uiNodes.expChartBtn.dataset.active === '1') {
-        this.expChart.push(data.exp)
-      }
+      if (this.expChart.visible) this.expChart.push(data.exp);
 
-      if (this.ui.nodes.targetRadarBtn.dataset.active === '1') {
-        this.clear();
+      if (this.visible) {
+        this.container.innerHTML = '';
         const radarRect = this.ui.nodes.radarContainer.getBoundingClientRect();
         const centerX = this.ui.nodes.pointsContainer.offsetWidth / 2;
         [data.target1, data.target2, data.target3].forEach((t) => {

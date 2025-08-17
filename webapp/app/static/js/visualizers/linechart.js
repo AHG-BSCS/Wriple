@@ -6,6 +6,8 @@ export class LineChart {
     this.button = button;
     this.container = container;
     this.chart = null;
+
+    this.visible = false;
     this.tick = 0;
     
     this.ctx.canvas.width = 680;
@@ -15,13 +17,13 @@ export class LineChart {
   show() {
     this.container.classList.remove('hidden');
     this.button.style.backgroundColor = UI_COLORS.btnActiveColor;
-    this.button.dataset.active = '1';
+    this.visible = true;
   }
 
   hide() {
     this.container.classList.add('hidden');
     this.button.style.backgroundColor = UI_COLORS.btnDefaultColor;
-    this.button.dataset.active = '0';
+    this.visible = false;
   }
 
   init() {
@@ -61,6 +63,17 @@ export class LineChart {
     });
   }
 
+  clear() {
+    this.hide();
+    if (!this.chart) return;
+
+    this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+    this.chart.data.labels = [];
+    this.chart.data.datasets[0].data = [];
+    this.tick = 0;
+    this.chart.update();
+  }
+
   push(value) {
     if (!this.chart) this.init();
     if (this.chart.data.labels.length >= 120) { // 30 seconds of data at 1Hz
@@ -73,16 +86,5 @@ export class LineChart {
       this.chart.update();
     }
     this.tick++;
-  }
-
-  clear() {
-    this.hide();
-    if (!this.chart) return;
-    
-    this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
-    this.chart.data.labels = [];
-    this.chart.data.datasets[0].data = [];
-    this.tick = 0;
-    this.chart.update();
   }
 }

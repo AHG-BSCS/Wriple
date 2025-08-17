@@ -50,7 +50,7 @@ const radar = new RadarVisualizer({
   ui: UI,
   expChart: expChart,
   button: UI.nodes.targetRadarBtn,
-  pointsContainer: UI.nodes.pointsContainer
+  container: UI.nodes.pointsContainer
 });
 
 const d3plot = new D3Plot({
@@ -69,7 +69,6 @@ function clearVisualizers() {
   expChart.clear();
   d3plot.clear();
   
-  UI.setButtonDefault(UI.nodes.targetRadarBtn);
   UI.setHeaderDefault();
   UI.setAsidesDefault();
 }
@@ -81,7 +80,6 @@ function stopVisualizers() {
   gatesHeatmap.stop();
   d3plot.stop();
 
-  UI.setButtonDefault(UI.nodes.targetRadarBtn);
   UI.setHeaderDefault();
   UI.setAsidesDefault();
 
@@ -94,9 +92,7 @@ function stopVisualizers() {
 
 async function startRecording(recordModeBtn) {
   await API.startRecording(OptionsUI.getSelectedParameters());
-  
   UI.setButtonActive(recordModeBtn);
-  UI.setButtonActive(UI.nodes.targetRadarBtn);
   radar.start();
 }
 
@@ -116,14 +112,13 @@ async function startMonitoring(monitorModeBtn) {
     return;
   }
   UI.enableButton(monitorModeBtn);
-
-  if (UI.isButtonActive(UI.nodes.amplitudeHeatmapBtn)) ampHeatmap.start();
-  if (UI.isButtonActive(UI.nodes.phaseHeatmapBtn)) phaseHeatmap.start();
-  if (UI.isButtonActive(UI.nodes.gatesHeatmapBtn)) gatesHeatmap.start();
-  if (UI.isButtonActive(UI.nodes.d3PlotBtn)) d3plot.start();
-  
   UI.setButtonActive(monitorModeBtn);
-  radar.start();
+
+  if (radar.visible) radar.start();
+  if (ampHeatmap.visible) ampHeatmap.start();
+  if (phaseHeatmap.visible) phaseHeatmap.start();
+  if (gatesHeatmap.visible) gatesHeatmap.start();
+  if (d3plot.visible) d3plot.start();
 }
 
 function wireSidebar() {
@@ -149,7 +144,7 @@ function wireSidebar() {
     }
 
     if (UI.nodes.recordModeBtn.dataset.active === '1') UI.stopRecording();
-    if (UI.nodes.monitorModeBtn.dataset.active === '1') stopMonitoring();
+    if (UI.isMonitoring()) stopMonitoring();
   });
 
   UI.sidebarNodes.historyTab.addEventListener('click', () => {
@@ -168,7 +163,7 @@ function wireSidebar() {
 
     // If user switch to history tab while monitoring or recording
     if (UI.isButtonActive(UI.nodes.recordModeBtn)) UI.stopRecording();
-    if (UI.isButtonActive(UI.nodes.monitorModeBtn)) stopMonitoring();
+    if (UI.isMonitoring()) stopMonitoring();
   });
 
   UI.sidebarNodes.datasetTab.addEventListener('click', () => {
@@ -186,10 +181,10 @@ function wireSidebar() {
     }
 
     // If user switch to dataset tab while monitoring
-    if (UI.isButtonActive(UI.nodes.monitorModeBtn)) {
+    if (UI.isMonitoring()) {
       stopMonitoring();
       clearVisualizers();
-      UI.setButtonDefault(UI.nodes.targetRadarBtn);
+      radar.hide();
     }
   });
 }
@@ -205,7 +200,7 @@ function wireFloatingActionButtons() {
     const recordModeBtn = UI.nodes.recordModeBtn;
     if (UI.isButtonActive(recordModeBtn)) UI.stopRecording();
     else {
-      if (UI.isButtonActive(UI.nodes.monitorModeBtn)) {
+      if (UI.isMonitoring()) {
         API.stopCapturing();
         radar.stop();
         UI.setHeaderDefault();
@@ -222,27 +217,30 @@ function wireFloatingActionButtons() {
   });
 
   UI.nodes.targetRadarBtn.addEventListener('click', async () => {
-    if (UI.isButtonActive(UI.nodes.targetRadarBtn)) {
-      if (UI.isButtonActive(UI.nodes.monitorModeBtn) && UI.isButtonActive(UI.sidebarNodes.datasetTab)) {
+    if (radar.visible) {
+      if (UI.isMonitoring() && UI.isButtonActive(UI.sidebarNodes.datasetTab)) {
         stopMonitoring();
         radar.stop();
         UI.enableButton(UI.nodes.targetRadarBtn)
       }
-      UI.setButtonDefault(UI.nodes.targetRadarBtn);
       UI.setHeaderDefault();
       UI.setAsidesDefault();
-      radar.clear();
+      radar.stop();
     } else {
-      UI.setButtonActive(UI.nodes.targetRadarBtn);
+      radar.show();
+      if (UI.isMonitoring()) radar.start();
       // TODO: Separate the radar to the status bar updates
-
       if (UI.isButtonActive(UI.sidebarNodes.datasetTab)) {
+        // Disable the button to prevent multiple clicks during the API call delay
+        UI.disableButton(UI.nodes.targetRadarBtn);
         try { await API.startMonitoring(); }
         catch {
-          UI.setButtonDefault(UI.nodes.targetRadarBtn);
+          // If the API call fails, re-enable the button
+          UI.enableButton(UI.nodes.targetRadarBtn);
+          radar.hide();
           return;
         }
-        
+        UI.enableButton(UI.nodes.targetRadarBtn);
         UI.setButtonActive(UI.nodes.monitorModeBtn);
         radar.start();
       }
@@ -250,46 +248,41 @@ function wireFloatingActionButtons() {
   });
 
   UI.nodes.amplitudeHeatmapBtn.addEventListener('click', () => {
-    const ampHeatmapBtn = UI.nodes.amplitudeHeatmapBtn;
-    if (UI.isButtonActive(ampHeatmapBtn)) ampHeatmap.clear();
+    if (ampHeatmap.visible) ampHeatmap.clear();
     else {
       ampHeatmap.show();
-      if (UI.isButtonActive(UI.nodes.monitorModeBtn)) ampHeatmap.start();
+      if (UI.isMonitoring()) ampHeatmap.start();
     }
   });
 
   UI.nodes.phaseHeatmapBtn.addEventListener('click', () => {
-    const phaseHeatmapBtn = UI.nodes.phaseHeatmapBtn;
-    if (UI.isButtonActive(phaseHeatmapBtn)) phaseHeatmap.clear();
+    if (phaseHeatmap.visible) phaseHeatmap.clear();
     else {
       phaseHeatmap.show();
-      if (UI.isButtonActive(UI.nodes.monitorModeBtn)) phaseHeatmap.start();
+      if (UI.isMonitoring()) phaseHeatmap.start();
     }
   });
 
   UI.nodes.gatesHeatmapBtn.addEventListener('click', () => {
-    const gatesHeatmapBtn = UI.nodes.gatesHeatmapBtn;
-    if (UI.isButtonActive(gatesHeatmapBtn)) gatesHeatmap.clear();
+    if (gatesHeatmap.visible) gatesHeatmap.clear();
     else {
       gatesHeatmap.show();
-      if (UI.isButtonActive(UI.nodes.monitorModeBtn)) gatesHeatmap.start();
+      if (UI.isMonitoring()) gatesHeatmap.start();
     }
   });
 
   UI.nodes.expChartBtn.addEventListener('click', () => {
-    const expChartBtn = UI.nodes.expChartBtn;
-    if (UI.isButtonActive(expChartBtn)) expChart.clear();
+    if (expChart.visible) expChart.clear();
     else expChart.init();
   });
 
   UI.nodes.d3PlotBtn.addEventListener('click', () => {
-    const d3PlotBtn = UI.nodes.d3PlotBtn;
-    if (UI.isButtonActive(d3PlotBtn)) {
+    if (d3plot.visible) {
       d3plot.stop();
       d3plot.clear();
     } else {
       d3plot.show();
-      if (UI.isButtonActive(UI.nodes.monitorModeBtn)) d3plot.start();
+      if (UI.isMonitoring()) d3plot.start();
     }
   });
 }
