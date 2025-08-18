@@ -7,6 +7,9 @@ import { LineChart } from './visualizers/linechart.js';
 import { D3Plot } from './visualizers/d3plot.js';
 import { DEFAULTS } from './constants.js';
 
+let monitorInterval = null;
+
+// TODO: Add visualizers default values to constants.js
 const ampHeatmap = new HeatmapVisualizer({
   canvas: UI.nodes.amplitudeCanvas,
   button: UI.nodes.amplitudeHeatmapBtn,
@@ -47,10 +50,12 @@ const expChart = new LineChart({
 });
 
 const radar = new RadarVisualizer({
-  ui: UI,
-  expChart: expChart,
   button: UI.nodes.targetRadarBtn,
-  container: UI.nodes.pointsContainer
+  targetContainer: UI.nodes.targetContainer,
+  radarContainer: UI.nodes.radarContainer,
+  targetDistance: UI.nodes.target1Dist,
+  refreshRate: DEFAULTS.radarRefreshRate,
+  setAsidesTexts: UI.setAsidesTexts.bind(UI)
 });
 
 const d3plot = new D3Plot({
@@ -96,7 +101,29 @@ async function startRecording(recordModeBtn) {
   radar.start();
 }
 
+async function updateMonitorInfo() {
+  try {
+    const data = await API.fetchMonitorStatus();
+    if (data.modeStatus === -1) {
+      UI.stopRecording();
+      return;
+    }
+    
+    UI.nodes.packetCount.textContent = data.totalPacket;
+    UI.nodes.packetLoss.textContent = `${data.packetLoss}%`;
+    UI.nodes.expValue.textContent = data.rssi;
+
+    if (parseInt(data.rssi) > -60) UI.nodes.presenceStatus.textContent = "?";
+    else UI.nodes.presenceStatus.textContent = data.presence;
+    if (expChart.visible) expChart.push(data.exp);
+  } catch (err) {
+    UI.setHeaderDefault();
+    console.warn('Missing data for status bar.', err);
+  }
+}
+
 function stopMonitoring() {
+  clearInterval(monitorInterval);
   API.stopCapturing();
   UI.setButtonDefault(UI.nodes.monitorModeBtn);
   stopVisualizers();
@@ -105,7 +132,7 @@ function stopMonitoring() {
 async function startMonitoring(monitorModeBtn) {
   // Disable the button to prevent multiple clicks during the API call delay
   UI.disableButton(monitorModeBtn);
-  try { await API.startMonitoring(); } 
+  try { await API.startMonitoring(); }
   catch {
     // If the API call fails, re-enable the button
     UI.enableButton(monitorModeBtn);
@@ -113,6 +140,7 @@ async function startMonitoring(monitorModeBtn) {
   }
   UI.enableButton(monitorModeBtn);
   UI.setButtonActive(monitorModeBtn);
+  monitorInterval = setInterval(() => updateMonitorInfo(), DEFAULTS.monitorIntervalDelay);
 
   if (radar.visible) radar.start();
   if (ampHeatmap.visible) ampHeatmap.start();
@@ -192,7 +220,7 @@ function wireSidebar() {
 function wireFloatingActionButtons() {
   UI.nodes.monitorModeBtn.addEventListener('click', () => {
     const monitorModeBtn = UI.nodes.monitorModeBtn;
-    if (UI.isButtonActive(monitorModeBtn)) stopMonitoring();
+    if (UI.isMonitoring()) stopMonitoring();
     else startMonitoring(monitorModeBtn);
   });
 
@@ -220,8 +248,6 @@ function wireFloatingActionButtons() {
     if (radar.visible) {
       if (UI.isMonitoring() && UI.isButtonActive(UI.sidebarNodes.datasetTab)) {
         stopMonitoring();
-        radar.stop();
-        UI.enableButton(UI.nodes.targetRadarBtn)
       }
       UI.setHeaderDefault();
       UI.setAsidesDefault();
@@ -229,7 +255,8 @@ function wireFloatingActionButtons() {
     } else {
       radar.show();
       if (UI.isMonitoring()) radar.start();
-      // TODO: Separate the radar to the status bar updates
+
+      // If the user is in dataset tab
       if (UI.isButtonActive(UI.sidebarNodes.datasetTab)) {
         // Disable the button to prevent multiple clicks during the API call delay
         UI.disableButton(UI.nodes.targetRadarBtn);

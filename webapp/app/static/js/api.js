@@ -14,7 +14,8 @@ async function postJson(url, body = {}) {
 }
 
 export const API = {
-  checkSystemStatus: () => postJson('/check_system_status'),
+  fetchSystemIconStatus: () => postJson('/fetch_system_icon_status'),
+  fetchMonitorStatus: () => postJson('/fetch_monitor_status'),
   
   startMonitoring: () => postJson(`/capture_data/monitor`),
   startRecording: (params) => postJson(`/capture_data/record`, params),

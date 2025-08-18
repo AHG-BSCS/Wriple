@@ -4,6 +4,7 @@ import { API } from './api.js';
 function $(sel) { return document.querySelector(sel); }
 function $$(sel) { return document.querySelectorAll(sel); }
 
+// TODO: Further refactor the UI.nodes
 export const UI = {
   sidebarNodes: {
     collapseBtn: $(SELECTORS.collapseBtn),
@@ -38,7 +39,7 @@ export const UI = {
 
     datasetList: $(SELECTORS.datasetList),
 
-    pointsContainer: $(SELECTORS.pointsContainer),
+    targetContainer: $(SELECTORS.targetContainer),
     radarContainer: $(SELECTORS.radarContainer),
 
     amplitudeHeatmapContainer: $(SELECTORS.amplitudeHeatmapContainer),
@@ -88,7 +89,7 @@ export const UI = {
   async updateStatusBar() {
     const n = this.nodes;
     try {
-      const status = await API.checkSystemStatus();
+      const status = await API.fetchSystemIconStatus();
       if (status.ap) n.apStatus.style.fill = UI_COLORS.statusBarActiveColor;
       else n.apStatus.style.fill = UI_COLORS.statusBarInactiveColor;
       
@@ -166,6 +167,22 @@ export const UI = {
     this.setTextContent(n.target3DistRes, '0');
   },
 
+  setAsidesTexts(texts) {
+    const n = this.asideNodes;
+    this.setTextContent(n.target1Angle, texts.target1Angle);
+    this.setTextContent(n.target2Angle, texts.target2Angle);
+    this.setTextContent(n.target3Angle, texts.target3Angle);
+    this.setTextContent(n.target1Distance, texts.target1Distance);
+    this.setTextContent(n.target2Distance, texts.target2Distance);
+    this.setTextContent(n.target3Distance, texts.target3Distance);
+    this.setTextContent(n.target1Speed, texts.target1Speed);
+    this.setTextContent(n.target2Speed, texts.target2Speed);
+    this.setTextContent(n.target3Speed, texts.target3Speed);
+    this.setTextContent(n.target1DistRes, texts.target1DistRes);
+    this.setTextContent(n.target2DistRes, texts.target2DistRes);
+    this.setTextContent(n.target3DistRes, texts.target3DistRes);
+  },
+
   setButtonActive(buttonNode) {
     buttonNode.style.backgroundColor = UI_COLORS.btnActiveColor;
     buttonNode.dataset.active = '1';
@@ -229,14 +246,6 @@ export const UI = {
     this.setHeaderDefault();
     this.setButtonDefault(n.recordModeBtn);
     // this.setButtonDefault(n.targetRadarBtn);
-    n.pointsContainer.innerHTML = '';
-  },
-
-  createRadarPoint(x, y) {
-    const point = document.createElement('div');
-    point.className = 'point';
-    point.style.left = `${x}px`;
-    point.style.top = `${y}px`;
-    this.nodes.pointsContainer.appendChild(point);
+    n.targetContainer.innerHTML = '';
   },
 };

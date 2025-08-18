@@ -147,6 +147,20 @@ class HumanDetectionSystem:
             'model': self.model_manager.model_loaded
         }
     
+    def get_monitor_status(self) -> dict:
+        presence_prediction = self.predict_presence()
+        mode_status = (0 if self.is_recording and self.network_manager.is_listening else 
+                       1 if self.is_monitoring else -1)
+        
+        return {
+            'modeStatus': mode_status,
+            'presence': presence_prediction,
+            'totalPacket': self.network_manager.packet_received_count,
+            'packetLoss': self.network_manager.get_packet_loss_rate(),
+            'rssi': self.radar_data[0],
+            'exp': self.radar_data[1]
+        }
+    
     def get_radar_status(self) -> dict:
         """
         Get radar data and predictions
@@ -154,20 +168,14 @@ class HumanDetectionSystem:
         Returns:
             dict: Dictionary with radar data and presence prediction
         """
-        presence_prediction = self.predict_presence()
         mode_status = (0 if self.is_recording and self.network_manager.is_listening else 
-                      1 if self.is_monitoring else -1)
+                       1 if self.is_monitoring else -1)
         
         return {
-            'presence': presence_prediction,
+            'modeStatus': mode_status,
             'target1': self.radar_data[2],
             'target2': self.radar_data[3],
-            'target3': self.radar_data[4],
-            'totalPacket': self.network_manager.packet_received_count,
-            'packetLoss': self.network_manager.get_packet_loss_rate(),
-            'rssi': self.radar_data[0],
-            'exp': self.radar_data[1],
-            'modeStatus': mode_status
+            'target3': self.radar_data[4]
         }
     
     def set_recording_parameters(self, params: dict) -> bool:

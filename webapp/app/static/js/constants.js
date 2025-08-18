@@ -30,7 +30,7 @@ export const SELECTORS = {
 
   datasetList: '#dataset-list',
 
-  pointsContainer: '#points',
+  targetContainer: '#points',
   radarContainer: '#radar-container',
 
   target1Angle: '#target1-angle',
@@ -156,6 +156,7 @@ export const DEFAULTS = {
   heatmapRefreshRate: 100,
   gatesHeatmapRefreshRate: 333,
   systemStatusInterval: 2000,
+  monitorIntervalDelay: 100,
   recordingDelay: 1000
 };
 

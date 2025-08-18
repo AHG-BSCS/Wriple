@@ -16,12 +16,21 @@ def create_api_routes(app, detection_system):
         """Serve the main HTML page"""
         return render_template('index.html')
     
-    @app.route('/check_system_status', methods=['POST'])
-    def check_system_status():
+    @app.route('/fetch_system_icon_status', methods=['POST'])
+    def fetch_system_icon_status():
         """Get system component status"""
         try:
             status = detection_system.get_system_status()
             return jsonify(status)
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/fetch_monitor_status', methods=['POST'])
+    def fetch_monitor_status():
+        """Get capturing data and presence predictions"""
+        try:
+            radar_status = detection_system.get_monitor_status()
+            return jsonify(radar_status)
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
