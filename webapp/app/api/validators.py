@@ -80,14 +80,14 @@ def validate_recording_parameters(params) -> bool:
             logger.error(f'Invalid activity value: {activity}')
             return False
 
-        # Validate angle: must be one of -45, -30, -15, 0, 15, 30, 45
+        # Validate angle: must be one of 0-5
         angle = params.get('angle')
         try:
             angle_val = int(angle)
         except (ValueError, TypeError):
             logger.error(f'Invalid angle type: {angle}')
             return False
-        if angle_val not in [360, -45, -30, -15, 0, 15, 30, 45]:
+        if angle_val not in [0, 1, 2, 3, 4, 5]:
             logger.error(f'Invalid angle value: {angle}')
             return False
 
@@ -113,25 +113,25 @@ def validate_recording_parameters(params) -> bool:
             logger.error(f'Invalid obstructed value: {obstructed}')
             return False
 
-        # Validate obstruction: must be integer 0-5 (None, Plastic, Wood, Glass, Concrete, Metal)
+        # Validate obstruction: must be integer 0-3 (None, Wood, Concrete, Metal)
         obstruction = params.get('obstruction')
         try:
             obstruction_int = int(obstruction)
         except (ValueError, TypeError):
             logger.error(f'Invalid obstruction type: {obstruction}')
             return False
-        if obstruction_int < 0 or obstruction_int > 5:
+        if obstruction_int < 0 or obstruction_int > 3:
             logger.error(f'Invalid obstruction value: {obstruction}')
             return False
 
-        # Validate spacing: must be integer 3-12
+        # Validate spacing: must be integer 3-15
         spacing = params.get('spacing')
         try:
             spacing_val = int(spacing)
         except (ValueError, TypeError):
             logger.error(f'Invalid spacing type: {spacing}')
             return False
-        if spacing_val < 3 or spacing_val > 12:
+        if spacing_val < 3 or spacing_val > 15:
             logger.error(f'Invalid spacing value: {spacing}')
             return False
 
@@ -158,14 +158,13 @@ def validate_class(params) -> bool:
         distance_t1 = int(params.get('distance_t1'))
         
         if class_label == 0:
-            if target_count == 0 and angle == 360 and distance_t1 == -1:
+            if target_count == 0 and angle == 0 and distance_t1 == -1:
                 return True
             else:
                 logger.error(f'Invalid recording parameter/s for absence class.')
                 return False
         elif class_label == 1:
-            # If class is presence, target count should be 1-3
-            if target_count in [1, 2, 3] and angle in [-45, -30, -15, 0, 15, 30, 45] and distance_t1 >= 0:
+            if target_count in [1, 2, 3] and angle in [1, 2, 3, 4, 5] and distance_t1 >= 0:
                 return True
             else:
                 logger.error(f'Invalid recording parameter/s for presence class.')
@@ -200,7 +199,7 @@ def validate_obstruction(params) -> bool:
                 return False
         # If obstructed, obstruction should not be 1
         elif obstructed == 1:
-            if obstruction in [1, 2, 3, 4, 5]:
+            if obstruction in [1, 2, 3]:
                 return True
             else:
                 logger.error(f'Invalid obstruction type when obstructed.')

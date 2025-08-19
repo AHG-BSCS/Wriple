@@ -98,14 +98,12 @@ export const OPTIONS = {
       { value: '4', label: 'Running' },
     ],
     angle: [
-      { value: '360', label: 'No Angle' },
-      { value: '-45', label: '-45°' },
-      { value: '-30', label: '-30°' },
-      { value: '-15', label: '-15°' },
-      { value: '0', label: '0°' },
-      { value: '15', label: '15°' },
-      { value: '30', label: '30°' },
-      { value: '45', label: '45°' }
+      { value: '0', label: 'No Angle' },
+      { value: '1', label: '-60° ~ -45°' },
+      { value: '2', label: '-45° ~ -14°' },
+      { value: '3', label: '-15° ~ +14°' },
+      { value: '4', label: '+15° ~ +44°' },
+      { value: '5', label: '+45° ~ +60°' }
     ],
     distance: [
       { value: '-1', label: 'No Distance' },
@@ -126,11 +124,9 @@ export const OPTIONS = {
     ],
     obstruction: [
       { value: '0', label: 'None' },
-      { value: '1', label: 'Plastic' },
-      { value: '2', label: 'Wood' },
-      { value: '3', label: 'Glass' },
-      { value: '4', label: 'Concrete' },
-      { value: '5', label: 'Metal' }
+      { value: '1', label: 'Wood' },
+      { value: '2', label: 'Concrete' },
+      { value: '3', label: 'Metal' }
     ],
     spacing: [
       { value: '3', label: '3m' },
@@ -142,7 +138,10 @@ export const OPTIONS = {
       { value: '9', label: '9m' },
       { value: '10', label: '10m' },
       { value: '11', label: '11m' },
-      { value: '12', label: '12m' }
+      { value: '12', label: '12m' },
+      { value: '13', label: '13m' },
+      { value: '14', label: '14m' },
+      { value: '15', label: '15m' }
     ]
   };
 
