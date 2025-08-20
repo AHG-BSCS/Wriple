@@ -71,7 +71,9 @@ export const SELECTORS = {
   
   amplitudeMaxValue: '#amplitude-max-value',
   phaseMaxValue: '#phase-max-value',
-  gatesMaxValue: '#gates-max-value'
+  gatesMaxValue: '#gates-max-value',
+
+  expLineChartCanvas: '#exp-chart',
 };
 
 export const OPTIONS = {
@@ -145,18 +147,54 @@ export const OPTIONS = {
     ]
   };
 
-export const DEFAULTS = {
-  SUBCARRIER_COUNT: 85,
-  MAX_COLS: 160,
-  DOPPLER_BINS: 20,
-  RANGE_GATES: 16,
-  d3PlotRefreshRate: 1000,
-  radarRefreshRate: 100,
-  heatmapRefreshRate: 100,
-  gatesHeatmapRefreshRate: 333,
-  systemStatusInterval: 2000,
-  monitorIntervalDelay: 100,
-  recordingDelay: 1000
+export const MAIN = {
+  delaySystemIconStatus: 2000,
+  delayMonitorInterval: 100,
+  delayRecordingAction: 1000
+};
+
+export const RADAR = {
+  refreshRate: 100,
+  maxDistance: 10_000
+};
+
+export const HEATMAP = {
+  radius: 1,
+  blur: 0,
+  maxColumns: 150, // 5 seconds of data
+  subcarriers: 85, // TODO: Update the subcarrier count on launch
+  rangeGates: 16,
+  dopplerBins: 20,
+  delayCsi: 100,
+  delayMmwave: 333 // Maximum LD2420 refresh rate
+};
+
+export const LINECHART = {
+  height: 200,
+  width: 680,
+  tension: 0.3,
+  pointRadius: 0,
+  maxDataPoints: 120, // 30 seconds of data at 1Hz
+  suggestedMin: -80,
+  suggestedMax: -20
+}
+
+export const D3PLOT = {
+  svgId: '#d3-plot',
+  delayD3Plot: 1000,
+  gridStrokeColor: 'black',
+  gridStrokeWidth: 0.3,
+  gridFillOpacity: 0.8,
+  pointRadius: 3,
+  pointOpacity: 1,
+  yScaleStrokeColor: 'black',
+  yScaleStrokeWidth: 0.5,
+  yTextFontFamily: 'system-ui, sans-serif',
+  origin: { x: 400, y: 200 }, // Center of the plot
+  startAngle: 180, // Initial rotation angle
+  scale: 20, // Scale factor for the plot
+  dragRotateFactor: 230,
+  animateDuration: 1000,
 };
 
 export const UI_COLORS = {

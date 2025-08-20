@@ -1,28 +1,34 @@
-import { UI_COLORS } from '../constants.js';
 import { API } from '../api.js';
+import { HEATMAP, UI_COLORS } from '../constants.js';
 
 export class HeatmapVisualizer {
-  constructor({canvas, button, container, type, maxValue, maxCols, subcarrierCount, refreshRate}) {
-    this.canvas = canvas;
+  constructor({canvas, button, container, type, maxValue}) {
     this.button = button;
     this.container = container;
 
     this.type = type;
     this.visible = false;
-
     this.interval = null;
-    this.refreshRate = refreshRate;
 
     this.heat = simpleheat(canvas);
-    this.heat.radius(1, 0);
+    this.heat.radius(HEATMAP.radius, HEATMAP.blur);
     this.heat.max(maxValue);
-    this.maxCols = maxCols;
-    this.subcarrierCount = subcarrierCount;
-    this.buffer = Array.from({length: subcarrierCount}, () => []);
+    this.buffer = Array.from({length: HEATMAP.subcarriers}, () => []);
 
-    // Crop the heatmaps to canvas
-    this.canvas.height = subcarrierCount - 1;
-    this.canvas.width = maxCols - 1;
+    if (type !== 'mmwave') {
+      this.rows = HEATMAP.subcarriers;
+      this.maxCols = HEATMAP.maxColumns;
+      // Crop the heatmaps to canvas
+      canvas.height = HEATMAP.subcarriers - 1;
+      canvas.width = HEATMAP.maxColumns - 1;
+    }
+    else {
+      this.rows = HEATMAP.dopplerBins;
+      this.maxCols = HEATMAP.rangeGates;
+      // Crop the heatmaps to canvas
+      canvas.height = HEATMAP.dopplerBins - 1;
+      canvas.width = HEATMAP.rangeGates - 1;
+    }
   }
 
   show() {
@@ -39,21 +45,20 @@ export class HeatmapVisualizer {
 
   clear() {
     clearInterval(this.interval);
-    this.buffer = Array.from({length: this.subcarrierCount}, () => []);
+    this.buffer = Array.from({length: this.rows}, () => []);
     this.heat.clear().draw();
     this.hide();
   }
 
   start() {
-    if (this.type !== 'gates')
-      this.interval = setInterval(() => this.fetchAndDrawCsi(), this.refreshRate);
+    if (this.type !== 'mmwave')
+      this.interval = setInterval(() => this.fetchAndDrawCsi(), HEATMAP.delayCsi);
     else
-      this.interval = setInterval(() => this.fetchAndDrawMmwave(), this.refreshRate);
+      this.interval = setInterval(() => this.fetchAndDrawMmwave(), HEATMAP.delayMmwave);
   }
 
   stop() {
     clearInterval(this.interval);
-    setTimeout(() => {}, this.refreshRate);
   }
 
   setMaxValue(newMax) {

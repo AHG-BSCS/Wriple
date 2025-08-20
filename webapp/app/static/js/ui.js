@@ -61,6 +61,10 @@ export const UI = {
     modelStatus: $(SELECTORS.modelStatus),
   },
 
+  visualizers: {
+    expChartCanvasCtx: document.querySelector(SELECTORS.expLineChartCanvas).getContext('2d'),
+  },
+
   sliderNodes: {
     amplitudeMaxSlider: $(SELECTORS.amplitudeMaxSlider),
     phaseMaxSlider: $(SELECTORS.phaseMaxSlider),

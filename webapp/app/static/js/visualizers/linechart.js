@@ -1,17 +1,17 @@
-import { UI_COLORS } from '../constants.js';
+import { LINECHART, UI_COLORS } from '../constants.js';
 
 export class LineChart {
   constructor({context, button, container}) {
-    this.ctx = document.querySelector(context).getContext('2d');
+    this.context = context;
     this.button = button;
     this.container = container;
     this.chart = null;
 
     this.visible = false;
     this.tick = 0;
-    
-    this.ctx.canvas.width = 680;
-    this.ctx.canvas.height = 200;
+
+    this.context.canvas.height = LINECHART.height;
+    this.context.canvas.width = LINECHART.width;
   }
 
   show() {
@@ -30,7 +30,7 @@ export class LineChart {
     this.show();
     if (this.chart) return;
 
-    this.chart = new Chart(this.ctx, {
+    this.chart = new Chart(this.context, {
       type: 'line',
       data: {
         labels: [],
@@ -39,8 +39,8 @@ export class LineChart {
           data: [],
           borderColor: 'rgb(31, 41, 55)',
           backgroundColor: 'rgba(148, 163, 183, 0.1)',
-          tension: 0.3,
-          pointRadius: 0
+          tension: LINECHART.tension,
+          pointRadius: LINECHART.pointRadius,
         }]
       },
       options: {
@@ -51,12 +51,16 @@ export class LineChart {
             title: { display: true, text: 'Time (s)' },
             ticks: {
               callback: function (val, index) {
-                // Show label every 5 seconds
+                // Show label every 5 seconds based on monitoring interval
                 return index % 10 === 0 ? this.getLabelForValue(val) : '';
               }
             }
           },
-          y: { title: { display: true, text: 'Amplitude' }, suggestedMin: -80, suggestedMax: -20}
+          y: { 
+            title: { display: true, text: 'Amplitude' },
+            suggestedMin: LINECHART.suggestedMin,
+            suggestedMax: LINECHART.suggestedMax
+          }
         },
         plugins: { legend: { display: false }}
       }
@@ -67,7 +71,7 @@ export class LineChart {
     this.hide();
     if (!this.chart) return;
 
-    this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+    this.context.clearRect(0, 0, this.context.canvas.width, this.context.canvas.height);
     this.chart.data.labels = [];
     this.chart.data.datasets[0].data = [];
     this.tick = 0;
@@ -76,7 +80,8 @@ export class LineChart {
 
   push(value) {
     if (!this.chart) this.init();
-    if (this.chart.data.labels.length >= 120) { // 30 seconds of data at 1Hz
+    // 30 seconds of data at 1Hz
+    if (this.chart.data.labels.length >= LINECHART.maxDataPoints) {
       this.chart.data.labels.shift();
       this.chart.data.datasets[0].data.shift();
     }

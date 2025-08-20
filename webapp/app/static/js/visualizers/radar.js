@@ -1,18 +1,16 @@
 import { API } from '../api.js';
-import { UI_COLORS } from '../constants.js';
+import { RADAR, UI_COLORS } from '../constants.js';
 
 export class RadarVisualizer {
-  constructor({button, targetContainer, radarContainer, targetDistance, refreshRate, setAsidesTexts}) {
+  constructor({button, targetContainer, radarContainer, targetDistance, setAsidesTexts}) {
     this.button = button;
     this.targetContainer = targetContainer;
     this.radarContainer = radarContainer;
     this.targetDistance = targetDistance;
+
     this.interval = null;
     this.visible = false;
     
-    this.radarMaxDistance = 10_000;
-    this.refreshRate = refreshRate;
-
     this.radarRect = radarContainer.getBoundingClientRect();
     this.centerX = targetContainer.offsetWidth / 2;
 
@@ -32,7 +30,7 @@ export class RadarVisualizer {
   }
 
   start() {
-    this.interval = setInterval(() => this.tick(), this.refreshRate);
+    this.interval = setInterval(() => this.tick(), RADAR.refreshRate);
     this.show();
   }
 
@@ -80,6 +78,7 @@ export class RadarVisualizer {
       }
 
       if (data.modeStatus === 1) {
+        console.log('Radar mode is active, updating targets...');
         this.setAsidesTexts({
           target1Angle: this.calculateAngle(data.target1[0], data.target1[1]).toFixed(2) + '°',
           target2Angle: this.calculateAngle(data.target2[0], data.target2[1]).toFixed(2) + '°',
@@ -99,8 +98,8 @@ export class RadarVisualizer {
       this.targetContainer.innerHTML = '';
       [data.target1, data.target2, data.target3].forEach((t) => {
         if (t[1] !== 0) {
-          const x = Math.floor((t[0] / this.radarMaxDistance) * (this.radarRect.width / 2));
-          const y = Math.floor((t[1] / this.radarMaxDistance) * this.radarRect.height);
+          const x = Math.floor((t[0] / RADAR.maxDistance) * (this.radarRect.width / 2));
+          const y = Math.floor((t[1] / RADAR.maxDistance) * this.radarRect.height);
           this.createRadarPoint(this.centerX + x, this.radarRect.height - y);
         }
       });

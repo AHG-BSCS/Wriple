@@ -5,20 +5,16 @@ import { HeatmapVisualizer } from './visualizers/heatmap.js';
 import { RadarVisualizer } from './visualizers/radar.js';
 import { LineChart } from './visualizers/linechart.js';
 import { D3Plot } from './visualizers/d3plot.js';
-import { DEFAULTS } from './constants.js';
+import { MAIN } from './constants.js';
 
 let monitorInterval = null;
 
-// TODO: Add visualizers default values to constants.js
 const ampHeatmap = new HeatmapVisualizer({
   canvas: UI.nodes.amplitudeCanvas,
   button: UI.nodes.amplitudeHeatmapBtn,
   container: UI.nodes.amplitudeHeatmapContainer,
   type: 'amplitude',
-  maxValue: parseFloat(UI.sliderNodes.amplitudeMaxSlider.value),
-  maxCols: DEFAULTS.MAX_COLS,
-  subcarrierCount: DEFAULTS.SUBCARRIER_COUNT,
-  refreshRate: DEFAULTS.heatmapRefreshRate
+  maxValue: parseFloat(UI.sliderNodes.amplitudeMaxSlider.value)
 });
 
 const phaseHeatmap = new HeatmapVisualizer({
@@ -26,25 +22,19 @@ const phaseHeatmap = new HeatmapVisualizer({
   button: UI.nodes.phaseHeatmapBtn,
   container: UI.nodes.phaseHeatmapContainer,
   type: 'phase',
-  maxValue: parseFloat(UI.sliderNodes.phaseMaxSlider.value),
-  maxCols: DEFAULTS.MAX_COLS,
-  subcarrierCount: DEFAULTS.SUBCARRIER_COUNT,
-  refreshRate: DEFAULTS.heatmapRefreshRate
+  maxValue: parseFloat(UI.sliderNodes.phaseMaxSlider.value)
 });
 
 const gatesHeatmap = new HeatmapVisualizer({
   canvas: UI.nodes.gatesCanvas,
   button: UI.nodes.gatesHeatmapBtn,
   container: UI.nodes.gatesHeatmapContainer,
-  type: 'gates',
-  maxValue: parseFloat(UI.sliderNodes.gatesMaxSlider.value),
-  maxCols: DEFAULTS.DOPPLER_BINS,
-  subcarrierCount: DEFAULTS.RANGE_GATES,
-  refreshRate: DEFAULTS.heatmapRefreshRate
+  type: 'mmwave',
+  maxValue: parseFloat(UI.sliderNodes.gatesMaxSlider.value)
 });
 
 const expChart = new LineChart({
-  context: '#exp-chart',
+  context: UI.visualizers.expChartCanvasCtx,
   button: UI.nodes.expChartBtn,
   container: UI.nodes.expChartContainer
 });
@@ -54,15 +44,12 @@ const radar = new RadarVisualizer({
   targetContainer: UI.nodes.targetContainer,
   radarContainer: UI.nodes.radarContainer,
   targetDistance: UI.nodes.target1Dist,
-  refreshRate: DEFAULTS.radarRefreshRate,
   setAsidesTexts: UI.setAsidesTexts.bind(UI)
 });
 
 const d3plot = new D3Plot({
-  svg: "#d3-plot",
   button: UI.nodes.d3PlotBtn,
   container: UI.nodes.d3PlotContainer,
-  refreshRate: DEFAULTS.d3PlotRefreshRate
 });
 
 function clearVisualizers() {
@@ -89,10 +76,10 @@ function stopVisualizers() {
   UI.setAsidesDefault();
 
   // Ensure to remove the status bar and asides update from interval if mistimed
-  setTimeout(() => {
-    UI.setHeaderDefault();
-    UI.setAsidesDefault();
-  }, DEFAULTS.radarRefreshRate);
+  // setTimeout(() => {
+  //   UI.setHeaderDefault();
+  //   UI.setAsidesDefault();
+  // }, 500);
 }
 
 async function startRecording(recordModeBtn) {
@@ -113,7 +100,7 @@ async function updateMonitorInfo() {
     UI.nodes.packetLoss.textContent = `${data.packetLoss}%`;
     UI.nodes.expValue.textContent = data.rssi;
 
-    if (parseInt(data.rssi) > -60) UI.nodes.presenceStatus.textContent = "?";
+    if (parseInt(data.rssi) > -60) UI.nodes.presenceStatus.textContent = '?';
     else UI.nodes.presenceStatus.textContent = data.presence;
     if (expChart.visible) expChart.push(data.exp);
   } catch (err) {
@@ -140,7 +127,7 @@ async function startMonitoring(monitorModeBtn) {
   }
   UI.enableButton(monitorModeBtn);
   UI.setButtonActive(monitorModeBtn);
-  monitorInterval = setInterval(() => updateMonitorInfo(), DEFAULTS.monitorIntervalDelay);
+  monitorInterval = setInterval(() => updateMonitorInfo(), MAIN.delayMonitorInterval);
 
   if (radar.visible) radar.start();
   if (ampHeatmap.visible) ampHeatmap.start();
@@ -234,14 +221,14 @@ function wireFloatingActionButtons() {
         UI.setHeaderDefault();
 
         // Delay the recording due to suddent stop of monitoring
-        setTimeout(() => startRecording(recordModeBtn), DEFAULTS.recordingDelay);
+        setTimeout(() => startRecording(recordModeBtn), MAIN.delayRecordingAction);
       }
       else startRecording(recordModeBtn);
     }
 
     // Temporarily disable button to prevent multiple clicks
     UI.disableButton(recordModeBtn);
-    setTimeout(() => UI.enableButton(recordModeBtn), DEFAULTS.recordingDelay);
+    setTimeout(() => UI.enableButton(recordModeBtn), MAIN.delayRecordingAction);
   });
 
   UI.nodes.targetRadarBtn.addEventListener('click', async () => {
@@ -315,19 +302,19 @@ function wireFloatingActionButtons() {
 }
 
 function wireHeatmapSliders() {
-  UI.sliderNodes.amplitudeMaxSlider.addEventListener("input", (e) => {
+  UI.sliderNodes.amplitudeMaxSlider.addEventListener('input', (e) => {
     const newMax = parseFloat(e.target.value);
     UI.setTextContent(UI.sliderNodes.amplitudeMaxValue, newMax);
     ampHeatmap.setMaxValue(newMax);
   });
 
-  UI.sliderNodes.phaseMaxSlider.addEventListener("input", (e) => {
+  UI.sliderNodes.phaseMaxSlider.addEventListener('input', (e) => {
     const newMax = parseFloat(e.target.value);
     UI.setTextContent(UI.sliderNodes.phaseMaxValue, newMax);
     phaseHeatmap.setMaxValue(newMax);
   });
 
-  UI.sliderNodes.gatesMaxSlider.addEventListener("input", (e) => {
+  UI.sliderNodes.gatesMaxSlider.addEventListener('input', (e) => {
     const newMax = parseFloat(e.target.value);
     UI.setTextContent(UI.sliderNodes.gatesMaxValue, newMax);
     gatesHeatmap.setMaxValue(newMax);
@@ -363,7 +350,7 @@ function init() {
   wireHeatmapSliders();
   wireSelections();
 
-  setInterval(UI.updateStatusBar.bind(UI), DEFAULTS.systemStatusInterval);
+  setInterval(UI.updateStatusBar.bind(UI), MAIN.delaySystemIconStatus);
   UI.list_csv_files();
   // TODO: Make some UI invisible by default
   UI.sidebarNodes.monitorTab.click(); // Set default tab to monitor
