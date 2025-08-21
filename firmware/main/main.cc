@@ -1,6 +1,4 @@
 #include "esp_log.h"
-#include "esp_mac.h"
-#include "esp_timer.h"
 #include "esp_wifi.h"
 #include "nvs_flash.h"
 
@@ -15,14 +13,12 @@
 void config_print() {
     printf("\n\n");
     printf("-----------------------\n");
-    printf("ESP32 CSI Tool Settings\n");
+    printf("PROJECT NAME: %s\n", "WRIPLE");
+    printf("MONITOR BAUDRATE: %d\n", CONFIG_ESPTOOLPY_MONITOR_BAUD);
+    printf("CONSOLE BAUDRATE: %d\n", CONFIG_ESP_CONSOLE_UART_BAUDRATE);
     printf("-----------------------\n");
-    printf("PROJECT_NAME: %s\n", "Wriple");
-    printf("CONFIG_ESPTOOLPY_MONITOR_BAUD: %d\n", CONFIG_ESPTOOLPY_MONITOR_BAUD);
-    printf("CONFIG_ESP_CONSOLE_UART_BAUDRATE: %d\n", CONFIG_ESP_CONSOLE_UART_BAUDRATE);
-    printf("-----------------------\n");
-    printf("ESP_WIFI_SSID: %s\n", ESP_WIFI_SSID);
-    printf("ESP_WIFI_PASSWORD: %s\n", ESP_WIFI_PASS);
+    printf("WIFI SSID: %s\n", ESP_WIFI_SSID);
+    printf("WIFI PASSWORD: %s\n", ESP_WIFI_PASS);
     printf("-----------------------\n");
     printf("\n\n");
 }
@@ -80,7 +76,6 @@ extern "C" void app_main() {
 
     // Add a delay for sensor to initialize
     vTaskDelay(pdMS_TO_TICKS(1000));
-    rd03d_init();
     ld2420_init();
     csi_init();
 }

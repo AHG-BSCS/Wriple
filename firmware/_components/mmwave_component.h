@@ -1,5 +1,9 @@
-#ifndef LD2420_RADAR_COMPONENT_H
-#define LD2420_RADAR_COMPONENT_H
+#ifndef LD2420_MMWAVE_COMPONENT_H
+#define LD2420_MMWAVE_COMPONENT_H
+
+#include <inttypes.h>
+#include "driver/uart.h"
+#include "esp_timer.h"
 
 #define LD2420_UART_PORT     UART_NUM_2
 #define LD2420_UART_WAIT     5 / portTICK_PERIOD_MS // 5 ms (Keep it low for low latency read)
@@ -24,10 +28,11 @@
 
 #define DOPPLER_BINS  20
 #define GATES         16
+#define LD2420_PAYLOAD_SIZE  (DOPPLER_BINS * GATES * 3)
 
 #define LD2420_TIMER_INTERVAL  333 // LD2420 updates every 300 ms in debug mode
 #define LD2420_READ_INTERVAL   333000
-#define LD2420_TAG "LD2420"
+#define LD2420_TAG "MMWAVE"
 
 static int64_t last_ld2420_read_time = 0;
 static TimerHandle_t ld2420_timer;
@@ -64,9 +69,13 @@ std::string get_ld2420_data() {
             ld2420_buffer[tail_idx + 2] == LD2420_TAIL_3 &&
             ld2420_buffer[tail_idx + 3] == LD2420_TAIL_4)
         {
-            std::stringstream ss;
             const uint8_t* rdmap_data = &ld2420_buffer[i + LD2420_HEADER_LEN];
 
+            // Reserve enough space
+            std::string out;
+            out.reserve(LD2420_PAYLOAD_SIZE);
+
+            char tmp[16];
             for (int doppler = 0; doppler < DOPPLER_BINS; doppler++) {
                 for (int gate = 0; gate < GATES; gate++) {
                     int idx = (doppler * GATES + gate) * 4;
@@ -76,14 +85,16 @@ std::string get_ld2420_data() {
                     val |= ((uint32_t)rdmap_data[idx + 2]) << 16;
                     val |= ((uint32_t)rdmap_data[idx + 3]) << 24;
 
-                    ss << val;
+                    int n = snprintf(tmp, sizeof(tmp), "%" PRIu32, val);
+                    out.append(tmp, (n > 0) ? n : 0);
+
                     if (!(doppler == DOPPLER_BINS - 1 && gate == GATES - 1)) {
-                        ss << ",";
+                        out.push_back(',');
                     }
                 }
             }
 
-            return ss.str();
+            return out;
         }
     }
 

@@ -3,14 +3,13 @@
 
 #include <sstream>
 #include "driver/gpio.h"
-#include "driver/uart.h"
 #include "lwip/sockets.h"
 
-#include "rd03d_component.h"
-#include "ld2420_component.h"
+#include "mmwave_component.h"
 
 #define LED_GPIO_PIN GPIO_NUM_2
-#define LED_PACKET_COUNT_BLINK 15
+#define LED_PACKET_COUNT_BLINK 15 // Blink every 500 ms
+#define CSI_PAYLOAD_SIZE (1344 + LD2420_PAYLOAD_SIZE)
 
 #define CSI_TAG "CSI"
 
@@ -20,7 +19,7 @@ TimerHandle_t led_timer;
 static int total_packet_count = 0;
 static int sock = -1;
 static sockaddr_in client_addr;
-static const char *target_ip = "192.168.11.222"; // IP address of the station
+static const char *target_ip = "10.59.14.222"; // IP address of the station
 
 bool is_led_high = false;
 
@@ -37,32 +36,35 @@ void _wifi_csi_callback(void *ctx, wifi_csi_info_t *data) {
     // ESP_LOGI(CSI_TAG, "%d channel", data[0].rx_ctrl.cwb);
     // If from 40Mhz Channel with payload specific to station packet
     if (data[0].rx_ctrl.cwb == 0 && data[0].rx_ctrl.sig_len == 88) {
-        xSemaphoreTake(mutex, portMAX_DELAY);
-        
-        std::stringstream ss;
         wifi_csi_info_t d = data[0];
-        char mac[20] = {0};
-        sprintf(mac, "%02X:%02X:%02X:%02X:%02X:%02X", d.mac[0], d.mac[1], d.mac[2], d.mac[3], d.mac[4], d.mac[5]);
-
-        // (1) Metadata
-        ss << d.rx_ctrl.timestamp << "," << d.rx_ctrl.rssi << "," << d.rx_ctrl.channel << "|";
-
-        // (2) CSI
-        for (int i = 0; i < data->len; i++) {
-            ss << (int)data->buf[i];
-            if (i < data->len - 1) ss << " ";
+        std::string payload;
+        payload.reserve(CSI_PAYLOAD_SIZE);
+    
+        char tmp[64];
+        // Metadata
+        int n = snprintf(tmp, sizeof(tmp), "%llu,%d,%d,%d,%d|",
+                         (unsigned long long)d.rx_ctrl.timestamp,
+                         d.rx_ctrl.rssi,
+                         d.rx_ctrl.cwb,
+                         d.rx_ctrl.channel,
+                         d.rx_ctrl.ant);
+        payload.append(tmp, n);
+    
+        // CSI bytes as decimal text separated by space
+        for (int i = 0; i < d.len; ++i) {
+            int m = snprintf(tmp, sizeof(tmp), "%d", (int)d.buf[i]);
+            payload.append(tmp, m);
+            if (i < d.len - 1) payload.push_back(' ');
         }
-        ss << "|";
-
-        // (3) RD03D (3 targets × 4 fields each)
-        ss << get_rd03d_data() << "|";
-
-        // (4) LD2420 (20 doppler x 16 range gates)
-        ss << get_ld2420_data() << "\n";
-
-        // Send the CSI data to the station
-        sendto(sock, ss.str().c_str(), strlen(ss.str().c_str()), 0, (struct sockaddr *)&client_addr, sizeof(client_addr));
-
+        payload.push_back('|');
+    
+        payload.append(get_ld2420_data());
+        payload.push_back('\n');
+    
+        // Send payload protected by mutex
+        xSemaphoreTake(mutex, portMAX_DELAY);
+        if (sock != -1) sendto(sock, payload.data(), payload.size(), 0, (struct sockaddr *)&client_addr, sizeof(client_addr));
+        
         blink_led();
         total_packet_count--;
         xSemaphoreGive(mutex);
