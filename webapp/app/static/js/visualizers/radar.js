@@ -42,6 +42,8 @@ export class RadarVisualizer {
   stop() {
     clearInterval(this.interval);
     this.clear();
+    // Ensure to reset the radar container if mistimed
+    setTimeout(() => this.targetContainer.innerHTML = '', 120);
   }
 
   calculateDistance(x, y) {

@@ -214,6 +214,7 @@ export const UI = {
     n.recordModeBtn.dataset.active = '0';
     this.setHeaderDefault();
     this.setButtonDefault(n.recordModeBtn);
-    n.targetContainer.innerHTML = '';
+    // Ensure to reset the status bar if mistimed
+    setTimeout(() => this.setHeaderDefault(), 120);
   },
 };

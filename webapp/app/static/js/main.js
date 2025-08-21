@@ -75,17 +75,11 @@ function stopVisualizers() {
   UI.setHeaderDefault();
   UI.setAsidesDefault();
 
-  // Ensure to remove the status bar and asides update from interval if mistimed
-  // setTimeout(() => {
-  //   UI.setHeaderDefault();
-  //   UI.setAsidesDefault();
-  // }, 500);
-}
-
-async function startRecording(recordModeBtn) {
-  await API.startRecording(OptionsUI.getSelectedParameters());
-  UI.setButtonActive(recordModeBtn);
-  radar.start();
+  // Ensure to reset the status bar and asides update if mistimed
+  setTimeout(() => {
+    UI.setHeaderDefault();
+    UI.setAsidesDefault();
+  }, 120);
 }
 
 async function updateMonitorInfo() {
@@ -93,6 +87,7 @@ async function updateMonitorInfo() {
     const data = await API.fetchMonitorStatus();
     if (data.modeStatus === -1) {
       UI.stopRecording();
+      clearInterval(monitorInterval);
       return;
     }
     
@@ -100,13 +95,19 @@ async function updateMonitorInfo() {
     UI.nodes.packetLoss.textContent = `${data.packetLoss}%`;
     UI.nodes.expValue.textContent = data.rssi;
 
-    if (parseInt(data.rssi) > -60) UI.nodes.presenceStatus.textContent = '?';
+    if (parseInt(data.rssi) > -50) UI.nodes.presenceStatus.textContent = '?';
     else UI.nodes.presenceStatus.textContent = data.presence;
     if (expChart.visible) expChart.push(data.exp);
   } catch (err) {
     UI.setHeaderDefault();
     console.warn('Missing data for status bar.', err);
   }
+}
+
+async function startRecording(recordModeBtn) {
+  await API.startRecording(OptionsUI.getSelectedParameters());
+  UI.setButtonActive(recordModeBtn);
+  monitorInterval = setInterval(() => updateMonitorInfo(), MAIN.delayMonitorInterval);
 }
 
 function stopMonitoring() {
@@ -158,7 +159,10 @@ function wireSidebar() {
       clearVisualizers();
     }
 
-    if (UI.nodes.recordModeBtn.dataset.active === '1') UI.stopRecording();
+    if (UI.isButtonActive(UI.nodes.recordModeBtn)) {
+      UI.stopRecording();
+      clearInterval(monitorInterval);
+    }
     if (UI.isMonitoring()) stopMonitoring();
   });
 
@@ -177,7 +181,10 @@ function wireSidebar() {
     }
 
     // If user switch to history tab while monitoring or recording
-    if (UI.isButtonActive(UI.nodes.recordModeBtn)) UI.stopRecording();
+    if (UI.isButtonActive(UI.nodes.recordModeBtn)) {
+      UI.stopRecording();
+      clearInterval(monitorInterval);
+    }
     if (UI.isMonitoring()) stopMonitoring();
   });
 
@@ -213,7 +220,10 @@ function wireFloatingActionButtons() {
 
   UI.nodes.recordModeBtn.addEventListener('click', () => {
     const recordModeBtn = UI.nodes.recordModeBtn;
-    if (UI.isButtonActive(recordModeBtn)) UI.stopRecording();
+    if (UI.isButtonActive(recordModeBtn)) {
+      UI.stopRecording();
+      clearInterval(monitorInterval);
+    }
     else {
       if (UI.isMonitoring()) {
         API.stopCapturing();
