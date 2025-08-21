@@ -10,46 +10,46 @@ import { MAIN } from './constants.js';
 let monitorInterval = null;
 
 const ampHeatmap = new HeatmapVisualizer({
-  canvas: UI.nodes.amplitudeCanvas,
-  button: UI.nodes.amplitudeHeatmapBtn,
-  container: UI.nodes.amplitudeHeatmapContainer,
+  canvas: UI.visualizerNodes.amplitudeCanvas,
+  button: UI.floatingButtonNodes.amplitudeHeatmapBtn,
+  container: UI.containerNodes.amplitudeHeatmapContainer,
   type: 'amplitude',
   maxValue: parseFloat(UI.sliderNodes.amplitudeMaxSlider.value)
 });
 
 const phaseHeatmap = new HeatmapVisualizer({
-  canvas: UI.nodes.phaseCanvas,
-  button: UI.nodes.phaseHeatmapBtn,
-  container: UI.nodes.phaseHeatmapContainer,
+  canvas: UI.visualizerNodes.phaseCanvas,
+  button: UI.floatingButtonNodes.phaseHeatmapBtn,
+  container: UI.containerNodes.phaseHeatmapContainer,
   type: 'phase',
   maxValue: parseFloat(UI.sliderNodes.phaseMaxSlider.value)
 });
 
 const gatesHeatmap = new HeatmapVisualizer({
-  canvas: UI.nodes.gatesCanvas,
-  button: UI.nodes.gatesHeatmapBtn,
-  container: UI.nodes.gatesHeatmapContainer,
+  canvas: UI.visualizerNodes.gatesCanvas,
+  button: UI.floatingButtonNodes.gatesHeatmapBtn,
+  container: UI.containerNodes.gatesHeatmapContainer,
   type: 'mmwave',
   maxValue: parseFloat(UI.sliderNodes.gatesMaxSlider.value)
 });
 
 const expChart = new LineChart({
-  context: UI.visualizers.expChartCanvasCtx,
-  button: UI.nodes.expChartBtn,
-  container: UI.nodes.expChartContainer
+  context: UI.visualizerNodes.expChartCanvasCtx,
+  button: UI.floatingButtonNodes.expChartBtn,
+  container: UI.containerNodes.expChartContainer
 });
 
 const radar = new RadarVisualizer({
-  button: UI.nodes.targetRadarBtn,
-  targetContainer: UI.nodes.targetContainer,
-  radarContainer: UI.nodes.radarContainer,
-  targetDistance: UI.nodes.target1Dist,
+  button: UI.floatingButtonNodes.targetRadarBtn,
+  targetContainer: UI.containerNodes.targetContainer,
+  radarContainer: UI.containerNodes.radarContainer,
+  targetDistance: UI.headerNodes.targetDist,
   setAsidesTexts: UI.setAsidesTexts.bind(UI)
 });
 
 const d3plot = new D3Plot({
-  button: UI.nodes.d3PlotBtn,
-  container: UI.nodes.d3PlotContainer,
+  button: UI.floatingButtonNodes.d3PlotBtn,
+  container: UI.containerNodes.d3PlotContainer,
 });
 
 function clearVisualizers() {
@@ -61,8 +61,8 @@ function clearVisualizers() {
   expChart.clear();
   d3plot.clear();
   
-  UI.setHeaderDefault();
-  UI.setAsidesDefault();
+  UI.setHeaderTexts();
+  UI.setAsidesTexts();
 }
 
 function stopVisualizers() {
@@ -72,13 +72,13 @@ function stopVisualizers() {
   gatesHeatmap.stop();
   d3plot.stop();
 
-  UI.setHeaderDefault();
-  UI.setAsidesDefault();
+  UI.setHeaderTexts();
+  UI.setAsidesTexts();
 
   // Ensure to reset the status bar and asides update if mistimed
   setTimeout(() => {
-    UI.setHeaderDefault();
-    UI.setAsidesDefault();
+    UI.setHeaderTexts();
+    UI.setAsidesTexts();
   }, 120);
 }
 
@@ -91,15 +91,10 @@ async function updateMonitorInfo() {
       return;
     }
     
-    UI.nodes.packetCount.textContent = data.totalPacket;
-    UI.nodes.packetLoss.textContent = `${data.packetLoss}%`;
-    UI.nodes.expValue.textContent = data.rssi;
-
-    if (parseInt(data.rssi) > -50) UI.nodes.presenceStatus.textContent = '?';
-    else UI.nodes.presenceStatus.textContent = data.presence;
+    UI.setHeaderTexts(data);
     if (expChart.visible) expChart.push(data.exp);
   } catch (err) {
-    UI.setHeaderDefault();
+    UI.setHeaderTexts();
     console.warn('Missing data for status bar.', err);
   }
 }
@@ -113,7 +108,7 @@ async function startRecording(recordModeBtn) {
 function stopMonitoring() {
   clearInterval(monitorInterval);
   API.stopCapturing();
-  UI.setButtonDefault(UI.nodes.monitorModeBtn);
+  UI.setButtonDefault(UI.floatingButtonNodes.monitorModeBtn);
   stopVisualizers();
 }
 
@@ -139,64 +134,64 @@ async function startMonitoring(monitorModeBtn) {
 
 function wireSidebar() {
   UI.sidebarNodes.collapseBtn.addEventListener('click', () => {
-    UI.sidebarNodes.sidebar.classList.toggle('w-20');
+    UI.sidebarNodes.sidebarContainer.classList.toggle('w-20');
     UI.sidebarNodes.sidebarText.forEach(t => {
       t.classList.toggle('hidden');
     });
   });
 
-  UI.sidebarNodes.monitorTab.addEventListener('click', () => {
-    if (UI.sidebarNodes.monitorTab.dataset.active === '0') {
-      UI.setTabSelected(UI.sidebarNodes.monitorTab);
-      UI.setTabDefault(UI.sidebarNodes.historyTab);
-      UI.setTabDefault(UI.sidebarNodes.datasetTab);
+  UI.sidebarNodes.monitorTabBtn.addEventListener('click', () => {
+    if (UI.sidebarNodes.monitorTabBtn.dataset.active === '0') {
+      UI.setTabSelected(UI.sidebarNodes.monitorTabBtn);
+      UI.setTabDefault(UI.sidebarNodes.historyTabBtn);
+      UI.setTabDefault(UI.sidebarNodes.datasetTabBtn);
 
-      UI.sidebarNodes.monitorElements.forEach(t => { UI.hideUI(t); });
-      UI.sidebarNodes.historyElements.forEach(t => { UI.showUI(t); });
-      UI.sidebarNodes.datasetElements.forEach(t => { UI.showUI(t); });
+      UI.sidebarNodes.monitorGroup.forEach(t => { UI.hideUI(t); });
+      UI.sidebarNodes.historyGroup.forEach(t => { UI.showUI(t); });
+      UI.sidebarNodes.datasetGroup.forEach(t => { UI.showUI(t); });
 
       UI.hideVisualizers();
       clearVisualizers();
     }
 
-    if (UI.isButtonActive(UI.nodes.recordModeBtn)) {
+    if (UI.isButtonActive(UI.floatingButtonNodes.recordModeBtn)) {
       UI.stopRecording();
       clearInterval(monitorInterval);
     }
     if (UI.isMonitoring()) stopMonitoring();
   });
 
-  UI.sidebarNodes.historyTab.addEventListener('click', () => {
-    if (UI.sidebarNodes.historyTab.dataset.active === '0') {
-      UI.setTabDefault(UI.sidebarNodes.monitorTab);
-      UI.setTabSelected(UI.sidebarNodes.historyTab);
-      UI.setTabDefault(UI.sidebarNodes.datasetTab);
+  UI.sidebarNodes.historyTabBtn.addEventListener('click', () => {
+    if (UI.sidebarNodes.historyTabBtn.dataset.active === '0') {
+      UI.setTabDefault(UI.sidebarNodes.monitorTabBtn);
+      UI.setTabSelected(UI.sidebarNodes.historyTabBtn);
+      UI.setTabDefault(UI.sidebarNodes.datasetTabBtn);
 
-      UI.sidebarNodes.monitorElements.forEach(t => { UI.showUI(t); });
-      UI.sidebarNodes.historyElements.forEach(t => { UI.hideUI(t); });
-      UI.sidebarNodes.datasetElements.forEach(t => { UI.showUI(t); });
+      UI.sidebarNodes.monitorGroup.forEach(t => { UI.showUI(t); });
+      UI.sidebarNodes.historyGroup.forEach(t => { UI.hideUI(t); });
+      UI.sidebarNodes.datasetGroup.forEach(t => { UI.showUI(t); });
 
       UI.hideVisualizers();
       clearVisualizers();
     }
 
     // If user switch to history tab while monitoring or recording
-    if (UI.isButtonActive(UI.nodes.recordModeBtn)) {
+    if (UI.isButtonActive(UI.floatingButtonNodes.recordModeBtn)) {
       UI.stopRecording();
       clearInterval(monitorInterval);
     }
     if (UI.isMonitoring()) stopMonitoring();
   });
 
-  UI.sidebarNodes.datasetTab.addEventListener('click', () => {
-    if (UI.sidebarNodes.datasetTab.dataset.active === '0') {
-      UI.setTabDefault(UI.sidebarNodes.monitorTab);
-      UI.setTabDefault(UI.sidebarNodes.historyTab);
-      UI.setTabSelected(UI.sidebarNodes.datasetTab);
+  UI.sidebarNodes.datasetTabBtn.addEventListener('click', () => {
+    if (UI.sidebarNodes.datasetTabBtn.dataset.active === '0') {
+      UI.setTabDefault(UI.sidebarNodes.monitorTabBtn);
+      UI.setTabDefault(UI.sidebarNodes.historyTabBtn);
+      UI.setTabSelected(UI.sidebarNodes.datasetTabBtn);
 
-      UI.sidebarNodes.monitorElements.forEach(t => { UI.showUI(t); });
-      UI.sidebarNodes.historyElements.forEach(t => { UI.showUI(t); });
-      UI.sidebarNodes.datasetElements.forEach(t => { UI.hideUI(t); });
+      UI.sidebarNodes.monitorGroup.forEach(t => { UI.showUI(t); });
+      UI.sidebarNodes.historyGroup.forEach(t => { UI.showUI(t); });
+      UI.sidebarNodes.datasetGroup.forEach(t => { UI.hideUI(t); });
 
       UI.hideVisualizers();
       clearVisualizers();
@@ -212,14 +207,14 @@ function wireSidebar() {
 }
 
 function wireFloatingActionButtons() {
-  UI.nodes.monitorModeBtn.addEventListener('click', () => {
-    const monitorModeBtn = UI.nodes.monitorModeBtn;
+  UI.floatingButtonNodes.monitorModeBtn.addEventListener('click', () => {
+    const monitorModeBtn = UI.floatingButtonNodes.monitorModeBtn;
     if (UI.isMonitoring()) stopMonitoring();
     else startMonitoring(monitorModeBtn);
   });
 
-  UI.nodes.recordModeBtn.addEventListener('click', () => {
-    const recordModeBtn = UI.nodes.recordModeBtn;
+  UI.floatingButtonNodes.recordModeBtn.addEventListener('click', () => {
+    const recordModeBtn = UI.floatingButtonNodes.recordModeBtn;
     if (UI.isButtonActive(recordModeBtn)) {
       UI.stopRecording();
       clearInterval(monitorInterval);
@@ -228,7 +223,7 @@ function wireFloatingActionButtons() {
       if (UI.isMonitoring()) {
         API.stopCapturing();
         radar.stop();
-        UI.setHeaderDefault();
+        UI.setHeaderTexts();
 
         // Delay the recording due to suddent stop of monitoring
         setTimeout(() => startRecording(recordModeBtn), MAIN.delayRecordingAction);
@@ -241,37 +236,37 @@ function wireFloatingActionButtons() {
     setTimeout(() => UI.enableButton(recordModeBtn), MAIN.delayRecordingAction);
   });
 
-  UI.nodes.targetRadarBtn.addEventListener('click', async () => {
+  UI.floatingButtonNodes.targetRadarBtn.addEventListener('click', async () => {
     if (radar.visible) {
-      if (UI.isMonitoring() && UI.isButtonActive(UI.sidebarNodes.datasetTab)) {
+      if (UI.isMonitoring() && UI.isButtonActive(UI.sidebarNodes.datasetTabBtn)) {
         stopMonitoring();
       }
-      UI.setHeaderDefault();
-      UI.setAsidesDefault();
+      UI.setHeaderTexts();
+      UI.setAsidesTexts();
       radar.stop();
     } else {
       radar.show();
       if (UI.isMonitoring()) radar.start();
 
       // If the user is in dataset tab
-      if (UI.isButtonActive(UI.sidebarNodes.datasetTab)) {
+      if (UI.isButtonActive(UI.sidebarNodes.datasetTabBtn)) {
         // Disable the button to prevent multiple clicks during the API call delay
-        UI.disableButton(UI.nodes.targetRadarBtn);
+        UI.disableButton(UI.floatingButtonNodes.targetRadarBtn);
         try { await API.startMonitoring(); }
         catch {
           // If the API call fails, re-enable the button
-          UI.enableButton(UI.nodes.targetRadarBtn);
+          UI.enableButton(UI.floatingButtonNodes.targetRadarBtn);
           radar.hide();
           return;
         }
-        UI.enableButton(UI.nodes.targetRadarBtn);
-        UI.setButtonActive(UI.nodes.monitorModeBtn);
+        UI.enableButton(UI.floatingButtonNodes.targetRadarBtn);
+        UI.setButtonActive(UI.floatingButtonNodes.monitorModeBtn);
         radar.start();
       }
     }
   });
 
-  UI.nodes.amplitudeHeatmapBtn.addEventListener('click', () => {
+  UI.floatingButtonNodes.amplitudeHeatmapBtn.addEventListener('click', () => {
     if (ampHeatmap.visible) ampHeatmap.clear();
     else {
       ampHeatmap.show();
@@ -279,7 +274,7 @@ function wireFloatingActionButtons() {
     }
   });
 
-  UI.nodes.phaseHeatmapBtn.addEventListener('click', () => {
+  UI.floatingButtonNodes.phaseHeatmapBtn.addEventListener('click', () => {
     if (phaseHeatmap.visible) phaseHeatmap.clear();
     else {
       phaseHeatmap.show();
@@ -287,7 +282,7 @@ function wireFloatingActionButtons() {
     }
   });
 
-  UI.nodes.gatesHeatmapBtn.addEventListener('click', () => {
+  UI.floatingButtonNodes.gatesHeatmapBtn.addEventListener('click', () => {
     if (gatesHeatmap.visible) gatesHeatmap.clear();
     else {
       gatesHeatmap.show();
@@ -295,12 +290,12 @@ function wireFloatingActionButtons() {
     }
   });
 
-  UI.nodes.expChartBtn.addEventListener('click', () => {
+  UI.floatingButtonNodes.expChartBtn.addEventListener('click', () => {
     if (expChart.visible) expChart.clear();
     else expChart.init();
   });
 
-  UI.nodes.d3PlotBtn.addEventListener('click', () => {
+  UI.floatingButtonNodes.d3PlotBtn.addEventListener('click', () => {
     if (d3plot.visible) {
       d3plot.stop();
       d3plot.clear();
@@ -314,19 +309,19 @@ function wireFloatingActionButtons() {
 function wireHeatmapSliders() {
   UI.sliderNodes.amplitudeMaxSlider.addEventListener('input', (e) => {
     const newMax = parseFloat(e.target.value);
-    UI.setTextContent(UI.sliderNodes.amplitudeMaxValue, newMax);
+    UI.sliderNodes.amplitudeMaxValue.textContent = newMax;
     ampHeatmap.setMaxValue(newMax);
   });
 
   UI.sliderNodes.phaseMaxSlider.addEventListener('input', (e) => {
     const newMax = parseFloat(e.target.value);
-    UI.setTextContent(UI.sliderNodes.phaseMaxValue, newMax);
+    UI.sliderNodes.phaseMaxValue.textContent = newMax;
     phaseHeatmap.setMaxValue(newMax);
   });
 
   UI.sliderNodes.gatesMaxSlider.addEventListener('input', (e) => {
     const newMax = parseFloat(e.target.value);
-    UI.setTextContent(UI.sliderNodes.gatesMaxValue, newMax);
+    UI.sliderNodes.gatesMaxValue.textContent = newMax;
     gatesHeatmap.setMaxValue(newMax);
   });
 }
@@ -363,7 +358,7 @@ function init() {
   setInterval(UI.updateStatusBar.bind(UI), MAIN.delaySystemIconStatus);
   UI.list_csv_files();
   // TODO: Make some UI invisible by default
-  UI.sidebarNodes.monitorTab.click(); // Set default tab to monitor
+  UI.sidebarNodes.monitorTabBtn.click(); // Set default tab to monitor
 }
 
 document.addEventListener('DOMContentLoaded', init);

@@ -7,26 +7,35 @@ function $$(sel) { return document.querySelectorAll(sel); }
 // TODO: Further refactor the UI.nodes
 export const UI = {
   sidebarNodes: {
+    sidebarContainer: $(SELECTORS.sidebarContainer),
     collapseBtn: $(SELECTORS.collapseBtn),
-    sidebar: $(SELECTORS.sidebar),
     sidebarText: $$(SELECTORS.sidebarText),
 
-    monitorElements: $$(SELECTORS.monitorElements),
-    historyElements: $$(SELECTORS.historyElements),
-    datasetElements: $$(SELECTORS.datasetElements),
+    monitorGroup: $$(SELECTORS.monitorGroup),
+    historyGroup: $$(SELECTORS.historyGroup),
+    datasetGroup: $$(SELECTORS.datasetGroup),
 
-    monitorTab: $(SELECTORS.monitordTab),
-    historyTab: $(SELECTORS.historyTab),
-    datasetTab: $(SELECTORS.datasetTab),
+    monitorTabBtn: $(SELECTORS.monitorTabBtn),
+    historyTabBtn: $(SELECTORS.historyTabBtn),
+    datasetTabBtn: $(SELECTORS.datasetTabBtn)
   },
 
-  nodes: {
+  headerNodes: {
     presenceStatus: $(SELECTORS.presenceStatus),
-    target1Dist: $(SELECTORS.target1Dist),
+    targetDist: $(SELECTORS.targetDist),
     packetCount: $(SELECTORS.packetCount),
     packetLoss: $(SELECTORS.packetLoss),
     expValue: $(SELECTORS.expValue),
 
+    apStatus: $(SELECTORS.apStatus),
+    flaskStatus: $(SELECTORS.flaskStatus),
+    esp32Status: $(SELECTORS.esp32Status),
+    ld2420Status: $(SELECTORS.ld2420Status),
+    portStatus: $(SELECTORS.portStatus),
+    modelStatus: $(SELECTORS.modelStatus)
+  },
+
+  floatingButtonNodes: {
     recordModeBtn: $(SELECTORS.recordModeBtn),
     monitorModeBtn: $(SELECTORS.monitorModeBtn),
 
@@ -35,10 +44,10 @@ export const UI = {
     phaseHeatmapBtn: $(SELECTORS.phaseHeatmapBtn),
     gatesHeatmapBtn: $(SELECTORS.gatesHeatmapBtn),
     expChartBtn: $(SELECTORS.expChartBtn),
-    d3PlotBtn: $(SELECTORS.d3PlotBtn),
+    d3PlotBtn: $(SELECTORS.d3PlotBtn)
+  },
 
-    datasetList: $(SELECTORS.datasetList),
-
+  containerNodes: {
     targetContainer: $(SELECTORS.targetContainer),
     radarContainer: $(SELECTORS.radarContainer),
 
@@ -46,23 +55,18 @@ export const UI = {
     phaseHeatmapContainer: $(SELECTORS.phaseHeatmapContainer),
     gatesHeatmapContainer: $(SELECTORS.gatesHeatmapContainer),
     expChartContainer: $(SELECTORS.expChartContainer),
-    d3PlotContainer: $(SELECTORS.d3PlotContainer),
+    d3PlotContainer: $(SELECTORS.d3PlotContainer)
+  },
 
+  nodes: {
+    datasetList: $(SELECTORS.datasetList),
+  },
+
+  visualizerNodes: {
     amplitudeCanvas: $(SELECTORS.amplitudeCanvas),
     phaseCanvas: $(SELECTORS.phaseCanvas),
     gatesCanvas: $(SELECTORS.gatesCanvas),
-
-    apStatus: $(SELECTORS.apStatus),
-    flaskStatus: $(SELECTORS.flaskStatus),
-    esp32Status: $(SELECTORS.esp32Status),
-    ld2420Status: $(SELECTORS.ld2420Status),
-    rd03dStatus: $(SELECTORS.rd03dStatus),
-    portStatus: $(SELECTORS.portStatus),
-    modelStatus: $(SELECTORS.modelStatus),
-  },
-
-  visualizers: {
-    expChartCanvasCtx: document.querySelector(SELECTORS.expLineChartCanvas).getContext('2d'),
+    expChartCanvasCtx: document.querySelector(SELECTORS.expLineChartCanvas).getContext('2d')
   },
 
   sliderNodes: {
@@ -82,7 +86,7 @@ export const UI = {
   },
 
   async updateStatusBar() {
-    const n = this.nodes;
+    const n = this.headerNodes;
     try {
       const status = await API.fetchSystemIconStatus();
       if (status.ap) n.apStatus.style.fill = UI_COLORS.statusBarActiveColor;
@@ -126,31 +130,20 @@ export const UI = {
     } catch(e) { console.warn('Could not load CSV list', e); }
   },
 
-  setTextContent(node, text) {
-    node.textContent = text;
+  setHeaderTexts(text = {}) {
+    const n = this.headerNodes;
+    n.presenceStatus.textContent = text?.presence || '?';
+    n.targetDist.textContent = text?.targetDistance || '0m';
+    n.packetCount.textContent = text?.packetCount || '0';
+    n.packetLoss.textContent = text?.packetLoss || '0%';
+    n.expValue.textContent = text?.rssi || '0';
   },
 
-  setHeaderDefault() {
-    const n = this.nodes;
-    this.setTextContent(n.presenceStatus, '?');
-    this.setTextContent(n.target1Dist, '0m');
-    this.setTextContent(n.packetCount, '0');
-    this.setTextContent(n.packetLoss, '0%');
-    this.setTextContent(n.expValue, '0');
-  },
-
-  setAsidesDefault() {
+  setAsidesTexts(texts = {}) {
     const n = this.asideNodes;
-    this.setTextContent(n.targetDistance, '0m');
-    this.setTextContent(n.targetAngle, '0°');
-    this.setTextContent(n.targetEnergy, '0');
-  },
-
-  setAsidesTexts(texts) {
-    const n = this.asideNodes;
-    this.setTextContent(n.targetDistance, texts.targetDistance);
-    this.setTextContent(n.targetAngle, texts.targetAngle);
-    this.setTextContent(n.targetEnergy, texts.targetEnergy);
+    n.targetDistance.textContent = texts?.targetDistance || '0m';
+    n.targetAngle.textContent = texts?.targetAngle || '0°';
+    n.targetEnergy.textContent = texts?.targetEnergy || '0';
   },
 
   setButtonActive(buttonNode) {
@@ -194,11 +187,11 @@ export const UI = {
   },
 
   isMonitoring() {
-    return this.nodes.monitorModeBtn.dataset.active === '1';
+    return this.floatingButtonNodes.monitorModeBtn.dataset.active === '1';
   },
 
   hideVisualizers() {
-    const n = this.nodes;
+    const n = this.containerNodes;
     // this.hideUI(n.radarContainer);
     this.hideUI(n.amplitudeHeatmapContainer);
     this.hideUI(n.phaseHeatmapContainer);
@@ -211,10 +204,10 @@ export const UI = {
     const n = this.nodes;
     API.stopCapturing();
     this.list_csv_files();
-    n.recordModeBtn.dataset.active = '0';
-    this.setHeaderDefault();
-    this.setButtonDefault(n.recordModeBtn);
+    this.floatingButtonNodes.recordModeBtn.dataset.active = '0';
+    this.setHeaderTexts();
+    this.setButtonDefault(this.floatingButtonNodes.recordModeBtn);
     // Ensure to reset the status bar if mistimed
-    setTimeout(() => this.setHeaderDefault(), 120);
+    setTimeout(() => this.setHeaderTexts(), 120);
   },
 };

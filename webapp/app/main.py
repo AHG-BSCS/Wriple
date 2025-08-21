@@ -147,10 +147,11 @@ class HumanDetectionSystem:
         return {
             'modeStatus': mode_status,
             'presence': presence_prediction,
-            'totalPacket': self.network_manager.packet_received_count,
+            'targetDistance': 0,  # Placeholder for target distance
+            'packetCount': self.network_manager.packet_received_count,
             'packetLoss': self.network_manager.get_packet_loss_rate(),
             'rssi': self.rssi,
-            'exp': 0
+            'expValue': 0
             # 'exp': self.mmwave_data[10][3]
         }
     
