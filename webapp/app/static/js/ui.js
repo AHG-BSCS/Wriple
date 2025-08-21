@@ -76,18 +76,9 @@ export const UI = {
   },
 
   asideNodes: {
-    target1Angle: $(SELECTORS.target1Angle),
-    target2Angle: $(SELECTORS.target2Angle),
-    target3Angle: $(SELECTORS.target3Angle),
-    target1Distance: $(SELECTORS.target1Distance),
-    target2Distance: $(SELECTORS.target2Distance),
-    target3Distance: $(SELECTORS.target3Distance),
-    target1Speed: $(SELECTORS.target1Speed),
-    target2Speed: $(SELECTORS.target2Speed),
-    target3Speed: $(SELECTORS.target3Speed),
-    target1DistRes: $(SELECTORS.target1DistRes),
-    target2DistRes: $(SELECTORS.target2DistRes),
-    target3DistRes: $(SELECTORS.target3DistRes)
+    targetDistance: $(SELECTORS.targetDistance),
+    targetAngle: $(SELECTORS.targetAngle),
+    targetEnergy: $(SELECTORS.targetEnergy)
   },
 
   async updateStatusBar() {
@@ -105,9 +96,6 @@ export const UI = {
       if (status.ld2420) n.ld2420Status.style.fill = UI_COLORS.statusBarActiveColor;
       else n.ld2420Status.style.fill = UI_COLORS.statusBarInactiveColor;
 
-      if (status.rd03d) n.rd03dStatus.style.fill = UI_COLORS.statusBarActiveColor;
-      else n.rd03dStatus.style.fill = UI_COLORS.statusBarInactiveColor;
-
       if (status.port) n.portStatus.style.fill = UI_COLORS.statusBarActiveColor;
       else n.portStatus.style.fill = UI_COLORS.statusBarInactiveColor;
 
@@ -122,7 +110,6 @@ export const UI = {
       n.flaskStatus.style.fill = UI_COLORS.statusBarInactiveColor;
       n.esp32Status.style.fill = UI_COLORS.statusBarInactiveColor;
       n.ld2420Status.style.fill = UI_COLORS.statusBarInactiveColor;
-      n.rd03dStatus.style.fill = UI_COLORS.statusBarInactiveColor;
       n.modelStatus.style.fill = UI_COLORS.statusBarInactiveColor;
     }
   },
@@ -146,7 +133,7 @@ export const UI = {
   setHeaderDefault() {
     const n = this.nodes;
     this.setTextContent(n.presenceStatus, '?');
-    this.setTextContent(n.target1Dist, '0.0m');
+    this.setTextContent(n.target1Dist, '0m');
     this.setTextContent(n.packetCount, '0');
     this.setTextContent(n.packetLoss, '0%');
     this.setTextContent(n.expValue, '0');
@@ -154,37 +141,16 @@ export const UI = {
 
   setAsidesDefault() {
     const n = this.asideNodes;
-    this.setTextContent(n.target1Angle, '0.00°');
-    this.setTextContent(n.target2Angle, '0.00°');
-    this.setTextContent(n.target3Angle, '0.00°');
-
-    this.setTextContent(n.target1Distance, '0.00m');
-    this.setTextContent(n.target2Distance, '0.00m');
-    this.setTextContent(n.target3Distance, '0.00m');
-
-    this.setTextContent(n.target1Speed, '0cm/s');
-    this.setTextContent(n.target2Speed, '0cm/s');
-    this.setTextContent(n.target3Speed, '0cm/s');
-
-    this.setTextContent(n.target1DistRes, '0');
-    this.setTextContent(n.target2DistRes, '0');
-    this.setTextContent(n.target3DistRes, '0');
+    this.setTextContent(n.targetDistance, '0m');
+    this.setTextContent(n.targetAngle, '0°');
+    this.setTextContent(n.targetEnergy, '0');
   },
 
   setAsidesTexts(texts) {
     const n = this.asideNodes;
-    this.setTextContent(n.target1Angle, texts.target1Angle);
-    this.setTextContent(n.target2Angle, texts.target2Angle);
-    this.setTextContent(n.target3Angle, texts.target3Angle);
-    this.setTextContent(n.target1Distance, texts.target1Distance);
-    this.setTextContent(n.target2Distance, texts.target2Distance);
-    this.setTextContent(n.target3Distance, texts.target3Distance);
-    this.setTextContent(n.target1Speed, texts.target1Speed);
-    this.setTextContent(n.target2Speed, texts.target2Speed);
-    this.setTextContent(n.target3Speed, texts.target3Speed);
-    this.setTextContent(n.target1DistRes, texts.target1DistRes);
-    this.setTextContent(n.target2DistRes, texts.target2DistRes);
-    this.setTextContent(n.target3DistRes, texts.target3DistRes);
+    this.setTextContent(n.targetDistance, texts.targetDistance);
+    this.setTextContent(n.targetAngle, texts.targetAngle);
+    this.setTextContent(n.targetEnergy, texts.targetEnergy);
   },
 
   setButtonActive(buttonNode) {
@@ -246,10 +212,8 @@ export const UI = {
     API.stopCapturing();
     this.list_csv_files();
     n.recordModeBtn.dataset.active = '0';
-    n.targetRadarBtn.dataset.active = '0';
     this.setHeaderDefault();
     this.setButtonDefault(n.recordModeBtn);
-    // this.setButtonDefault(n.targetRadarBtn);
     n.targetContainer.innerHTML = '';
   },
 };

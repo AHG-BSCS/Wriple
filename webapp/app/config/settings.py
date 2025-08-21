@@ -10,11 +10,11 @@ class NetworkConfiguration:
     AP_GATEWAY: str = '192.168.11.236'
     AP_DNS: str = '8.8.8.8'
 
-    TX_ESP32_IP: str = '192.168.11.163' # IP address assigned by AP to ESP32
+    TX_ESP32_IP: str = '10.59.14.183'   # IP address assigned by AP to ESP32
     TX_UDP_PORT: int = 5000             # Keep the port open using firewall
     TX_CSI_REQ_PAYLOAD: str = 'Wriple'  # Frame length of 88
     TX_STOP_REQ_PAYLOAD: str = 'Stop'   # Frame length of 86
-    TX_CAPTURE_INTERVAL: float = 0.015  # Adjusted to meet the 30 packets per second
+    TX_CAPTURE_INTERVAL: float = 0.02   # Adjusted to be approximately 30 packets per second
     RECORD_PACKET_LIMIT: int = 150      # 5 seconds of data per recording
     RX_SOCKET_TIMEOUT: float = 0.25     # Timeout used to stop listening
     RX_BUFFER_SIZE: int = 4096          # Adjusted based on ESP32 CSI and sensor data size
@@ -39,8 +39,7 @@ class FileConfiguration:
         'Presence', 'Target_Count', 'State', 'Activity', 'Angle', 'Distance',
         'Obstructed', 'Obstruction', 'Spacing',
         'Transmit_Timestamp', 'Received_Timestamp',
-        'RSSI', 'Channel', 'Raw_CSI',
-        'RD03D_Target_1', 'RD03D_Target_2', 'RD03D_Target_3',
+        'RSSI', 'Bandwidth', 'Channel', 'Antenna', 'Raw_CSI',
         'LD2420_Doppler_1', 'LD2420_Doppler_2', 'LD2420_Doppler_3', 'LD2420_Doppler_4',
         'LD2420_Doppler_5', 'LD2420_Doppler_6', 'LD2420_Doppler_7', 'LD2420_Doppler_8',
         'LD2420_Doppler_9', 'LD2420_Doppler_10', 'LD2420_Doppler_11', 'LD2420_Doppler_12',
@@ -55,13 +54,13 @@ class VisualizerConfiguration:
     AVERAGED_WINDOWS: list = [(0, 10), (10, -1)]
     SUBCARRIER_COUNT: int = 192
 
-    HEAT_SIGNAL_WINDOW: int = 10
+    HEAT_SIGNAL_WINDOW: int = 30
     HEAT_AMP_START_SUB:int = 3
     HEAT_AMP_END_SUB:int = 88
     HEAT_PHASE_START_SUB:int = 6
     HEAT_PHASE_END_SUB:int = 27
     HEAT_PENALTY_FACTOR: int = 1
-    HEAT_DIFF_THRESHOLD: int = 3
+    HEAT_DIFF_THRESHOLD: int = 5
 
     CUTOFF:float = 0.1
     FS:int = 1
@@ -70,8 +69,6 @@ class VisualizerConfiguration:
     D3_STD_THRESHOLD: float = 1.75
     D3_VISUALIZER_SCALE: tuple = (-10, 10)
 
-    # 0: RSSI, 1: EXP, 2: Target 1, 3: Target 2, 4: Target 3
-    RADAR_DATA: list = [0, 0, [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
     # 20 * doppler with 16 gates
     MMWAVE_DATA: list = [[0] * 16, [0] * 16, [0] * 16, [0] * 16,
                         [0] * 16, [0] * 16, [0] * 16, [0] * 16,

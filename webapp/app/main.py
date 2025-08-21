@@ -24,12 +24,11 @@ class HumanDetectionSystem:
         # Application state and counter
         self.is_recording = False
         self.is_monitoring = False
-        self._is_rd03d_active = True
         self._is_ld2420_active = True
         self._is_esp32_active = True
 
         # Initialize parameters and data storage
-        self.radar_data = VisualizerConfiguration.RADAR_DATA
+        self.rssi = 0
         self.mmwave_data = []
         self.mmwave_queue_limit = RecordingConfiguration.MMWAVE_QUEUE_LIMIT
         self.record_parameters = RecordingConfiguration.RECORD_PARAMETERS
@@ -60,24 +59,20 @@ class HumanDetectionSystem:
         parsed_data = PacketParser.parse_csi_data(raw_data)
 
         if self.is_monitoring:
-            self.csi_processor.queue_amplitude_phase(parsed_data[5])
+            self.csi_processor.queue_amplitude_phase(parsed_data[6])
 
-            if parsed_data[0]: # If rd03d data is valid
-                # Change the index 0 for experimental data
-                # RSSI = parsed_data[3]
-                # RG 10 = parsed_data[20][3]
-                self.radar_data = [parsed_data[3], parsed_data[20][3], parsed_data[6], parsed_data[7], parsed_data[8]]
-            
             # Remove oldest mmwave data if it exceeds the limit
             while len(self.mmwave_data) > self.mmwave_queue_limit:
                 self.mmwave_data.pop(0)
 
-            if parsed_data[1]: # If ld24020 data is valid
-                self.mmwave_data.append(parsed_data[9:])
+            if parsed_data[0]: # If ld24020 data is valid
+                self.mmwave_data.append(parsed_data[7:])
+
+            self.rssi = parsed_data[2]
         
         # Record data to csv file if recording
         if self.is_recording:
-            self.record_data_packet(parsed_data[2:], tx_timestamp)
+            self.record_data_packet(parsed_data[1:], tx_timestamp)
     
     def start_capturing(self, is_recording: bool):
         """Start recording Wi-Fi CSI data into CSV file"""
@@ -131,18 +126,15 @@ class HumanDetectionSystem:
         """
         if self.network_manager.check_esp32():
             self._is_esp32_active = True
-            self._is_ld2420_active = PacketParser.is_rd03d_active()
-            self._is_rd03d_active = PacketParser.is_ld2420_active()
+            self._is_ld2420_active = PacketParser.is_ld2420_active()
         else:
             self._is_esp32_active = False
             self._is_ld2420_active = False
-            self._is_rd03d_active = False
 
         return {
             'ap': self.network_manager.check_wifi_connection(),
             'esp32': self._is_esp32_active,
             'ld2420': self._is_ld2420_active,
-            'rd03d': self._is_rd03d_active,
             'port': self.network_manager.is_udp_port_opened,
             'model': self.model_manager.model_loaded
         }
@@ -157,8 +149,9 @@ class HumanDetectionSystem:
             'presence': presence_prediction,
             'totalPacket': self.network_manager.packet_received_count,
             'packetLoss': self.network_manager.get_packet_loss_rate(),
-            'rssi': self.radar_data[0],
-            'exp': self.radar_data[1]
+            'rssi': self.rssi,
+            'exp': 0
+            # 'exp': self.mmwave_data[10][3]
         }
     
     def get_radar_status(self) -> dict:
@@ -173,9 +166,9 @@ class HumanDetectionSystem:
         
         return {
             'modeStatus': mode_status,
-            'target1': self.radar_data[2],
-            'target2': self.radar_data[3],
-            'target3': self.radar_data[4]
+            'angle': 0,
+            'distance': 0,
+            'energy': 0
         }
     
     def set_recording_parameters(self, params: dict) -> bool:

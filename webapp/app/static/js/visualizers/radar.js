@@ -69,40 +69,20 @@ export class RadarVisualizer {
   async tick() {
     try {
       const data = await API.getRadarData();
-
-      if (data.target1[1] !== '0') {
-        const distance = this.calculateDistance(data.target1[0], data.target1[1]);
-        this.targetDistance.textContent = `${distance.toFixed(1)}m`;
-      } else {
-        this.targetDistance.textContent = '0.0m';
-      }
+      this.targetDistance.textContent = `${data.distance}m`
 
       if (data.modeStatus === 1) {
-        console.log('Radar mode is active, updating targets...');
         this.setAsidesTexts({
-          target1Angle: this.calculateAngle(data.target1[0], data.target1[1]).toFixed(2) + '°',
-          target2Angle: this.calculateAngle(data.target2[0], data.target2[1]).toFixed(2) + '°',
-          target3Angle: this.calculateAngle(data.target3[0], data.target3[1]).toFixed(2) + '°',
-          target1Distance: this.calculateDistance(data.target1[0], data.target1[1]).toFixed(2) + 'm',
-          target2Distance: this.calculateDistance(data.target2[0], data.target2[1]).toFixed(2) + 'm',
-          target3Distance: this.calculateDistance(data.target3[0], data.target3[1]).toFixed(2) + 'm',
-          target1Speed: data.target1[2] + 'cm/s',
-          target2Speed: data.target2[2] + 'cm/s',
-          target3Speed: data.target3[2] + 'cm/s',
-          target1DistRes: data.target1[3],
-          target2DistRes: data.target2[3],
-          target3DistRes: data.target3[3]
+          targetAngle: `${data.angle}°`,
+          targetDistance: `${data.distance}m`,
+          targetEnergy: data.energy
         });
       }
 
       this.targetContainer.innerHTML = '';
-      [data.target1, data.target2, data.target3].forEach((t) => {
-        if (t[1] !== 0) {
-          const x = Math.floor((t[0] / RADAR.maxDistance) * (this.radarRect.width / 2));
-          const y = Math.floor((t[1] / RADAR.maxDistance) * this.radarRect.height);
-          this.createRadarPoint(this.centerX + x, this.radarRect.height - y);
-        }
-      });
+      const x = 0;
+      const y = 0;
+      this.createRadarPoint(this.centerX + x, this.radarRect.height - y);
     } catch (err) {
       this.stop();
       console.warn('Missing data for radar.', err);
