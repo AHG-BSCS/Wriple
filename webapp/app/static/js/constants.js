@@ -1,4 +1,14 @@
 export const SELECTORS = {
+  recordModeBtn: '#record-mode-btn',
+  monitorModeBtn: '#monitor-mode-btn',
+
+  targetRadarBtn: '#target-radar-btn',
+  amplitudeHeatmapBtn: '#amplitude-heatmap-btn',
+  phaseHeatmapBtn: '#phase-heatmap-btn',
+  gatesHeatmapBtn: '#gates-heatmap-btn',
+  expChartBtn: '#exp-line-chart-btn',
+  d3PlotBtn: '#d3-plot-btn',
+
   sidebarContainer: '#sidebar-container',
   collapseBtn: '#collapse-btn',
   sidebarText: '.sidebar-collapse',
@@ -10,9 +20,9 @@ export const SELECTORS = {
   monitorTabBtn: '#monitor-tab-btn',
   historyTabBtn: '#history-tab-btn',
   datasetTabBtn: '#dataset-tab-btn',
-  // settingsBtn: '#settings-tab-btn',
-  // infoBtn: '#info-tab-btn',
-  // darkModeSwitch: '#dark-mode-switch',
+  settingsBtn: '#settings-tab-btn',
+  infoBtn: '#info-tab-btn',
+  darkModeSwitch: '#dark-mode-switch',
 
   presenceStatus: '#presence-status',
   targetDist: '#target-dist',
@@ -27,43 +37,34 @@ export const SELECTORS = {
   portStatus: "#port-status",
   modelStatus: "#model-status",
 
-  datasetList: '#dataset-list',
-
-  targetContainer: '#points',
-  radarContainer: '#radar-container',
-
   targetAngle: '#target-angle',
   targetDistance: '#target-distance',
   targetEnergy: '#target-energy',
 
-  recordModeBtn: '#record-mode-btn',
-  monitorModeBtn: '#monitor-mode-btn',
-  targetRadarBtn: '#target-radar-btn',
-  amplitudeHeatmapBtn: '#amplitude-heatmap-btn',
-  phaseHeatmapBtn: '#phase-heatmap-btn',
-  gatesHeatmapBtn: '#gates-heatmap-btn',
-  expChartBtn: '#exp-line-chart-btn',
-  d3PlotBtn: '#d3-plot-btn',
-
-  amplitudeHeatmapContainer: '#amplitude-heatmap-container',
-  phaseHeatmapContainer: '#phase-heatmap-container',
-  gatesHeatmapContainer: '#gates-heatmap-container',
-  expChartContainer: '#exp-chart-container',
-  d3PlotContainer: '#d3-plot-container',
+  targetContainer: '#points',
+  radarContainer: '#radar-container',
 
   amplitudeCanvas: '#amplitude-heatmap',
-  phaseCanvas: '#phase-heatmap',
-  gatesCanvas: '#gates-heatmap',
-
+  amplitudeHeatmapContainer: '#amplitude-heatmap-container',
   amplitudeMaxSlider: '#amplitude-max-slider',
-  phaseMaxSlider: '#phase-max-slider',
-  gatesMaxSlider: '#gates-max-slider',
-  
   amplitudeMaxValue: '#amplitude-max-value',
-  phaseMaxValue: '#phase-max-value',
-  gatesMaxValue: '#gates-max-value',
 
+  phaseCanvas: '#phase-heatmap',
+  phaseHeatmapContainer: '#phase-heatmap-container',
+  phaseMaxSlider: '#phase-max-slider',
+  phaseMaxValue: '#phase-max-value',
+  
+  gatesCanvas: '#gates-heatmap',
+  gatesHeatmapContainer: '#gates-heatmap-container',
+  gatesMaxSlider: '#gates-max-slider',
+  gatesMaxValue: '#gates-max-value',
+  
   expLineChartCanvas: '#exp-chart',
+  expLineChartContainer: '#exp-chart-container',
+
+  d3PlotContainer: '#d3-plot-container',
+
+  datasetList: '#dataset-list',
 };
 
 export const OPTIONS = {

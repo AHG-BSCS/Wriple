@@ -12,7 +12,7 @@ let monitorInterval = null;
 const ampHeatmap = new HeatmapVisualizer({
   canvas: UI.visualizerNodes.amplitudeCanvas,
   button: UI.floatingButtonNodes.amplitudeHeatmapBtn,
-  container: UI.containerNodes.amplitudeHeatmapContainer,
+  container: UI.visualizerNodes.amplitudeHeatmapContainer,
   type: 'amplitude',
   maxValue: parseFloat(UI.sliderNodes.amplitudeMaxSlider.value)
 });
@@ -20,7 +20,7 @@ const ampHeatmap = new HeatmapVisualizer({
 const phaseHeatmap = new HeatmapVisualizer({
   canvas: UI.visualizerNodes.phaseCanvas,
   button: UI.floatingButtonNodes.phaseHeatmapBtn,
-  container: UI.containerNodes.phaseHeatmapContainer,
+  container: UI.visualizerNodes.phaseHeatmapContainer,
   type: 'phase',
   maxValue: parseFloat(UI.sliderNodes.phaseMaxSlider.value)
 });
@@ -28,28 +28,28 @@ const phaseHeatmap = new HeatmapVisualizer({
 const gatesHeatmap = new HeatmapVisualizer({
   canvas: UI.visualizerNodes.gatesCanvas,
   button: UI.floatingButtonNodes.gatesHeatmapBtn,
-  container: UI.containerNodes.gatesHeatmapContainer,
+  container: UI.visualizerNodes.gatesHeatmapContainer,
   type: 'mmwave',
   maxValue: parseFloat(UI.sliderNodes.gatesMaxSlider.value)
 });
 
 const expChart = new LineChart({
-  context: UI.visualizerNodes.expChartCanvasCtx,
+  context: UI.visualizerNodes.expLineChartCanvasCtx,
   button: UI.floatingButtonNodes.expChartBtn,
-  container: UI.containerNodes.expChartContainer
+  container: UI.visualizerNodes.expLineChartContainer
 });
 
 const radar = new RadarVisualizer({
   button: UI.floatingButtonNodes.targetRadarBtn,
-  targetContainer: UI.containerNodes.targetContainer,
-  radarContainer: UI.containerNodes.radarContainer,
+  targetContainer: UI.visualizerNodes.targetContainer,
+  radarContainer: UI.visualizerNodes.radarContainer,
   targetDistance: UI.headerNodes.targetDist,
   setAsidesTexts: UI.setAsidesTexts.bind(UI)
 });
 
 const d3plot = new D3Plot({
   button: UI.floatingButtonNodes.d3PlotBtn,
-  container: UI.containerNodes.d3PlotContainer,
+  container: UI.visualizerNodes.d3PlotContainer,
 });
 
 function clearVisualizers() {

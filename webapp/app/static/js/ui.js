@@ -4,8 +4,19 @@ import { API } from './api.js';
 function $(sel) { return document.querySelector(sel); }
 function $$(sel) { return document.querySelectorAll(sel); }
 
-// TODO: Further refactor the UI.nodes
 export const UI = {
+  floatingButtonNodes: {
+    recordModeBtn: $(SELECTORS.recordModeBtn),
+    monitorModeBtn: $(SELECTORS.monitorModeBtn),
+
+    targetRadarBtn: $(SELECTORS.targetRadarBtn),
+    amplitudeHeatmapBtn: $(SELECTORS.amplitudeHeatmapBtn),
+    phaseHeatmapBtn: $(SELECTORS.phaseHeatmapBtn),
+    gatesHeatmapBtn: $(SELECTORS.gatesHeatmapBtn),
+    expChartBtn: $(SELECTORS.expChartBtn),
+    d3PlotBtn: $(SELECTORS.d3PlotBtn)
+  },
+
   sidebarNodes: {
     sidebarContainer: $(SELECTORS.sidebarContainer),
     collapseBtn: $(SELECTORS.collapseBtn),
@@ -35,38 +46,29 @@ export const UI = {
     modelStatus: $(SELECTORS.modelStatus)
   },
 
-  floatingButtonNodes: {
-    recordModeBtn: $(SELECTORS.recordModeBtn),
-    monitorModeBtn: $(SELECTORS.monitorModeBtn),
-
-    targetRadarBtn: $(SELECTORS.targetRadarBtn),
-    amplitudeHeatmapBtn: $(SELECTORS.amplitudeHeatmapBtn),
-    phaseHeatmapBtn: $(SELECTORS.phaseHeatmapBtn),
-    gatesHeatmapBtn: $(SELECTORS.gatesHeatmapBtn),
-    expChartBtn: $(SELECTORS.expChartBtn),
-    d3PlotBtn: $(SELECTORS.d3PlotBtn)
-  },
-
-  containerNodes: {
-    targetContainer: $(SELECTORS.targetContainer),
-    radarContainer: $(SELECTORS.radarContainer),
-
-    amplitudeHeatmapContainer: $(SELECTORS.amplitudeHeatmapContainer),
-    phaseHeatmapContainer: $(SELECTORS.phaseHeatmapContainer),
-    gatesHeatmapContainer: $(SELECTORS.gatesHeatmapContainer),
-    expChartContainer: $(SELECTORS.expChartContainer),
-    d3PlotContainer: $(SELECTORS.d3PlotContainer)
-  },
-
-  nodes: {
-    datasetList: $(SELECTORS.datasetList),
+  asideNodes: {
+    targetDistance: $(SELECTORS.targetDistance),
+    targetAngle: $(SELECTORS.targetAngle),
+    targetEnergy: $(SELECTORS.targetEnergy)
   },
 
   visualizerNodes: {
+    targetContainer: $(SELECTORS.targetContainer),
+    radarContainer: $(SELECTORS.radarContainer),
+
     amplitudeCanvas: $(SELECTORS.amplitudeCanvas),
+    amplitudeHeatmapContainer: $(SELECTORS.amplitudeHeatmapContainer),
+
     phaseCanvas: $(SELECTORS.phaseCanvas),
+    phaseHeatmapContainer: $(SELECTORS.phaseHeatmapContainer),
+
     gatesCanvas: $(SELECTORS.gatesCanvas),
-    expChartCanvasCtx: document.querySelector(SELECTORS.expLineChartCanvas).getContext('2d')
+    gatesHeatmapContainer: $(SELECTORS.gatesHeatmapContainer),
+
+    expLineChartCanvasCtx: document.querySelector(SELECTORS.expLineChartCanvas).getContext('2d'),
+    expLineChartContainer: $(SELECTORS.expLineChartContainer),
+
+    d3PlotContainer: $(SELECTORS.d3PlotContainer),
   },
 
   sliderNodes: {
@@ -79,10 +81,8 @@ export const UI = {
     gatesMaxValue: $(SELECTORS.gatesMaxValue)
   },
 
-  asideNodes: {
-    targetDistance: $(SELECTORS.targetDistance),
-    targetAngle: $(SELECTORS.targetAngle),
-    targetEnergy: $(SELECTORS.targetEnergy)
+  nodes: {
+    datasetList: $(SELECTORS.datasetList),
   },
 
   async updateStatusBar() {
@@ -191,12 +191,12 @@ export const UI = {
   },
 
   hideVisualizers() {
-    const n = this.containerNodes;
+    const n = this.visualizerNodes;
     // this.hideUI(n.radarContainer);
     this.hideUI(n.amplitudeHeatmapContainer);
     this.hideUI(n.phaseHeatmapContainer);
     this.hideUI(n.gatesHeatmapContainer);
-    this.hideUI(n.expChartContainer);
+    this.hideUI(n.expLineChartContainer);
     this.hideUI(n.d3PlotContainer);
   },
 
