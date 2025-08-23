@@ -25,7 +25,7 @@ def validate_recording_parameters(params) -> bool:
             'state',
             'activity',
             'angle',
-            'distance_t1',
+            'distance',
             'obstructed',
             'obstruction',
             'spacing'
@@ -91,15 +91,15 @@ def validate_recording_parameters(params) -> bool:
             logger.error(f'Invalid angle value: {angle}')
             return False
 
-        # Validate distance_t1: must be integer 0-10
-        distance = params.get('distance_t1')
+        # Validate distance: must be integer 0-20
+        distance = params.get('distance')
         try:
             distance_val = int(distance)
         except (ValueError, TypeError):
-            logger.error(f'Invalid distance_t1 type: {distance}')
+            logger.error(f'Invalid distance type: {distance}')
             return False
-        if distance_val < -1 or distance_val > 10:
-            logger.error(f'Invalid distance_t1 value: {distance}')
+        if distance_val < 0 or distance_val > 20:
+            logger.error(f'Invalid distance value: {distance}')
             return False
 
         # Validate obstructed: must be 0 or 1 (No/Yes)
@@ -124,14 +124,14 @@ def validate_recording_parameters(params) -> bool:
             logger.error(f'Invalid obstruction value: {obstruction}')
             return False
 
-        # Validate spacing: must be integer 3-15
+        # Validate spacing: must be integer 4-25
         spacing = params.get('spacing')
         try:
             spacing_val = int(spacing)
         except (ValueError, TypeError):
             logger.error(f'Invalid spacing type: {spacing}')
             return False
-        if spacing_val < 3 or spacing_val > 15:
+        if spacing_val < 4 or spacing_val > 25:
             logger.error(f'Invalid spacing value: {spacing}')
             return False
 
@@ -155,16 +155,16 @@ def validate_class(params) -> bool:
         class_label = int(params.get('class_label'))
         target_count = int(params.get('target_count'))
         angle = int(params.get('angle'))
-        distance_t1 = int(params.get('distance_t1'))
+        distance = int(params.get('distance'))
         
         if class_label == 0:
-            if target_count == 0 and angle == 0 and distance_t1 == -1:
+            if target_count == 0 and angle == 0 and distance == 0:
                 return True
             else:
                 logger.error(f'Invalid recording parameter/s for absence class.')
                 return False
         elif class_label == 1:
-            if target_count in [1, 2, 3] and angle in [1, 2, 3, 4, 5] and distance_t1 >= 0:
+            if target_count in [1, 2, 3] and angle in [1, 2, 3, 4, 5] and distance >= 1 and distance <= 20:
                 return True
             else:
                 logger.error(f'Invalid recording parameter/s for presence class.')

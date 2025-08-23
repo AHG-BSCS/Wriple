@@ -6,7 +6,7 @@ let currentParams = {
   state: null,
   activity: null,
   angle: null,
-  distance_t1: null,
+  distance: null,
   obstructed: null,
   obstruction: null,
   spacing: null
@@ -70,7 +70,7 @@ function captureParams(selects) {
     state: selects.stateSelection.value,
     activity: selects.activitySelection.value,
     angle: selects.angleSelection.value,
-    distance_t1: selects.distanceSelection.value,
+    distance: selects.distanceSelection.value,
     obstructed: selects.obstructedSelection.value,
     obstruction: selects.obstructionSelection.value,
     spacing: selects.spacingSelection.value

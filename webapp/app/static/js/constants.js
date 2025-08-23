@@ -92,36 +92,16 @@ export const OPTIONS = {
     ],
     angle: [
       { value: '0', label: 'No Angle' },
-      { value: '1', label: '-60° ~ -45°' },
-      { value: '2', label: '-45° ~ -14°' },
-      { value: '3', label: '-15° ~ +14°' },
-      { value: '4', label: '+15° ~ +44°' },
-      { value: '5', label: '+45° ~ +60°' }
+      { value: '1', label: '-60° to -45°' },
+      { value: '2', label: '-45° to -14°' },
+      { value: '3', label: '-15° to +14°' },
+      { value: '4', label: '+15° to +44°' },
+      { value: '5', label: '+45° to +60°' }
     ],
     distance: [
-      { value: '-1', label: 'No Distance' },
+      { value: '0', label: 'No Distance' },
       { value: '1', label: '1m' },
       { value: '2', label: '2m' },
-      { value: '3', label: '3m' },
-      { value: '4', label: '4m' },
-      { value: '5', label: '5m' },
-      { value: '6', label: '6m' },
-      { value: '7', label: '7m' },
-      { value: '8', label: '8m' },
-      { value: '9', label: '9m' },
-      { value: '10', label: '10m' }
-    ],
-    obstructed: [
-      { value: '0', label: 'No' },
-      { value: '1', label: 'Yes' }
-    ],
-    obstruction: [
-      { value: '0', label: 'None' },
-      { value: '1', label: 'Wood' },
-      { value: '2', label: 'Concrete' },
-      { value: '3', label: 'Metal' }
-    ],
-    spacing: [
       { value: '3', label: '3m' },
       { value: '4', label: '4m' },
       { value: '5', label: '5m' },
@@ -134,7 +114,46 @@ export const OPTIONS = {
       { value: '12', label: '12m' },
       { value: '13', label: '13m' },
       { value: '14', label: '14m' },
-      { value: '15', label: '15m' }
+      { value: '15', label: '15m' },
+      { value: '16', label: '16m' },
+      { value: '17', label: '17m' },
+      { value: '18', label: '18m' },
+      { value: '19', label: '19m' },
+      { value: '20', label: '20m' }
+    ],
+    obstructed: [
+      { value: '0', label: 'No' },
+      { value: '1', label: 'Yes' }
+    ],
+    obstruction: [
+      { value: '0', label: 'None' },
+      { value: '1', label: 'Wood' },
+      { value: '2', label: 'Concrete' },
+      { value: '3', label: 'Metal' }
+    ],
+    spacing: [
+      { value: '4', label: '4m' },
+      { value: '5', label: '5m' },
+      { value: '6', label: '6m' },
+      { value: '7', label: '7m' },
+      { value: '8', label: '8m' },
+      { value: '9', label: '9m' },
+      { value: '10', label: '10m' },
+      { value: '11', label: '11m' },
+      { value: '12', label: '12m' },
+      { value: '13', label: '13m' },
+      { value: '14', label: '14m' },
+      { value: '15', label: '15m' },
+      { value: '16', label: '16m' },
+      { value: '17', label: '17m' },
+      { value: '18', label: '18m' },
+      { value: '19', label: '19m' },
+      { value: '20', label: '20m' },
+      { value: '21', label: '21m' },
+      { value: '22', label: '22m' },
+      { value: '23', label: '23m' },
+      { value: '24', label: '24m' },
+      { value: '25', label: '25m' }
     ]
   };
 

@@ -182,7 +182,7 @@ class HumanDetectionSystem:
                 - target_count: Number of targets to record
                 - angle: Angle of the target
                 - line_of_sight: Line of sight angle from the radar center point of view
-                - distance_t1: Distance to target
+                - distance: Distance to target
         
         Returns:
             bool: True if parameters were set successfully, False otherwise
@@ -194,7 +194,7 @@ class HumanDetectionSystem:
                 int(params['state']),
                 int(params['activity']),
                 int(params['angle']),
-                int(params['distance_t1']),
+                int(params['distance']),
                 int(params['obstructed']),
                 int(params['obstruction']),
                 int(params['spacing']),
