@@ -4,7 +4,6 @@ import socket
 import subprocess
 import threading
 import time
-from scapy.all import Raw, IP, UDP, send
 from config.settings import NetworkConfiguration
 from utils.logger import setup_logger
 
@@ -18,7 +17,8 @@ class NetworkManager:
     def __init__(self):
         # Receiver related variables
         self._is_listening = False
-        self._socket = None
+        self._rx_socket = None
+        self._tx_socket = None
         self._packet_transmit_count = 0
         self._packet_received_count = 0
 
@@ -27,18 +27,12 @@ class NetworkManager:
         self._tx_timestamps = []
         self._tx_capture_interval = NetworkConfiguration.TX_CAPTURE_INTERVAL
         self._record_packet_limit = NetworkConfiguration.RECORD_PACKET_LIMIT
+        self._tx_esp32_ip = NetworkConfiguration.TX_ESP32_IP
+        self._tx_udp_port = NetworkConfiguration.TX_UDP_PORT
         self._tx_buffer_size = NetworkConfiguration.RX_BUFFER_SIZE
+        self._csi_req_payload = NetworkConfiguration.TX_CSI_REQ_PAYLOAD
+        self._stop_req_payload = NetworkConfiguration.TX_STOP_REQ_PAYLOAD
 
-        self._csi_req_packet = IP(dst=NetworkConfiguration.TX_ESP32_IP) / \
-                         UDP(sport=NetworkConfiguration.TX_UDP_PORT, 
-                             dport=NetworkConfiguration.TX_UDP_PORT) / \
-                         Raw(load=NetworkConfiguration.TX_CSI_REQ_PAYLOAD)
-        
-        self._stop_req_packet = IP(dst=NetworkConfiguration.TX_ESP32_IP) / \
-                         UDP(sport=NetworkConfiguration.TX_UDP_PORT, 
-                             dport=NetworkConfiguration.TX_UDP_PORT) / \
-                         Raw(load=NetworkConfiguration.TX_STOP_REQ_PAYLOAD)
-        
         self._ap_ssid = NetworkConfiguration.AP_SSID
         self._logger = setup_logger('NetworkManager')
         self._udp_port_opened = self.open_esp32_udp_port()
@@ -115,7 +109,7 @@ class NetworkManager:
     
     # Receiver
 
-    def setup_socket(self) -> bool:
+    def setup_rx_socket(self) -> bool:
         """
         Setup UDP socket for receiving packets
 
@@ -123,13 +117,29 @@ class NetworkManager:
             bool: True if socket setup is successful, False otherwise
         """
         try:
-            self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self._socket.bind(('0.0.0.0', NetworkConfiguration.TX_UDP_PORT))
-            self._socket.settimeout(NetworkConfiguration.RX_SOCKET_TIMEOUT)
+            self._rx_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self._rx_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self._rx_socket.bind(('0.0.0.0', NetworkConfiguration.TX_UDP_PORT))
+            self._rx_socket.settimeout(NetworkConfiguration.RX_SOCKET_TIMEOUT)
             return True
         except Exception as e:
             self._logger.error(f'Error setting up socket: {e}')
+            return False
+    
+    def setup_tx_socket(self) -> bool:
+        """
+        Setup UDP socket for transmitting packets
+
+        Returns:
+            bool: True if socket setup is successful, False otherwise
+        """
+        try:
+            self._tx_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self._tx_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self._tx_socket.settimeout(NetworkConfiguration.RX_SOCKET_TIMEOUT)
+            return True
+        except Exception as e:
+            self._logger.error(f'Error setting up transmitter socket: {e}')
             return False
     
     def start_listening(self, parse_received_data, is_recording):
@@ -140,7 +150,7 @@ class NetworkManager:
             parse_received_data: Function to call when data is received
             is_recording: Current mode
         """
-        if not self.setup_socket():
+        if not self.setup_rx_socket():
             return
         
         self._is_listening = True
@@ -148,7 +158,7 @@ class NetworkManager:
         
         while self._is_listening:
             try:
-                data, addr = self._socket.recvfrom(self._tx_buffer_size)
+                data, addr = self._rx_socket.recvfrom(self._tx_buffer_size)
                 # Monitor Packet Count for automatic stopping during recording
                 self._packet_received_count += 1
                 
@@ -180,9 +190,9 @@ class NetworkManager:
         """Stop listening for packets"""
         self._is_listening = False
         self._packet_received_count = 0
-        if self._socket:
-            self._socket.close()
-            self._socket = None
+        if self._rx_socket:
+            self._rx_socket.close()
+            self._rx_socket = None
         self._logger.info('Stopped listening for packets.')
     
     # Transmitter
@@ -190,7 +200,7 @@ class NetworkManager:
     def transmit_csi_request_packet(self):
         """Send a single UDP packet to generate CSI data"""
         try:
-            send(self._csi_req_packet, verbose=False)
+            self._tx_socket.sendto(self._csi_req_payload, (self._tx_esp32_ip, self._tx_udp_port))
             tx_time = time.time()
             tx_time = int(tx_time * 1_000_000) % 1_000_000_000
             self._tx_timestamps.append(tx_time)
@@ -201,12 +211,15 @@ class NetworkManager:
     def transmit_stop_request_packet(self):
         """Send a single UDP packet to signal ESP32 to stop CSI request"""
         try:
-            send(self._stop_req_packet, verbose=False)
+            self._tx_socket.sendto(self._stop_req_payload, (self._tx_esp32_ip, self._tx_udp_port))
         except Exception as e:
             self._logger.error(f'Error sending stop packet: {e}')
     
     def request_captured_data(self):
         """Start continuous packet transmission at specified intervals"""
+        if not self.setup_tx_socket():
+            return
+
         self._is_transmitting = True
         
         def _transmit():

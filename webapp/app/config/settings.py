@@ -12,8 +12,8 @@ class NetworkConfiguration:
 
     TX_ESP32_IP: str = '10.59.14.183'   # IP address assigned by AP to ESP32
     TX_UDP_PORT: int = 5000             # Keep the port open using firewall
-    TX_CSI_REQ_PAYLOAD: str = 'Wriple'  # Frame length of 88
-    TX_STOP_REQ_PAYLOAD: str = 'Stop'   # Frame length of 86
+    TX_CSI_REQ_PAYLOAD: str = b'Wriple' # Frame length of 88
+    TX_STOP_REQ_PAYLOAD: str = b'Stop'  # Frame length of 86
     TX_CAPTURE_INTERVAL: float = 0.02   # Adjusted to be approximately 30 packets per second
     RECORD_PACKET_LIMIT: int = 150      # 5 seconds of data per recording
     RX_SOCKET_TIMEOUT: float = 0.25     # Timeout used to stop listening

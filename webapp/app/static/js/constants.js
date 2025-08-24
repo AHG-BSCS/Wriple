@@ -92,11 +92,11 @@ export const OPTIONS = {
     ],
     angle: [
       { value: '0', label: 'No Angle' },
-      { value: '1', label: '-60° to -45°' },
-      { value: '2', label: '-45° to -14°' },
-      { value: '3', label: '-15° to +14°' },
-      { value: '4', label: '+15° to +44°' },
-      { value: '5', label: '+45° to +60°' }
+      { value: '1', label: '-60° to -41°' },
+      { value: '2', label: '-40° to -11°' },
+      { value: '3', label: '-10° to +10°' },
+      { value: '4', label: '+11° to +40°' },
+      { value: '5', label: '+41° to +60°' }
     ],
     distance: [
       { value: '0', label: 'No Distance' },
