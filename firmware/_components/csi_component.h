@@ -10,6 +10,7 @@
 #define LED_GPIO_PIN GPIO_NUM_2
 #define LED_PACKET_COUNT_BLINK 15 // Blink every 500 ms
 #define CSI_PAYLOAD_SIZE (1344 + LD2420_PAYLOAD_SIZE)
+#define UDP_PORT 5000
 
 #define CSI_TAG "CSI"
 
@@ -17,9 +18,8 @@ SemaphoreHandle_t mutex = xSemaphoreCreateMutex();
 TimerHandle_t led_timer;
 
 static int total_packet_count = 0;
-static int sock = -1;
+static int tx_sock = -1;
 static sockaddr_in client_addr;
-static const char *target_ip = "10.59.14.222"; // IP address of the station
 
 bool is_led_high = false;
 
@@ -32,6 +32,7 @@ void blink_led() {
 }
 
 void _wifi_csi_callback(void *ctx, wifi_csi_info_t *data) {
+    // Common signal length: 14, 114
     // ESP_LOGI(CSI_TAG, "%d bytes", data[0].rx_ctrl.sig_len);
     // ESP_LOGI(CSI_TAG, "%d channel", data[0].rx_ctrl.cwb);
     // If from 40Mhz Channel with payload specific to station packet
@@ -63,7 +64,7 @@ void _wifi_csi_callback(void *ctx, wifi_csi_info_t *data) {
     
         // Send payload protected by mutex
         xSemaphoreTake(mutex, portMAX_DELAY);
-        if (sock != -1) sendto(sock, payload.data(), payload.size(), 0, (struct sockaddr *)&client_addr, sizeof(client_addr));
+        if (tx_sock != -1) sendto(tx_sock, payload.data(), payload.size(), 0, (struct sockaddr *)&client_addr, sizeof(client_addr));
         
         blink_led();
         total_packet_count--;
@@ -94,10 +95,9 @@ void csi_init() {
     ESP_ERROR_CHECK(esp_wifi_set_csi(1));
 
     client_addr.sin_family = AF_INET;
-    client_addr.sin_port = htons(5000);
-    client_addr.sin_addr.s_addr = inet_addr(target_ip);
+    client_addr.sin_port = htons(UDP_PORT);
 
-    sock = socket(AF_INET, SOCK_DGRAM, 0);
+    tx_sock = socket(AF_INET, SOCK_DGRAM, 0);
 }
 
 #endif

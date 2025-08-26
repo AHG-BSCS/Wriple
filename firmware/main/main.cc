@@ -1,5 +1,6 @@
 #include "esp_log.h"
 #include "esp_wifi.h"
+#include "lwip/netdb.h"
 #include "nvs_flash.h"
 
 #include "../_components/csi_component.h"
@@ -53,7 +54,8 @@ void station_init() {
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
     esp_event_handler_instance_t instance_any_id;
-    esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL, &instance_any_id);
+    esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID,
+                                        &event_handler, NULL, &instance_any_id);
 
     wifi_config_t wifi_config = {};
     strlcpy((char *) wifi_config.sta.ssid, ESP_WIFI_SSID, sizeof(ESP_WIFI_SSID));
@@ -68,6 +70,34 @@ void station_init() {
     ESP_LOGI(MAIN_TAG, "Connecting to SSID:%s Password:%s", ESP_WIFI_SSID, ESP_WIFI_PASS);
 }
 
+void get_station_ip_address() {
+    struct sockaddr_in server_addr;
+    char rx_buffer[128];
+    socklen_t addr_len = sizeof(client_addr);
+
+    int rx_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(UDP_PORT);
+    server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    bind(rx_sock, (struct sockaddr *)&server_addr, sizeof(server_addr));
+
+    while (1) {
+        // Get the IP address of the connected station
+        // Will not proceed until a station sends a "Connect" message
+        int len = recvfrom(rx_sock, rx_buffer, sizeof(rx_buffer)-1, 0,
+                           (struct sockaddr *)&client_addr, &addr_len);
+
+        if (len > 0) {
+            rx_buffer[len] = 0; // Null-terminate whatever is received
+            if (strcmp(rx_buffer, "Connect") == 0) {
+                sendto(rx_sock, "", 0, 0, (struct sockaddr *)&client_addr, addr_len);
+                ESP_LOGI(MAIN_TAG, "Discovered station at %s", inet_ntoa(client_addr.sin_addr));
+                return;
+            }
+        }
+    }
+}
+
 extern "C" void app_main() {
     nvs_init();
     config_print();
@@ -75,7 +105,8 @@ extern "C" void app_main() {
     esp_log_level_set("wifi", ESP_LOG_ERROR);
 
     // Add a delay for sensor to initialize
-    vTaskDelay(pdMS_TO_TICKS(1000));
+    vTaskDelay(pdMS_TO_TICKS(500));
+    get_station_ip_address();
     ld2420_init();
     csi_init();
 }

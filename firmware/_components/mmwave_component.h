@@ -30,13 +30,13 @@
 #define GATES         16
 #define LD2420_PAYLOAD_SIZE  (DOPPLER_BINS * GATES * 3)
 
-#define LD2420_TIMER_INTERVAL  333 // LD2420 updates every 300 ms in debug mode
+// #define LD2420_TIMER_INTERVAL  333 // LD2420 updates every 300 ms in debug mode
 #define LD2420_READ_INTERVAL   333000
 #define LD2420_TAG "MMWAVE"
 
 static int64_t last_ld2420_read_time = 0;
-static TimerHandle_t ld2420_timer;
-static TaskHandle_t ld2420_task_handle = NULL;
+// static TimerHandle_t ld2420_timer;
+// static TaskHandle_t ld2420_task_handle = NULL;
 static uint8_t ld2420_buffer[LD2420_BUF_SIZE];
 
 bool     ld242_presence       = false;
@@ -145,25 +145,26 @@ void read_ld2420_report_mode() {
     }
 }
 
-void ld2420_timer_callback(TimerHandle_t xTimer) {
-    if (ld2420_task_handle) xTaskNotifyGive(ld2420_task_handle);
-}
+// void ld2420_timer_callback(TimerHandle_t xTimer) {
+//     if (ld2420_task_handle) xTaskNotifyGive(ld2420_task_handle);
+// }
 
-void ld2420_task(void *pvParameters) {
-    while (1) {
-        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-        get_ld2420_data();
-        // read_ld2420_report_mode();
-    }
-}
+// void ld2420_task(void *pvParameters) {
+//     while (1) {
+//         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+//         get_ld2420_data();
+//         // read_ld2420_report_mode();
+//     }
+// }
 
-void start_ld2420_timer() {
-    if (ld2420_task_handle == NULL)
-        xTaskCreate(ld2420_task, "LD2420_Task", 4096, NULL, 10, &ld2420_task_handle);
+// void start_ld2420_timer() {
+//     if (ld2420_task_handle == NULL)
+//         xTaskCreate(ld2420_task, "LD2420_Task", 4096, NULL, 10, &ld2420_task_handle);
 
-    ld2420_timer = xTimerCreate("LD2420_Timer", pdMS_TO_TICKS(LD2420_TIMER_INTERVAL), pdTRUE, (void *)0, ld2420_timer_callback);
-    xTimerStart(ld2420_timer, 0);
-}
+//     ld2420_timer = xTimerCreate("LD2420_Timer", pdMS_TO_TICKS(LD2420_TIMER_INTERVAL),
+//                                 pdTRUE, (void *)0, ld2420_timer_callback);
+//     xTimerStart(ld2420_timer, 0);
+// }
 
 void ld2420_init() {
     uart_config_t uart_config = {
