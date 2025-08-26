@@ -4,6 +4,9 @@ import socket
 import subprocess
 import threading
 import time
+import json
+import os
+from pathlib import Path
 from config.settings import NetworkConfiguration
 from utils.logger import setup_logger
 
@@ -27,15 +30,18 @@ class NetworkManager:
         self._tx_timestamps = []
         self._tx_capture_interval = NetworkConfiguration.TX_CAPTURE_INTERVAL
         self._record_packet_limit = NetworkConfiguration.RECORD_PACKET_LIMIT
-        self._tx_esp32_ip = NetworkConfiguration.TX_ESP32_IP
+        self._tx_esp32_ip = None
         self._tx_udp_port = NetworkConfiguration.TX_UDP_PORT
         self._tx_buffer_size = NetworkConfiguration.RX_BUFFER_SIZE
         self._csi_req_payload = NetworkConfiguration.TX_CSI_REQ_PAYLOAD
         self._stop_req_payload = NetworkConfiguration.TX_STOP_REQ_PAYLOAD
+        self._ip_req_payload = NetworkConfiguration.TX_IP_REQ_PAYLOAD
 
         self._ap_ssid = NetworkConfiguration.AP_SSID
+        self._ap_broadcast_ip = NetworkConfiguration.AP_BROADCAST_IP
         self._logger = setup_logger('NetworkManager')
         self._udp_port_opened = self.open_esp32_udp_port()
+        self.setup_tx_socket()
 
     def open_esp32_udp_port(self) -> bool:
         """
@@ -89,7 +95,7 @@ class NetworkManager:
         except Exception as e:
             self._logger.error(f'Error checking AP connection: {e}')
             return False
-        
+    
     def check_esp32(self) -> bool:
         """
         Check if ESP32 is reachable by pinging its IP address
@@ -98,13 +104,31 @@ class NetworkManager:
             bool: True if ESP32 is reachable, False otherwise
         """
         try:
-            result = subprocess.run(
-                ['ping', '-n', '1', NetworkConfiguration.TX_ESP32_IP],
-                capture_output=True, text=True
-            )
-            return 'TTL=' in result.stdout
+            if self._tx_esp32_ip:
+                result = subprocess.run(
+                    ['ping', '-n', '1', self._tx_esp32_ip],
+                    capture_output=True, text=True
+                )
+
+                esp32_status = 'TTL=' in result.stdout
+                # Set to None to sync with ESP32 reboot
+                if not esp32_status:
+                    self._tx_esp32_ip = None
+                    print('ESP32 IP set to None')
+                return esp32_status
+            else:
+                self._is_transmitting = True
+                self.transmit_esp32_ip_request_packet()
+
+                data, addr = self._tx_socket.recvfrom(1024)
+                print(f'ESP32 IP: {addr[0]}')
+                self._tx_esp32_ip = addr[0]
+                self._is_transmitting = False
+                return True
+                
         except Exception as e:
             self._logger.error(f'Error pinging ESP32: {e}')
+            self._is_transmitting = False
             return False
     
     # Receiver
@@ -135,8 +159,8 @@ class NetworkManager:
         """
         try:
             self._tx_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self._tx_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self._tx_socket.settimeout(NetworkConfiguration.RX_SOCKET_TIMEOUT)
+            self._tx_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+            self._tx_socket.settimeout(NetworkConfiguration.TX_SOCKET_TIMEOUT)
             return True
         except Exception as e:
             self._logger.error(f'Error setting up transmitter socket: {e}')
@@ -173,7 +197,7 @@ class NetworkManager:
                 if is_recording and self._packet_received_count >= self._record_packet_limit:
                     self._logger.info(f'Recording completed with {self._packet_received_count} packets')
                     break
-                    
+            
             # Implement a timeout to avoid continuous listening
             except socket.timeout:
                 if not self._is_listening:
@@ -215,18 +239,29 @@ class NetworkManager:
         except Exception as e:
             self._logger.error(f'Error sending stop packet: {e}')
     
+    def transmit_esp32_ip_request_packet(self):
+        """Send a single UDP packet to request ESP32 IP address"""
+
+        def _transmit():
+            if self._is_transmitting:
+                try:
+                    self._tx_socket.sendto(self._ip_req_payload, (self._ap_broadcast_ip, self._tx_udp_port))
+                    # Schedule transmission using threading to avoid blocking
+                    threading.Timer(self._tx_capture_interval, _transmit).start()
+                except Exception as e:
+                    self._logger.error(f'Error sending IP request packet: {e}')
+
+        _transmit()
+    
     def request_captured_data(self):
         """Start continuous packet transmission at specified intervals"""
-        if not self.setup_tx_socket():
-            return
-
         self._is_transmitting = True
         
         def _transmit():
             if self._is_transmitting:
                 self.transmit_csi_request_packet()
                 
-                # Schedule next transmission
+                # Schedule transmission using threading to avoid blocking
                 threading.Timer(self._tx_capture_interval, _transmit).start()
         
         _transmit()
