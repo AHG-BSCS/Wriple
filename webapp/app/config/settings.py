@@ -1,21 +1,41 @@
 """Configuration settings for the Human Presence Detection System"""
 
-class NetworkConfiguration:
+class NetworkConfig:
     """Configuration for network settings"""
-    AP_SSID: str = 'Wriple'
-    AP_PASSWORD: str = 'Wr!ple@ESP32'
-    AP_BROADCAST_IP: str = '10.59.14.255'
+    AP_SSID: str = None
+    AP_PASSWORD: str = None
+    AP_BROADCAST_IP: str = None
 
-    TX_ESP32_IP: str = '10.59.14.183'   # IP address assigned by AP to ESP32
-    TX_UDP_PORT: int = 5000             # Keep the port open using firewall
+    TX_ESP32_IP: str = None             # IP address assigned by AP to ESP32
+    TX_UDP_PORT: int = None             # Keep the port open using firewall
     TX_CSI_REQ_PAYLOAD: str = b'Wriple' # Frame length of 88
     TX_STOP_REQ_PAYLOAD: str = b'Stop'  # Frame length of 86
     TX_IP_REQ_PAYLOAD: str = b'Connect'
-    TX_CAPTURE_INTERVAL: float = 0.02   # Adjusted to be approximately 30 packets per second
-    RECORD_PACKET_LIMIT: int = 150      # 5 seconds of data per recording
+    TX_CAPTURE_INTERVAL: float = None   # Adjusted to be approximately 30 packets per second
+    RECORD_PACKET_LIMIT: int = None     # 5 seconds of data per recording
     RX_SOCKET_TIMEOUT: float = 0.25     # Timeout used to stop listening
     TX_SOCKET_TIMEOUT: float = 0.1      # Timeout used to stop listening
     RX_BUFFER_SIZE: int = 4096          # Adjusted based on ESP32 CSI and sensor data size
+
+    def to_dict(self) -> dict:
+        return {
+            'ap_ssid': self.AP_SSID,
+            'ap_password': self.AP_PASSWORD,
+            'ap_broadcast_ip': self.AP_BROADCAST_IP,
+            'tx_esp32_ip': self.TX_ESP32_IP,
+            'tx_udp_port': self.TX_UDP_PORT,
+            'tx_capture_interval': self.TX_CAPTURE_INTERVAL,
+            'record_packet_limit': self.RECORD_PACKET_LIMIT
+        }
+
+    def update(self, config: dict):
+        self.AP_SSID = config.get('ap_ssid', self.AP_SSID)
+        self.AP_PASSWORD = config.get('ap_password', self.AP_PASSWORD)
+        self.AP_BROADCAST_IP = config.get('ap_broadcast_ip', self.AP_BROADCAST_IP)
+        self.TX_ESP32_IP = config.get('tx_esp32_ip', self.TX_ESP32_IP)
+        self.TX_UDP_PORT = config.get('tx_udp_port', self.TX_UDP_PORT)
+        self.TX_CAPTURE_INTERVAL = config.get('tx_capture_interval', self.TX_CAPTURE_INTERVAL)
+        self.RECORD_PACKET_LIMIT = config.get('record_packet_limit', self.RECORD_PACKET_LIMIT)
 
 
 class RecordingConfiguration:
@@ -44,6 +64,7 @@ class FileConfiguration:
         'LD2420_Doppler_13', 'LD2420_Doppler_14', 'LD2420_Doppler_15', 'LD2420_Doppler_16',
         'LD2420_Doppler_17', 'LD2420_Doppler_18', 'LD2420_Doppler_19', 'LD2420_Doppler_20'
     ]
+    SETTING_FILE: str = 'setting/setting.json'
 
 
 class VisualizerConfiguration:

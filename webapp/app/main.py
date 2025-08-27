@@ -1,7 +1,7 @@
 import threading
 from flask import Flask
 
-from config.settings import FlaskConfiguration, RecordingConfiguration, VisualizerConfiguration
+from config.settings import FlaskConfiguration, RecordingConfiguration
 from core.csi_processor import CSIProcessor
 from core.file_manager import FileManager
 from core.model_manager import ModelManager
@@ -16,10 +16,11 @@ class HumanDetectionSystem:
     
     def __init__(self):
         # Initialize core components
-        self.csi_processor = CSIProcessor()
         self.file_manager = FileManager()
+        self.file_manager.load_settings()
+        self.csi_processor = CSIProcessor()
         self.model_manager = ModelManager()
-        self.network_manager = NetworkManager()
+        self.network_manager = NetworkManager(self.file_manager)
         
         # Application state and counter
         self.is_recording = False
@@ -82,13 +83,13 @@ class HumanDetectionSystem:
         
         if is_recording: self.is_recording = True
         else: self.is_monitoring = True
-        self.network_manager.request_captured_data()
 
         threading.Thread(
             target=self.network_manager.start_listening,
             args=(self.parse_received_data, self.is_recording),
             daemon=True
         ).start()
+        self.network_manager.request_captured_data()
     
     def stop_operations(self):
         """Stop all recording/monitoring operations"""

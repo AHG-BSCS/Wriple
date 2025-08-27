@@ -1,13 +1,15 @@
 """File Manager Module"""
 
 import csv
+import json
 import os
 import re
 import threading
 
 from config.settings import FileConfiguration
-from config.settings import NetworkConfiguration
+from config.settings import NetworkConfig
 from utils.logger import setup_logger
+
 
 class FileManager:
     """Handles CSV file CRUD operations and management"""
@@ -15,14 +17,12 @@ class FileManager:
     def __init__(self):
             self._csv_file_path = None
             self._selected_csv_file = None
-            self._csv_directory = FileConfiguration.CSV_DIRECTORY
             self._csv_buffer = []
-            self._csv_buffer_limit = NetworkConfiguration.RECORD_PACKET_LIMIT
             self._lock = threading.Lock()
             self._logger = setup_logger('FileManager')
             
             # Ensure directory exists
-            os.makedirs(self._csv_directory, exist_ok=True)
+            os.makedirs(FileConfiguration.CSV_DIRECTORY, exist_ok=True)
     
     def get_next_filename(self) -> str:
         """
@@ -32,7 +32,7 @@ class FileManager:
             str: Full path to the next CSV file
         """
         try:
-            files = os.listdir(self._csv_directory)
+            files = os.listdir(FileConfiguration.CSV_DIRECTORY)
             pattern = re.compile(FileConfiguration.CSV_FILE_PATTERN)
             matching_files = [f for f in files if pattern.match(f)]
             
@@ -50,12 +50,12 @@ class FileManager:
             
             filename = f'{FileConfiguration.CSV_FILE_PREFIX}{next_number:03d}.csv'
             self._logger.info(f'Writing on {filename}.')
-            return os.path.join(self._csv_directory, filename)
+            return os.path.join(FileConfiguration.CSV_DIRECTORY, filename)
             
         except Exception as e:
             self._logger.error(f'Error generating new csv filename: {e}')
             # Fallback filename
-            return os.path.join(self._csv_directory, f'{FileConfiguration.CSV_FILE_PREFIX}ERROR.csv')
+            return os.path.join(FileConfiguration.CSV_DIRECTORY, f'{FileConfiguration.CSV_FILE_PREFIX}ERROR.csv')
     
     def list_csv_files(self) -> list:
         """
@@ -65,7 +65,7 @@ class FileManager:
             list: Sorted list of CSV filenames
         """
         try:
-            files = os.listdir(self._csv_directory)
+            files = os.listdir(FileConfiguration.CSV_DIRECTORY)
             csv_files = [f for f in files if f.endswith('.csv')]
             return sorted(csv_files)
         except Exception as e:
@@ -82,7 +82,7 @@ class FileManager:
         Returns:
             bool: True if file exists and is selected, False otherwise
         """
-        self._selected_csv_file = os.path.join(self._csv_directory, filename)
+        self._selected_csv_file = os.path.join(FileConfiguration.CSV_DIRECTORY, filename)
         
         if os.path.exists(self._selected_csv_file):
             self._logger.info(f'{filename} is selected for visualization')
@@ -126,7 +126,7 @@ class FileManager:
         try:
             with self._lock:
                 self._csv_buffer.append(data_row)
-                if len(self._csv_buffer) >= self._csv_buffer_limit:
+                if len(self._csv_buffer) >= NetworkConfig.RECORD_PACKET_LIMIT:
                     self.flush_buffer()
             return True
         except Exception as e:
@@ -149,3 +149,34 @@ class FileManager:
     def close(self):
         with self._lock:
             self.flush_buffer()
+
+    def load_settings(self):
+        """Load settings from JSON file and apply relevant values."""
+        try:
+            with open(FileConfiguration.SETTING_FILE, mode='r', encoding='utf-8') as file:
+                data: dict = json.load(file)
+                NetworkConfig.update(NetworkConfig, data['NetworkConfiguration'])
+
+        except Exception as e:
+            self._logger.error(f'Error loading settings from {FileConfiguration.SETTING_FILE}: {e}')
+
+    def save_settings(self):
+        """Save current settings to JSON file."""
+        settings = {
+            'NetworkConfiguration': NetworkConfig.to_dict(NetworkConfig)
+        }
+
+        tmp_file = FileConfiguration.SETTING_FILE + '.tmp'
+        try:
+            # Create temporary file first
+            os.makedirs(os.path.dirname(tmp_file), exist_ok=True)
+            with open(tmp_file, mode='w', encoding='utf-8') as file:
+                json.dump(settings, file, indent=2)
+                file.flush()
+                os.fsync(file.fileno())
+
+            # Then replace original file
+            os.replace(tmp_file, FileConfiguration.SETTING_FILE)
+            self._logger.info(f'Settings saved to {FileConfiguration.SETTING_FILE}')
+        except Exception as e:
+            self._logger.error(f'Error saving settings to {FileConfiguration.SETTING_FILE}: {e}')

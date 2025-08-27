@@ -1,0 +1,11 @@
+{
+  "NetworkConfiguration": {
+    "ap_ssid": "Wriple",
+    "ap_password": "Wr!ple@ESP32",
+    "ap_broadcast_ip": "10.59.14.255",
+    "tx_esp32_ip": "10.59.14.183",
+    "tx_udp_port": 5000,
+    "tx_capture_interval": 0.02,
+    "record_packet_limit": 150
+  }
+}
