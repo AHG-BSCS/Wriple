@@ -1,6 +1,5 @@
 #include "esp_log.h"
 #include "esp_wifi.h"
-#include "lwip/netdb.h"
 #include "nvs_flash.h"
 
 #include "../_components/csi_component.h"
@@ -68,34 +67,6 @@ void station_init() {
     esp_wifi_set_ps(WIFI_PS_NONE);
 
     ESP_LOGI(MAIN_TAG, "Connecting to SSID:%s Password:%s", ESP_WIFI_SSID, ESP_WIFI_PASS);
-}
-
-void get_station_ip_address() {
-    struct sockaddr_in server_addr;
-    char rx_buffer[128];
-    socklen_t addr_len = sizeof(client_addr);
-
-    int rx_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(UDP_PORT);
-    server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    bind(rx_sock, (struct sockaddr *)&server_addr, sizeof(server_addr));
-
-    while (1) {
-        // Get the IP address of the connected station
-        // Will not proceed until a station sends a "Connect" message
-        int len = recvfrom(rx_sock, rx_buffer, sizeof(rx_buffer)-1, 0,
-                           (struct sockaddr *)&client_addr, &addr_len);
-
-        if (len > 0) {
-            rx_buffer[len] = 0; // Null-terminate whatever is received
-            if (strcmp(rx_buffer, "Connect") == 0) {
-                sendto(rx_sock, "", 0, 0, (struct sockaddr *)&client_addr, addr_len);
-                ESP_LOGI(MAIN_TAG, "Discovered station at %s", inet_ntoa(client_addr.sin_addr));
-                return;
-            }
-        }
-    }
 }
 
 extern "C" void app_main() {

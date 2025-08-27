@@ -19,6 +19,8 @@ class NetworkManager:
         self.file_manager: FileManager = file_manager
         
         self._is_listening = False
+        self._port_established = False
+        self._wifi_connected = False
         self._rx_socket = None
         self._tx_socket = None
         self._packet_transmit_count = 0
@@ -29,39 +31,7 @@ class NetworkManager:
         self._tx_timestamps = []
 
         self._logger = setup_logger('NetworkManager')
-        self._udp_port_opened = self.open_esp32_udp_port()
         self.setup_tx_socket()
-
-    def open_esp32_udp_port(self) -> bool:
-        """
-        Open UDP port for communication with ESP32 if not already open
-        
-        Returns:
-            bool: True if port opened successfully or already exists, False otherwise
-        """
-        rule_name = "ESP32 UDP Port"
-        try:
-            # Check if rule already exists
-            result = subprocess.run([
-                'netsh', 'advfirewall', 'firewall', 'show', 'rule',
-                f'name={rule_name}'
-            ], capture_output=True, text=True)
-            if f"{NetworkConfig.TX_UDP_PORT}" in result.stdout and "UDP" in result.stdout:
-                return True
-
-            # Add rule if not found
-            subprocess.run([
-                'netsh', 'advfirewall', 'firewall', 'add', 'rule',
-                f'name={rule_name}',
-                'dir=in',
-                'action=allow',
-                'protocol=UDP',
-                f'localport={NetworkConfig.TX_UDP_PORT}'
-            ], check=True)
-            return True
-        except subprocess.CalledProcessError as e:
-            self._logger.error(f'Failed to open port {NetworkConfig.TX_UDP_PORT}: {e}')
-            return False
 
     def check_wifi_connection(self) -> bool:
         """
@@ -76,9 +46,11 @@ class NetworkManager:
                 capture_output=True, text=True
             )
             if NetworkConfig.AP_SSID in result.stdout:
+                self._wifi_connected = True
                 return True
             
             self._logger.warning(f'Not connected to AP: {NetworkConfig.AP_SSID}')
+            self._wifi_connected = False
             return False
         except Exception as e:
             self._logger.error(f'Error checking AP connection: {e}')
@@ -92,32 +64,29 @@ class NetworkManager:
             bool: True if ESP32 is reachable, False otherwise
         """
         try:
-            if NetworkConfig.TX_ESP32_IP:
+            if self._wifi_connected and NetworkConfig.TX_ESP32_IP and self._port_established:
                 result = subprocess.run(
                     ['ping', '-n', '1', NetworkConfig.TX_ESP32_IP],
                     capture_output=True, text=True
                 )
 
                 esp32_status = 'TTL=' in result.stdout
-                # Set to None to sync with ESP32 reboot
+                # Set to None to reset with ESP32 on reboot
                 if not esp32_status:
                     NetworkConfig.TX_ESP32_IP = None
-                    print('ESP32 IP set to None')
+                    self._logger.info('ESP32 IP is unreachable')
                 return esp32_status
             else:
-                self._is_transmitting = True
-                self.transmit_esp32_ip_request_packet()
-
-                data, addr = self._tx_socket.recvfrom(1024)
-                self._logger.info(f'ESP32 discovered at {addr[0]}')
+                self.transmit_start_request_packet()
+                threading.Thread(target=self.transmit_esp32_ip_request_packet, daemon=True).start()
+                data, addr = self._tx_socket.recvfrom(2)
                 NetworkConfig.TX_ESP32_IP = addr[0]
+                self._port_established = True
                 self.file_manager.save_settings()
-                self._is_transmitting = False
                 return True
                 
         except Exception as e:
-            self._logger.error(f'Error pinging ESP32: {e}')
-            self._is_transmitting = False
+            self._logger.error(f'ESP32 is unreachable: {e}')
             return False
     
     # Receiver
@@ -132,7 +101,7 @@ class NetworkManager:
         try:
             self._rx_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self._rx_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self._rx_socket.bind(('0.0.0.0', NetworkConfig.TX_UDP_PORT))
+            self._rx_socket.bind(('0.0.0.0', NetworkConfig.TX_PORT))
             self._rx_socket.settimeout(NetworkConfig.RX_SOCKET_TIMEOUT)
             return True
         except Exception as e:
@@ -171,15 +140,15 @@ class NetworkManager:
         
         while self._is_listening:
             try:
-                data, addr = self._rx_socket.recvfrom(NetworkConfig.RX_BUFFER_SIZE)
+                data, addr = self._tx_socket.recvfrom(NetworkConfig.RX_BUFFER_SIZE)
+                # data, addr = self._rx_socket.recvfrom(NetworkConfig.RX_BUFFER_SIZE)
                 # Monitor Packet Count for automatic stopping during recording
                 self._packet_received_count += 1
                 
                 # Process data in separate thread
                 threading.Thread(
                     target=parse_received_data, 
-                    args=(data, 
-                    self._tx_timestamps.pop(0)), 
+                    args=(data, self._tx_timestamps.pop(0)), 
                     daemon=True
                 ).start()
                 
@@ -213,7 +182,8 @@ class NetworkManager:
     def transmit_csi_request_packet(self):
         """Send a single UDP packet to generate CSI data"""
         try:
-            self._tx_socket.sendto(NetworkConfig.TX_CSI_REQ_PAYLOAD, (NetworkConfig.TX_ESP32_IP, NetworkConfig.TX_UDP_PORT))
+            self._tx_socket.sendto(NetworkConfig.TX_CSI_REQ_PAYLOAD,
+                                   (NetworkConfig.TX_ESP32_IP, NetworkConfig.TX_PORT))
             tx_time = time.time()
             tx_time = int(tx_time * 1_000_000) % 1_000_000_000
             self._tx_timestamps.append(tx_time)
@@ -224,23 +194,30 @@ class NetworkManager:
     def transmit_stop_request_packet(self):
         """Send a single UDP packet to signal ESP32 to stop CSI request"""
         try:
-            self._tx_socket.sendto(NetworkConfig.TX_STOP_REQ_PAYLOAD, (NetworkConfig.TX_ESP32_IP, NetworkConfig.TX_UDP_PORT))
+            self._tx_socket.sendto(NetworkConfig.TX_STOP_REQ_PAYLOAD,
+                                   (NetworkConfig.TX_ESP32_IP, NetworkConfig.TX_PORT))
         except Exception as e:
             self._logger.error(f'Error sending stop packet: {e}')
     
+    def transmit_start_request_packet(self):
+        """Send a single UDP packet to signal ESP32 to start CSI request"""
+        try:
+            self._tx_socket.sendto(NetworkConfig.TX_START_REQ_PAYLOAD,
+                                   (NetworkConfig.TX_ESP32_IP, NetworkConfig.TX_PORT))
+        except Exception as e:
+            self._logger.error(f'Error sending start packet: {e}')
+    
     def transmit_esp32_ip_request_packet(self):
         """Send a single UDP packet to request ESP32 IP address"""
-
-        def _transmit():
-            if self._is_transmitting:
-                try:
-                    self._tx_socket.sendto(NetworkConfig.TX_IP_REQ_PAYLOAD, (NetworkConfig.AP_BROADCAST_IP, NetworkConfig.TX_UDP_PORT))
-                    # Schedule transmission using threading to avoid blocking
-                    threading.Timer(NetworkConfig.TX_CAPTURE_INTERVAL, _transmit).start()
-                except Exception as e:
-                    self._logger.error(f'Error sending IP request packet: {e}')
-
-        _transmit()
+        tx_counter = 0
+        while tx_counter < 5:
+            try:
+                self._tx_socket.sendto(NetworkConfig.TX_IP_REQ_PAYLOAD,
+                                       (NetworkConfig.AP_BROADCAST_IP, NetworkConfig.TX_PORT))
+                tx_counter += 1
+                time.sleep(NetworkConfig.TX_CONNECT_INTERVAL)
+            except Exception as e:
+                self._logger.error(f'Error sending IP request packet: {e}')
     
     def request_captured_data(self):
         """Start continuous packet transmission at specified intervals"""
@@ -249,7 +226,6 @@ class NetworkManager:
         def _transmit():
             if self._is_transmitting:
                 self.transmit_csi_request_packet()
-                
                 # Schedule transmission using threading to avoid blocking
                 threading.Timer(NetworkConfig.TX_CAPTURE_INTERVAL, _transmit).start()
         
@@ -258,11 +234,12 @@ class NetworkManager:
     
     def stop_transmitting(self):
         """Stop continuous packet transmission"""
-        self._is_transmitting = False
-        self._requesting_csi = False
-        self._packet_transmit_count = 0
-        self.transmit_stop_request_packet()
-        self._logger.info('Stopped packet transmission')
+        if self._packet_transmit_count > 0:
+            self._is_transmitting = False
+            self._requesting_csi = False
+            self._packet_transmit_count = 0
+            self.transmit_stop_request_packet()
+            self._logger.info('Stopped packet transmission')
 
     def get_packet_loss_rate(self) -> int:
         """
@@ -294,12 +271,3 @@ class NetworkManager:
             int: Number of packets received
         """
         return self._packet_received_count
-    
-    @property
-    def is_udp_port_opened(self) -> bool:
-        """
-        Check if the UDP port is opened for communication
-        Returns:
-            bool: True if port is opened, False otherwise
-        """
-        return self._udp_port_opened
