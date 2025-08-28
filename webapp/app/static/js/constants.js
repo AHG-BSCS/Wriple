@@ -34,7 +34,6 @@ export const SELECTORS = {
   flaskStatus: "#flask-status",
   esp32Status: "#esp32-status",
   ld2420Status: "#ld2420-status",
-  portStatus: "#port-status",
   modelStatus: "#model-status",
 
   targetAngle: '#target-angle',

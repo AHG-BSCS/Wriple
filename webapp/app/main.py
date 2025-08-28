@@ -136,7 +136,6 @@ class HumanDetectionSystem:
             'ap': self.network_manager.check_wifi_connection(),
             'esp32': self._is_esp32_active,
             'ld2420': self._is_ld2420_active,
-            'port': True,
             'model': self.model_manager.model_loaded
         }
     

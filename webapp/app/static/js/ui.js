@@ -42,7 +42,6 @@ export const UI = {
     flaskStatus: $(SELECTORS.flaskStatus),
     esp32Status: $(SELECTORS.esp32Status),
     ld2420Status: $(SELECTORS.ld2420Status),
-    portStatus: $(SELECTORS.portStatus),
     modelStatus: $(SELECTORS.modelStatus)
   },
 
@@ -99,9 +98,6 @@ export const UI = {
       
       if (status.ld2420) n.ld2420Status.style.fill = UI_COLORS.statusBarActiveColor;
       else n.ld2420Status.style.fill = UI_COLORS.statusBarInactiveColor;
-
-      if (status.port) n.portStatus.style.fill = UI_COLORS.statusBarActiveColor;
-      else n.portStatus.style.fill = UI_COLORS.statusBarInactiveColor;
 
       if (status.model) n.modelStatus.style.fill = UI_COLORS.statusBarActiveColor;
       else n.modelStatus.style.fill = UI_COLORS.statusBarInactiveColor;
