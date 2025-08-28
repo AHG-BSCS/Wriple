@@ -1,7 +1,7 @@
 {
   "NetworkConfiguration": {
-    "ap_ssid": "Wriple",
-    "ap_password": "Wr!ple@ESP32",
+    "ap_ssid": "WRIPLE",
+    "ap_password": "WRIPLE_ESP32",
     "ap_broadcast_ip": "10.59.14.255",
     "tx_esp32_ip": "10.59.14.183",
     "tx_port": 5001,

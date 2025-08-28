@@ -12,7 +12,7 @@ class NetworkConfig:
     TX_CSI_REQ_PAYLOAD = b'Wriple'  # Frame length of 88
     TX_STOP_REQ_PAYLOAD = b'Stop'   # Frame length of 86
     TX_START_REQ_PAYLOAD = b'Start' # Frame length of 87
-    TX_IP_REQ_PAYLOAD = b'Connect'
+    TX_IP_REQ_PAYLOAD = b'Discover'
     TX_CAPTURE_INTERVAL: float = None   # Adjusted to be approximately 30 packets per second
     TX_CONNECT_INTERVAL: float = 0.05   # Interval between IP request packets
     RECORD_PACKET_LIMIT: int = None     # 5 seconds of data per recording

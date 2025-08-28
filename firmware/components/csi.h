@@ -1,27 +1,27 @@
-#ifndef ESP32_CSI_COMPONENT_H
-#define ESP32_CSI_COMPONENT_H
+#ifndef CSI_COMPONENT_H
+#define CSI_COMPONENT_H
 
 #include <sstream>
 #include "driver/gpio.h"
 
-#include "sta_component.h"
-#include "mmwave_component.h"
-
-#define LED_PACKET_COUNT_BLINK 15 // Blink every 500 ms if 30 packets/sec
-#define CSI_PAYLOAD_SIZE (1344 + LD2420_PAYLOAD_SIZE)
+#include "rdm.h"
+#include "server.h"
 
 #define CSI_TAG "CSI"
 
-const SemaphoreHandle_t mutex = xSemaphoreCreateMutex();
-constexpr gpio_num_t ledPin = GPIO_NUM_2;
+#define LED_PIN GPIO_NUM_2
+#define LED_BLINK_INTERVAL  15 // Blink every 500 ms if 30 packets/sec
+#define CSI_PAYLOAD_SIZE    (1344 + RDM_PAYLOAD_SIZE)
+
+static SemaphoreHandle_t mutex = xSemaphoreCreateMutex();
 static bool is_led_high = false;
 static int total_packet_count = 0;
 
 void blink_led() {
     if (total_packet_count == 0) {
         is_led_high = !is_led_high;
-        gpio_set_level(ledPin, is_led_high);
-        total_packet_count = LED_PACKET_COUNT_BLINK;
+        gpio_set_level(LED_PIN, is_led_high);
+        total_packet_count = LED_BLINK_INTERVAL;
     }
 }
 
@@ -54,13 +54,13 @@ void _wifi_csi_callback(void *ctx, wifi_csi_info_t *data) {
         }
         payload.push_back('|');
     
-        payload.append(get_ld2420_data());
+        payload.append(get_rdm_data());
         payload.push_back('\n');
     
         // Send payload protected by mutex
         xSemaphoreTake(mutex, portMAX_DELAY);
-        sendto(rx_sock, payload.data(), payload.size(), 0,
-               (struct sockaddr *)&client_addr, sizeof(client_addr));
+        if (server_sock != -1) sendto(server_sock, payload.data(), payload.size(), 0,
+                                      (struct sockaddr *)&server_addr, server_addr_len);
         
         blink_led();
         total_packet_count--;
@@ -70,18 +70,22 @@ void _wifi_csi_callback(void *ctx, wifi_csi_info_t *data) {
     else if (data[0].rx_ctrl.sig_len == 87) {
         is_led_high = true;
         total_packet_count = 0;
-        gpio_set_level(ledPin, is_led_high);
-        get_station_ip_address();
+        gpio_set_level(LED_PIN, is_led_high);
+        discover_server_address();
     }
     // Stop signal capturing
     else if (data[0].rx_ctrl.sig_len == 86) {
         is_led_high = false;
         total_packet_count = 0;
-        gpio_set_level(ledPin, is_led_high);
+        gpio_set_level(LED_PIN, is_led_high);
+        ESP_LOGI(CSI_TAG, "Stop signal received");
     }
 }
 
 void csi_init() {
+    gpio_reset_pin(LED_PIN);
+    ESP_ERROR_CHECK(gpio_set_direction(LED_PIN, GPIO_MODE_OUTPUT));
+
     wifi_csi_config_t csi_config;
     csi_config.lltf_en = 1;
     csi_config.htltf_en = 1;
@@ -89,10 +93,6 @@ void csi_init() {
     csi_config.ltf_merge_en = 1;
     csi_config.channel_filter_en = 0;
     csi_config.manu_scale = 0;
-
-    // Configure LED
-    gpio_reset_pin(ledPin);
-    gpio_set_direction(ledPin, GPIO_MODE_OUTPUT);
 
     ESP_ERROR_CHECK(esp_wifi_set_csi_config(&csi_config));
     ESP_ERROR_CHECK(esp_wifi_set_csi_rx_cb(&_wifi_csi_callback, NULL));
