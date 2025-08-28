@@ -52,7 +52,7 @@ void discover_server_address() {
 
         if (len > 0) {
             rx_buffer[len] = 0; // Null-terminate whatever is received
-            if (strcmp(rx_buffer, "Discover") == 0) {
+            if (strcmp(rx_buffer, "Broadcast") == 0) {
                 uint16_t server_port = ntohs(server_addr.sin_port);
                 if (server_port != prev_server_port) {
                     // Reply to let server trace new ESP32 IP address

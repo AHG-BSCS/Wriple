@@ -10,11 +10,11 @@ class NetworkConfig:
     TX_ESP32_IP: str = None             # IP address assigned by AP to ESP32
     TX_PORT: int = None
     RX_PORT: int = 5001
-    TX_CSI_REQ_PAYLOAD = b'Wriple'  # Frame length of 88
-    TX_STOP_REQ_PAYLOAD = b'Stop'   # Frame length of 86
-    TX_START_REQ_PAYLOAD = b'Start' # Frame length of 87
-    TX_IP_REQ_PAYLOAD = b'Discover'
-    TX_CAPTURE_INTERVAL: float = None   # Adjusted to be approximately 30 packets per second
+    TX_CSI_REQ_PAYLOAD = b'Wriple'      # Frame length of 88
+    TX_STOP_REQ_PAYLOAD = b'Stop'       # Frame length of 86
+    TX_RECONNECT_PAYLOAD = b'Reconnect' # Frame length of 91
+    TX_IP_BROADCAST_PAYLOAD = b'Broadcast'
+    TX_INTERVAL: float = None   # Adjusted to be approximately 30 packets per second
     TX_CONNECT_INTERVAL: float = 0.05   # Interval between IP request packets
     RECORD_PACKET_LIMIT: int = None     # 5 seconds of data per recording
     RX_SOCKET_TIMEOUT: float = 0.25     # Timeout used to stop listening
@@ -28,7 +28,7 @@ class NetworkConfig:
             'ap_broadcast_ip': self.AP_BROADCAST_IP,
             'tx_esp32_ip': self.TX_ESP32_IP,
             'tx_port': self.TX_PORT,
-            'tx_capture_interval': self.TX_CAPTURE_INTERVAL,
+            'tx_interval': self.TX_INTERVAL,
             'record_packet_limit': self.RECORD_PACKET_LIMIT
         }
 
@@ -38,7 +38,7 @@ class NetworkConfig:
         self.AP_BROADCAST_IP = config.get('ap_broadcast_ip', self.AP_BROADCAST_IP)
         self.TX_ESP32_IP = config.get('tx_esp32_ip', self.TX_ESP32_IP)
         self.TX_PORT = config.get('tx_port', self.TX_PORT)
-        self.TX_CAPTURE_INTERVAL = config.get('tx_capture_interval', self.TX_CAPTURE_INTERVAL)
+        self.TX_INTERVAL = config.get('tx_interval', self.TX_INTERVAL)
         self.RECORD_PACKET_LIMIT = config.get('record_packet_limit', self.RECORD_PACKET_LIMIT)
 
 

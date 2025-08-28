@@ -1,7 +1,6 @@
 """Network Communication Module"""
 
 import socket
-import re
 import subprocess
 import threading
 import time
@@ -19,20 +18,18 @@ class NetworkManager:
         from core.file_manager import FileManager
         self.file_manager: FileManager = file_manager
         
-        self._is_listening = False
+        self._receiving = False
+        self._transmitting = False
         self._port_established = False
         self._wifi_connected = False
-        self._rx_socket = None
-        self._tx_socket = None
-        self._packet_transmit_count = 0
-        self._packet_received_count = 0
 
-        # Transmitter related variables
-        self._is_transmitting = False
+        self._socket = None
+        self._rx_packet_count = 0
+        self._tx_packet_count = 0
         self._tx_timestamps = []
 
         self._logger = setup_logger('NetworkManager')
-        self.setup_tx_socket()
+        self.init_socket()
     
     def find_ip_address(self) -> str:
         """
@@ -48,6 +45,7 @@ class NetworkManager:
                 output = subprocess.run(['ipconfig'], capture_output=True, text=True)
                 for line in output.stdout.splitlines():
                     if 'IPv4 Address' in line:
+                        import re
                         m = re.search(r'IPv4 Address[^\:]*:\s*([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)', line)
                         if m: return m.group(1)
                         else: return None
@@ -115,10 +113,10 @@ class NetworkManager:
                 return esp32_status
             else:
                 if NetworkConfig.TX_ESP32_IP:
-                    self.transmit_start_request_packet()
+                    self.transmit_reconnection_packet()
                 
-                threading.Thread(target=self.transmit_esp32_ip_request_packet, daemon=True).start()
-                data, addr = self._tx_socket.recvfrom(2)
+                threading.Thread(target=self.transmit_ip_broadcast_packet, daemon=True).start()
+                data, addr = self._socket.recvfrom(2)
 
                 if addr[0] != NetworkConfig.TX_ESP32_IP:
                     NetworkConfig.TX_ESP32_IP = addr[0]
@@ -133,24 +131,7 @@ class NetworkManager:
     
     # Receiver
 
-    def setup_rx_socket(self) -> bool:
-        """
-        Setup UDP socket for receiving packets
-
-        Returns:
-            bool: True if socket setup is successful, False otherwise
-        """
-        try:
-            self._rx_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self._rx_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self._rx_socket.bind(('0.0.0.0', NetworkConfig.TX_PORT))
-            self._rx_socket.settimeout(NetworkConfig.RX_SOCKET_TIMEOUT)
-            return True
-        except Exception as e:
-            self._logger.error(f'Error setting up socket: {e}')
-            return False
-    
-    def setup_tx_socket(self) -> bool:
+    def init_socket(self) -> bool:
         """
         Setup UDP socket for transmitting packets
 
@@ -158,15 +139,15 @@ class NetworkManager:
             bool: True if socket setup is successful, False otherwise
         """
         try:
-            self._tx_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self._tx_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-            self._tx_socket.settimeout(NetworkConfig.TX_SOCKET_TIMEOUT)
+            self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+            self._socket.settimeout(NetworkConfig.TX_SOCKET_TIMEOUT)
             return True
         except Exception as e:
             self._logger.error(f'Error setting up transmitter socket: {e}')
             return False
     
-    def start_listening(self, parse_received_data, is_recording):
+    def start_receiving(self, parse_received_data, is_recording):
         """
         Start listening for UDP packets from ESP32
         
@@ -174,18 +155,15 @@ class NetworkManager:
             parse_received_data: Function to call when data is received
             is_recording: Current mode
         """
-        if not self.setup_rx_socket():
-            return
+        self._receiving = True
+        self._logger.info('Listening...')
         
-        self._is_listening = True
-        self._logger.info('Listening for packets...')
-        
-        while self._is_listening:
+        while self._receiving:
             try:
-                data, addr = self._tx_socket.recvfrom(NetworkConfig.RX_BUFFER_SIZE)
+                data, addr = self._socket.recvfrom(NetworkConfig.RX_BUFFER_SIZE)
                 # data, addr = self._rx_socket.recvfrom(NetworkConfig.RX_BUFFER_SIZE)
                 # Monitor Packet Count for automatic stopping during recording
-                self._packet_received_count += 1
+                self._rx_packet_count += 1
                 
                 # Process data in separate thread
                 threading.Thread(
@@ -194,13 +172,13 @@ class NetworkManager:
                     daemon=True
                 ).start()
                 
-                if is_recording and self._packet_received_count >= NetworkConfig.RECORD_PACKET_LIMIT:
-                    self._logger.info(f'Recording completed with {self._packet_received_count} packets')
+                if is_recording and self._rx_packet_count >= NetworkConfig.RECORD_PACKET_LIMIT:
+                    self._logger.info(f'Recording completed with {self._rx_packet_count} packets')
                     break
             
             # Implement a timeout to avoid continuous listening
             except socket.timeout:
-                if not self._is_listening:
+                if not self._receiving:
                     break
                 continue
             except Exception as e:
@@ -212,104 +190,84 @@ class NetworkManager:
     
     def stop_listening(self):
         """Stop listening for packets"""
-        self._is_listening = False
-        self._packet_received_count = 0
-        if self._rx_socket:
-            self._rx_socket.close()
-            self._rx_socket = None
-        self._logger.info('Stopped listening for packets.')
+        self._receiving = False
+        self._rx_packet_count = 0
+        self._logger.info('Receiving stopped')
     
     # Transmitter
 
-    def transmit_csi_request_packet(self):
-        """Send a single UDP packet to generate CSI data"""
-        try:
-            self._tx_socket.sendto(NetworkConfig.TX_CSI_REQ_PAYLOAD,
-                                   (NetworkConfig.TX_ESP32_IP, NetworkConfig.TX_PORT))
+    def transmit_csi_generating_packet(self):
+        """Send a UDP packet to generate CSI data"""
+        # Removed the error handling to reduce overhead
+        while self._transmitting:
+            self._socket.sendto(NetworkConfig.TX_CSI_REQ_PAYLOAD,
+                                (NetworkConfig.TX_ESP32_IP, NetworkConfig.TX_PORT))
             tx_time = time.time()
             tx_time = int(tx_time * 1_000_000) % 1_000_000_000
             self._tx_timestamps.append(tx_time)
-            self._packet_transmit_count += 1
-        except Exception as e:
-            self._logger.error(f'Error sending request packet: {e}')
+            self._tx_packet_count += 1
+            time.sleep(NetworkConfig.TX_INTERVAL)
     
-    def transmit_stop_request_packet(self):
+    def transmit_stop_csi_packet(self):
         """Send a single UDP packet to signal ESP32 to stop CSI request"""
         try:
-            self._tx_socket.sendto(NetworkConfig.TX_STOP_REQ_PAYLOAD,
+            self._socket.sendto(NetworkConfig.TX_STOP_REQ_PAYLOAD,
                                    (NetworkConfig.TX_ESP32_IP, NetworkConfig.TX_PORT))
         except Exception as e:
             self._logger.error(f'Error sending stop packet: {e}')
     
-    def transmit_start_request_packet(self):
+    def transmit_reconnection_packet(self):
         """Send a single UDP packet to signal ESP32 to start CSI request"""
         try:
-            self._tx_socket.sendto(NetworkConfig.TX_START_REQ_PAYLOAD,
+            self._socket.sendto(NetworkConfig.TX_RECONNECT_PAYLOAD,
                                    (NetworkConfig.TX_ESP32_IP, NetworkConfig.TX_PORT))
         except Exception as e:
             self._logger.error(f'Error sending start packet: {e}')
     
-    def transmit_esp32_ip_request_packet(self):
+    def transmit_ip_broadcast_packet(self):
         """Send a single UDP packet to request ESP32 IP address"""
         tx_counter = 0
         while tx_counter < 5:
             try:
-                self._tx_socket.sendto(NetworkConfig.TX_IP_REQ_PAYLOAD,
+                self._socket.sendto(NetworkConfig.TX_IP_BROADCAST_PAYLOAD,
                                        (NetworkConfig.AP_BROADCAST_IP, NetworkConfig.TX_PORT))
                 tx_counter += 1
                 time.sleep(NetworkConfig.TX_CONNECT_INTERVAL)
             except Exception as e:
                 self._logger.error(f'Error sending IP request packet: {e}')
     
-    def request_captured_data(self):
+    def start_csi_transmission(self):
         """Start continuous packet transmission at specified intervals"""
-        self._is_transmitting = True
-        
-        def _transmit():
-            if self._is_transmitting:
-                self.transmit_csi_request_packet()
-                # Schedule transmission using threading to avoid blocking
-                threading.Timer(NetworkConfig.TX_CAPTURE_INTERVAL, _transmit).start()
-        
-        _transmit()
-        self._logger.info('Started packet transmission')
+        self._transmitting = True
+        threading.Thread(target=self.transmit_csi_generating_packet, daemon=True).start()
+        self._logger.info('Transmitting...')
     
     def stop_transmitting(self):
         """Stop continuous packet transmission"""
-        if self._packet_transmit_count > 0:
-            self._is_transmitting = False
-            self._requesting_csi = False
-            self._packet_transmit_count = 0
-            self.transmit_stop_request_packet()
-            self._logger.info('Stopped packet transmission')
+        if self._tx_packet_count > 0:
+            self._transmitting = False
+            self._tx_packet_count = 0
+            self._tx_timestamps.clear()
+            self._logger.info('Transmission stopped')
+            self.transmit_stop_csi_packet()
 
-    def get_packet_loss_rate(self) -> int:
+    def get_packet_loss(self) -> int:
         """
         Calculate packet loss rate based on transmitted and received packets
         
         Returns:
             float: Packet loss rate as a percentage (rounded to two decimal places)
         """
-        if self._packet_transmit_count == 0:
+        if self._tx_packet_count == 0:
             return 0.0
         
-        loss = (self._packet_transmit_count - self._packet_received_count) / self._packet_transmit_count
+        loss = (self._tx_packet_count - self._rx_packet_count) / self._tx_packet_count
         return int(loss * 100)
 
     @property
-    def is_listening(self) -> bool:
-        """
-        Check if the manager is currently listening for packets
-        Returns:
-            bool: True if listening, False otherwise
-        """
-        return self._is_listening
+    def is_receiving(self) -> bool:
+        return self._receiving
 
     @property
-    def packet_received_count(self) -> int:
-        """
-        Get the current packet count
-        Returns:
-            int: Number of packets received
-        """
-        return self._packet_received_count
+    def packet_count(self) -> int:
+        return self._rx_packet_count

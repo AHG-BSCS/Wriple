@@ -85,11 +85,11 @@ class HumanDetectionSystem:
         else: self.is_monitoring = True
 
         threading.Thread(
-            target=self.network_manager.start_listening,
+            target=self.network_manager.start_receiving,
             args=(self.parse_received_data, self.is_recording),
             daemon=True
         ).start()
-        self.network_manager.request_captured_data()
+        self.network_manager.start_csi_transmission()
     
     def stop_operations(self):
         """Stop all recording/monitoring operations"""
@@ -143,15 +143,15 @@ class HumanDetectionSystem:
     
     def get_monitor_status(self) -> dict:
         presence_prediction = self.predict_presence()
-        mode_status = (0 if self.is_recording and self.network_manager.is_listening else 
+        mode_status = (0 if self.is_recording and self.network_manager.is_receiving else 
                        1 if self.is_monitoring else -1)
         
         return {
             'modeStatus': mode_status,
             'presence': presence_prediction,
             'targetDistance': 0,  # Placeholder for target distance
-            'packetCount': self.network_manager.packet_received_count,
-            'packetLoss': self.network_manager.get_packet_loss_rate(),
+            'packetCount': self.network_manager.packet_count,
+            'packetLoss': self.network_manager.get_packet_loss(),
             'rssi': self.rssi,
             'expValue': 0
             # 'exp': self.mmwave_data[10][3]
@@ -164,7 +164,7 @@ class HumanDetectionSystem:
         Returns:
             dict: Dictionary with radar data and presence prediction
         """
-        mode_status = (0 if self.is_recording and self.network_manager.is_listening else 
+        mode_status = (0 if self.is_recording and self.network_manager.is_receiving else 
                        1 if self.is_monitoring else -1)
         
         return {

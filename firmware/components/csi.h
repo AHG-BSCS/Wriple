@@ -70,19 +70,19 @@ void _wifi_csi_callback(void *ctx, wifi_csi_info_t *data) {
         total_packet_count--;
         xSemaphoreGive(mutex);
     }
-    // Start signal capturing
-    else if (data[0].rx_ctrl.sig_len == 87) {
-        is_led_high = true;
-        total_packet_count = 0;
-        gpio_set_level(LED_PIN, is_led_high);
-        discover_server_address();
-    }
     // Stop signal capturing
     else if (data[0].rx_ctrl.sig_len == 86) {
         is_led_high = false;
         total_packet_count = 0;
         gpio_set_level(LED_PIN, is_led_high);
         ESP_LOGI(CSI_TAG, "Stop signal received");
+    }
+    // Update server port address
+    else if (data[0].rx_ctrl.sig_len == 91) {
+        is_led_high = true;
+        total_packet_count = 0;
+        gpio_set_level(LED_PIN, is_led_high);
+        discover_server_address();
     }
 }
 
