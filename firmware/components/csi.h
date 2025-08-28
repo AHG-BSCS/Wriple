@@ -13,6 +13,10 @@
 #define LED_BLINK_INTERVAL  15 // Blink every 500 ms if 30 packets/sec
 #define CSI_PAYLOAD_SIZE    (1344 + RDM_PAYLOAD_SIZE)
 
+extern int server_sock;
+extern struct sockaddr_in server_addr;
+extern socklen_t server_addr_len;
+
 static SemaphoreHandle_t mutex = xSemaphoreCreateMutex();
 static bool is_led_high = false;
 static int total_packet_count = 0;

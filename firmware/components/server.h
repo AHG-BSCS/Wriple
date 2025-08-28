@@ -1,17 +1,17 @@
 #ifndef SERVER_COMPONENT_H
 #define SERVER_COMPONENT_H
 
-#include "lwip/sockets.h"
+#include "globals.cc"
 
 #define SERVER_TAG "SERVER"
 #define SERVER_PORT 5001
 
 static char rx_buffer[64];
-int server_sock = -1;
+extern int server_sock;
 static struct sockaddr_in broadcast_addr;
-struct sockaddr_in server_addr;
+extern struct sockaddr_in server_addr;
 static uint16_t prev_server_port = 0;
-socklen_t server_addr_len = sizeof(server_addr);
+extern socklen_t server_addr_len;
 
 void socket_init() {
     server_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);

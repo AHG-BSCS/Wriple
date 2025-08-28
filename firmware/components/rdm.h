@@ -190,7 +190,7 @@ void rdm_init() {
     uint8_t debug_cmd[18] = {0xFD, 0xFC, 0xFB, 0xFA, 0x08, 0x00, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x03, 0x02, 0x01};
     int written = uart_write_bytes(LD2420_UART_PORT, (const char *)debug_cmd, sizeof(debug_cmd));
     if (written < 0) ESP_LOGW(RDM_TAG, "Radar command failed: %d", written);
-    ESP_LOGI(RDM_TAG, "LD2420 Mode: Debug.");
+    ESP_LOGI(RDM_TAG, "LD2420 Mode: Debug");
 
     // Temporary timer for debugging
     // start_ld2420_timer();

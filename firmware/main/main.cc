@@ -1,12 +1,9 @@
 #include "esp_log.h"
-#include "esp_wifi.h"
 #include "nvs_flash.h"
+#include "esp_wifi.h"
 
 #include "../components/csi.h"
-
-#define MAIN_TAG "MAIN"
-#define STA_SSID "WRIPLE"
-#define STA_PASS "WRIPLE_ESP32"
+#include "../components/station.h"
 
 void config_print() {
     printf("\n\n");
@@ -28,43 +25,6 @@ void nvs_init() {
         ret = nvs_flash_init();
     }
     ESP_ERROR_CHECK(ret);
-}
-
-static void event_handler(void* arg, esp_event_base_t event_base,
-                          int32_t event_id, void* event_data) {
-    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
-        esp_wifi_connect();
-        ESP_LOGI(MAIN_TAG, "Station Mode Active");
-    } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-        ESP_LOGI(MAIN_TAG, "Reconnecting to the AP");
-        esp_wifi_connect();
-    }
-}
-
-void station_init() {
-    ESP_ERROR_CHECK(esp_netif_init());
-
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
-    esp_netif_create_default_wifi_sta();
-
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-
-    esp_event_handler_instance_t instance_any_id;
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID,
-                    &event_handler, NULL, &instance_any_id));
-
-    wifi_config_t wifi_config = {};
-    strlcpy((char *) wifi_config.sta.ssid, STA_SSID, sizeof(STA_SSID));
-    strlcpy((char *) wifi_config.sta.password, STA_PASS, sizeof(STA_PASS));
-
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
-    ESP_ERROR_CHECK(esp_wifi_start());
-
-    ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
-
-    ESP_LOGI(MAIN_TAG, "Connecting: SSID=%s Password=%s", STA_SSID, STA_PASS);
 }
 
 extern "C" void app_main() {
