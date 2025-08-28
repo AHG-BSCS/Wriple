@@ -47,7 +47,7 @@ class RecordingConfiguration:
     Configuration for CSI data recording
     Packet and queue limits are based on TX interval
     """
-    MONITOR_QUEUE_LIMIT: int = 90
+    MONITOR_QUEUE_LIMIT: int = 180
     MMWAVE_QUEUE_LIMIT: int = 12
     RECORD_PARAMETERS: list = [None, None, None, None, None, None, None, None, None]
 
@@ -68,7 +68,7 @@ class FileConfiguration:
         'LD2420_Doppler_13', 'LD2420_Doppler_14', 'LD2420_Doppler_15', 'LD2420_Doppler_16',
         'LD2420_Doppler_17', 'LD2420_Doppler_18', 'LD2420_Doppler_19', 'LD2420_Doppler_20'
     ]
-    SETTING_FILE: str = 'setting/setting.json'
+    SETTING_FILE: str = 'setting/settings.json'
 
 
 class VisualizerConfiguration:
@@ -77,7 +77,7 @@ class VisualizerConfiguration:
     AVERAGED_WINDOWS: list = [(0, 10), (10, -1)]
     SUBCARRIER_COUNT: int = 192
 
-    HEAT_SIGNAL_WINDOW: int = 30
+    HEAT_SIGNAL_WINDOW: int = 60
     HEAT_AMP_START_SUB:int = 3
     HEAT_AMP_END_SUB:int = 88
     HEAT_PHASE_START_SUB:int = 6

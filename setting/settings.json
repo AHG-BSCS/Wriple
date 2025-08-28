@@ -5,7 +5,7 @@
     "ap_broadcast_ip": "10.59.14.255",
     "tx_esp32_ip": "10.59.14.183",
     "tx_port": 5001,
-    "tx_capture_interval": 0.02,
-    "record_packet_limit": 150
+    "tx_interval": 0.016,
+    "record_packet_limit": 240
   }
 }
