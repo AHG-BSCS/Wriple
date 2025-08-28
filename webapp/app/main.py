@@ -125,15 +125,17 @@ class HumanDetectionSystem:
         Returns:
             dict: Dictionary with status of each system component
         """
-        if self.network_manager.check_esp32():
-            self._is_esp32_active = True
-            self._is_ld2420_active = PacketParser.is_ld2420_active()
-        else:
-            self._is_esp32_active = False
-            self._is_ld2420_active = False
+        ap_status = self.network_manager.check_wifi_connection()
+        if ap_status:
+            if self.network_manager.check_esp32():
+                self._is_esp32_active = True
+                self._is_ld2420_active = PacketParser.is_ld2420_active()
+            else:
+                self._is_esp32_active = False
+                self._is_ld2420_active = False
 
         return {
-            'ap': self.network_manager.check_wifi_connection(),
+            'ap': ap_status,
             'esp32': self._is_esp32_active,
             'ld2420': self._is_ld2420_active,
             'model': self.model_manager.model_loaded

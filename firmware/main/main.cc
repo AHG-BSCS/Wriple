@@ -33,6 +33,8 @@ extern "C" void app_main() {
     station_init();
     esp_log_level_set("wifi", ESP_LOG_ERROR);
 
+    // Wait for AP connection and radar stabilization
+    vTaskDelay(pdMS_TO_TICKS(500));
     // Discover server address before initializing CSI and RDM
     socket_init();
     discover_server_address();

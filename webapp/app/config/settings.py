@@ -5,6 +5,7 @@ class NetworkConfig:
     AP_SSID: str = None
     AP_PASSWORD: str = None
     AP_BROADCAST_IP: str = None
+    SERVER_IP_ADDR: str = None
 
     TX_ESP32_IP: str = None             # IP address assigned by AP to ESP32
     TX_PORT: int = None

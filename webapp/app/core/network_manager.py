@@ -1,6 +1,7 @@
 """Network Communication Module"""
 
 import socket
+import re
 import subprocess
 import threading
 import time
@@ -32,6 +33,40 @@ class NetworkManager:
 
         self._logger = setup_logger('NetworkManager')
         self.setup_tx_socket()
+    
+    def find_ip_address(self) -> str:
+        """
+        Find the current IP address of the machine
+
+        Returns:
+            str: Current IP address or None if not found
+        """
+        try:
+            ip_addr = socket.gethostbyname(socket.gethostname())
+            # Fallback to ipconfig parsing if localhost is returned
+            if ip_addr.startswith("127."):
+                output = subprocess.run(['ipconfig'], capture_output=True, text=True)
+                for line in output.stdout.splitlines():
+                    if 'IPv4 Address' in line:
+                        m = re.search(r'IPv4 Address[^\:]*:\s*([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)', line)
+                        if m: return m.group(1)
+                        else: return None
+            else:
+                return ip_addr
+        except Exception:
+            return None
+        return None
+    
+    def update_broadcast_ip(self):
+        """Update the broadcast IP based on current IP address"""
+        NetworkConfig.SERVER_IP_ADDR = self.find_ip_address()
+        prev_broadcast_ip = NetworkConfig.AP_BROADCAST_IP
+        NetworkConfig.AP_BROADCAST_IP = NetworkConfig.SERVER_IP_ADDR[
+                        :NetworkConfig.SERVER_IP_ADDR.rfind('.')] + '.255'
+        
+        if prev_broadcast_ip != NetworkConfig.AP_BROADCAST_IP:
+            self._logger.info(f'New Broadcast IP: {NetworkConfig.AP_BROADCAST_IP}')
+            self.file_manager.save_settings()
 
     def check_wifi_connection(self) -> bool:
         """
@@ -41,12 +76,15 @@ class NetworkManager:
             bool: True if connected, False otherwise
         """
         try:
-            result = subprocess.run(
+            output = subprocess.run(
                 ['netsh', 'wlan', 'show', 'interfaces'], 
                 capture_output=True, text=True
             )
-            if NetworkConfig.AP_SSID in result.stdout:
+            if NetworkConfig.AP_SSID in output.stdout:
                 self._wifi_connected = True
+                
+                if not NetworkConfig.AP_BROADCAST_IP:
+                    self.update_broadcast_ip()
                 return True
             
             self._logger.warning(f'Not connected to AP: {NetworkConfig.AP_SSID}')
@@ -55,7 +93,7 @@ class NetworkManager:
         except Exception as e:
             self._logger.error(f'Error checking AP connection: {e}')
             return False
-    
+
     def check_esp32(self) -> bool:
         """
         Check if ESP32 is reachable by pinging its IP address
@@ -65,24 +103,28 @@ class NetworkManager:
         """
         try:
             if self._wifi_connected and NetworkConfig.TX_ESP32_IP and self._port_established:
-                result = subprocess.run(
+                output = subprocess.run(
                     ['ping', '-n', '1', NetworkConfig.TX_ESP32_IP],
                     capture_output=True, text=True
                 )
-
-                esp32_status = 'TTL=' in result.stdout
+                esp32_status = 'TTL=' in output.stdout
                 # Set to None to reset with ESP32 on reboot
                 if not esp32_status:
                     NetworkConfig.TX_ESP32_IP = None
                     self._logger.info('ESP32 IP is unreachable')
                 return esp32_status
             else:
-                self.transmit_start_request_packet()
+                if NetworkConfig.TX_ESP32_IP:
+                    self.transmit_start_request_packet()
+                
                 threading.Thread(target=self.transmit_esp32_ip_request_packet, daemon=True).start()
                 data, addr = self._tx_socket.recvfrom(2)
-                NetworkConfig.TX_ESP32_IP = addr[0]
+
+                if addr[0] != NetworkConfig.TX_ESP32_IP:
+                    NetworkConfig.TX_ESP32_IP = addr[0]
+                    self._logger.info(f'New ESP32 IP: {NetworkConfig.TX_ESP32_IP}')
+                    self.file_manager.save_settings()
                 self._port_established = True
-                self.file_manager.save_settings()
                 return True
                 
         except Exception as e:
