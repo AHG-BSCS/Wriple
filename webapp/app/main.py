@@ -25,8 +25,8 @@ class HumanDetectionSystem:
         # Application state and counter
         self.is_recording = False
         self.is_monitoring = False
-        self._is_ld2420_active = True
-        self._is_esp32_active = True
+        self._is_ld2420_active = False
+        self._is_esp32_active = False
 
         # Initialize parameters and data storage
         self.rssi = 0
@@ -149,12 +149,11 @@ class HumanDetectionSystem:
         return {
             'modeStatus': mode_status,
             'presence': presence_prediction,
-            'targetDistance': 0,  # Placeholder for target distance
+            'targetDistance': 0, # Placeholder for target distance
             'packetCount': self.network_manager.packet_count,
             'packetLoss': self.network_manager.get_packet_loss(),
             'rssi': self.rssi,
-            'expValue': 0
-            # 'exp': self.mmwave_data[10][3]
+            'exp': self.mmwave_data[10][3]
         }
     
     def get_radar_status(self) -> dict:

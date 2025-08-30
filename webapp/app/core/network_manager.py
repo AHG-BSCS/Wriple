@@ -58,13 +58,16 @@ class NetworkManager:
     def update_broadcast_ip(self):
         """Update the broadcast IP based on current IP address"""
         NetworkConfig.SERVER_IP_ADDR = self.find_ip_address()
-        prev_broadcast_ip = NetworkConfig.AP_BROADCAST_IP
+        
+        if not NetworkConfig.SERVER_IP_ADDR:
+            self._logger.error('Could not determine current IP address')
+            NetworkConfig.AP_BROADCAST_IP = None
+            return
+        
         NetworkConfig.AP_BROADCAST_IP = NetworkConfig.SERVER_IP_ADDR[
                         :NetworkConfig.SERVER_IP_ADDR.rfind('.')] + '.255'
         
-        if prev_broadcast_ip != NetworkConfig.AP_BROADCAST_IP:
-            self._logger.info(f'New Broadcast IP: {NetworkConfig.AP_BROADCAST_IP}')
-            self.file_manager.save_settings()
+        self._logger.info(f'AP Broadcast IP: {NetworkConfig.AP_BROADCAST_IP}')
 
     def check_wifi_connection(self) -> bool:
         """
@@ -85,7 +88,6 @@ class NetworkManager:
                     self.update_broadcast_ip()
                 return True
             
-            self._logger.warning(f'Not connected to AP: {NetworkConfig.AP_SSID}')
             self._wifi_connected = False
             return False
         except Exception as e:
@@ -191,8 +193,8 @@ class NetworkManager:
     def stop_listening(self):
         """Stop listening for packets"""
         self._receiving = False
+        self._logger.info(f'Receiving stopped at {self._rx_packet_count} packets')
         self._rx_packet_count = 0
-        self._logger.info('Receiving stopped')
     
     # Transmitter
 

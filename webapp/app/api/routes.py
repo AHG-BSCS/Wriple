@@ -7,7 +7,7 @@ from .validators import validate_recording_parameters, validate_class, validate_
 def create_api_routes(app, detection_system):
     """Create and register all API routes with the Flask app"""
     
-    # A trick to explicitly set the detection_system instance variable
+    # Set the detection_system instance object for usage reference
     from main import HumanDetectionSystem
     detection_system: HumanDetectionSystem = detection_system
     
@@ -16,39 +16,27 @@ def create_api_routes(app, detection_system):
         """Serve the main HTML page"""
         return render_template('index.html')
     
-    @app.route('/fetch_system_icon_status', methods=['POST'])
-    def fetch_system_icon_status():
+    @app.route('/get_system_status', methods=['GET'])
+    def get_system_status():
         """Get system component status"""
-        try:
-            status = detection_system.get_system_status()
-            return jsonify(status)
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
+        status = detection_system.get_system_status()
+        return jsonify(status), 200
     
-    @app.route('/fetch_monitor_status', methods=['POST'])
-    def fetch_monitor_status():
+    @app.route('/get_monitor_status', methods=['GET'])
+    def get_monitor_status():
         """Get capturing data and presence predictions"""
-        try:
-            radar_status = detection_system.get_monitor_status()
-            return jsonify(radar_status)
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
+        radar_status = detection_system.get_monitor_status()
+        return jsonify(radar_status), 200
     
-    @app.route('/capture_data/monitor', methods=['POST'])
+    @app.route('/start_monitoring', methods=['POST'])
     def start_monitoring():
         """Start monitoring mode"""
-        if not detection_system.network_manager.check_esp32():
-            return jsonify({'message': 'ESP32 is not connected'}), 400
-        
         detection_system.start_capturing(is_recording=False)
         return jsonify({'message': 'Monitoring started'}), 200
     
-    @app.route('/capture_data/record', methods=['POST'])
+    @app.route('/start_recording', methods=['POST'])
     def start_recording():
         """Start recording mode with parameters"""
-        if not detection_system.network_manager.check_esp32():
-            return jsonify({'message': 'ESP32 is not connected'}), 400
-        
         params = request.get_json()
         
         if not validate_recording_parameters(params):
@@ -67,36 +55,32 @@ def create_api_routes(app, detection_system):
         detection_system.start_capturing(is_recording=True)
         return jsonify({'message': 'Recording started'}), 200
     
-    @app.route('/capture_data/stop', methods=['POST'])
+    @app.route('/stop_capturing', methods=['POST'])
     def stop_capturing():
         """Stop recording or monitoring"""
-        try:
-            # TODO: Log the number of packets captured during stop
-            detection_system.stop_operations()
-            return jsonify({'status': 'stopped'})
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
+        detection_system.stop_operations()
+        return jsonify({'message': 'Stopped capturing'}), 200
     
-    @app.route('/visualize_3d_plot', methods=['POST'])
-    def visualize_3d_plot():
-        """Get processed signal data for visualization"""
-        try:
-            signal_coordinates = detection_system.csi_processor.get_amp_phase_3d_coords()
-            return jsonify({'signalCoordinates': signal_coordinates})
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
+    @app.route('/get_amplitude_data', methods=['GET'])
+    def get_amplitude_data():
+        """Get latest amplitude data subset"""
+        latest_amplitudes = detection_system.csi_processor.get_latest_amplitude()
+        return jsonify({'latestAmplitudes': latest_amplitudes}), 200
     
-    @app.route('/get_radar_data', methods=['POST'])
+    @app.route('/get_phase_data', methods=['GET'])
+    def get_phase_data():
+        """Get latest phase data subset"""
+        latest_phases = detection_system.csi_processor.get_latest_phase()
+        return jsonify({'latestPhases': latest_phases}), 200
+    
+    @app.route('/get_radar_data', methods=['GET'])
     def get_radar_data():
         """Get radar data and presence predictions"""
-        try:
-            radar_status = detection_system.get_radar_status()
-            return jsonify(radar_status)
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
+        radar_status = detection_system.get_radar_status()
+        return jsonify(radar_status), 200
     
-    @app.route('/get_mmwave_heatmap_data', methods=['POST'])
-    def mmwave_heatmap():
+    @app.route('/get_rdm_data', methods=['GET'])
+    def get_rdm_data():
         raw = detection_system.mmwave_data[-1]
         heatmap = []
         
@@ -109,53 +93,37 @@ def create_api_routes(app, detection_system):
                     value = 0.0
                 heatmap.append([doppler_idx, gate_idx, value])
         
-        return jsonify({'latestDoppler': heatmap})
-
-    @app.route('/fetch_amplitude_data', methods=['POST'])
-    def fetch_amplitude_data():
-        """Get latest amplitude data subset"""
-        try:
-            latest_amplitudes = detection_system.csi_processor.get_latest_amplitude()
-            return jsonify({'latestAmplitudes': latest_amplitudes})
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
+        return jsonify({'latestDoppler': heatmap}), 200
     
-    @app.route('/fetch_phase_data', methods=['POST'])
-    def fetch_phase_data():
-        """Get latest phase data subset"""
-        try:
-            latest_phases = detection_system.csi_processor.get_latest_phase()
-            return jsonify({'latestPhases': latest_phases})
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
+    @app.route('/get_3d_plot_data', methods=['GET'])
+    def get_3d_plot_data():
+        """Get processed signal data for visualization"""
+        signal_coordinates = detection_system.csi_processor.get_amp_phase_3d_coords()
+        return jsonify({'signalCoordinates': signal_coordinates}), 200
     
     # CSV File Management Routes
     
-    @app.route('/list_csv_files', methods=['POST'])
-    def list_csv_files():
+    @app.route('/get_csv_files', methods=['GET'])
+    def get_csv_files():
         """List all recorded CSV files"""
-        try:
-            files = detection_system.file_manager.list_csv_files()
-            return jsonify(files)
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
+        files = detection_system.file_manager.list_csv_files()
+        return jsonify(files), 200
     
-    @app.route('/visualize_csv_file', methods=['POST'])
-    def select_csv_file(filename):
+    @app.route('/read_csv_file', methods=['POST'])
+    def read_csv_file(filename):
         """Set a CSV file for visualization"""
         filename = request.get_json()
         if (detection_system.file_manager.select_csv_file(filename)):
-            detection_system.csi_processor.set_max_packets(0)
             return jsonify({'status': 'success'})
         else:
             return jsonify({'status': 'error'}), 404
     
     # Error Handlers
     
-    # @app.errorhandler(404)
-    # def not_found(error):
-    #     return jsonify({'error': 'Endpoint not found'}), 404
+    @app.errorhandler(404)
+    def not_found(error):
+        return jsonify({'error': 'Endpoint not found'}), 404
     
-    # @app.errorhandler(500)
-    # def internal_error(error):
-    #     return jsonify({'error': 'Internal server error'}), 500
+    @app.errorhandler(500)
+    def internal_error(error):
+        return jsonify({'error': 'Internal server error'}), 500

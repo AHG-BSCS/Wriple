@@ -79,7 +79,7 @@ export class HeatmapVisualizer {
 
   async fetchAndDrawCsi() {
     try {
-      const data = (this.type === 'phase') ? await API.fetchPhaseData() : await API.fetchAmplitudeData();
+      const data = (this.type === 'phase') ? await API.getchPhaseData() : await API.getchAmplitudeData();
       const arr = (this.type === 'phase') ? data.latestPhases : data.latestAmplitudes;
 
       arr.forEach((val, i) => {
@@ -94,7 +94,7 @@ export class HeatmapVisualizer {
 
   async fetchAndDrawMmwave() {
     try {
-      const { latestDoppler } = await API.getMMWaveHeatmap();
+      const { latestDoppler } = await API.getRdmData();
       this.heat.clear();
       this.heat.data(latestDoppler).draw();
     } catch (err) {

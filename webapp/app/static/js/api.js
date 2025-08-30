@@ -13,20 +13,34 @@ async function postJson(url, body = {}) {
   return response.json();
 }
 
+async function getJson(url) {
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {'Content-Type':'application/json'}
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    const message = JSON.parse(text).message;
+    alert(message);
+    throw new Error(`API: ${url} STATUS: ${response.status} TEXT: ${text}`);
+  }
+  return response.json();
+}
+
 export const API = {
-  fetchSystemIconStatus: () => postJson('/fetch_system_icon_status'),
-  fetchMonitorStatus: () => postJson('/fetch_monitor_status'),
+  getSystemStatus: () => getJson('/get_system_status'),
+  getMonitorStatus: () => getJson('/get_monitor_status'),
   
-  startMonitoring: () => postJson(`/capture_data/monitor`),
-  startRecording: (params) => postJson(`/capture_data/record`, params),
-  stopCapturing: () => postJson('/capture_data/stop'),
+  startMonitoring: () => postJson(`/start_monitoring`),
+  startRecording: (params) => postJson(`/start_recording`, params),
+  stopCapturing: () => postJson('/stop_capturing'),
   
-  fetchAmplitudeData: () => postJson('/fetch_amplitude_data'),
-  fetchPhaseData: () => postJson('/fetch_phase_data'),
-  getRadarData: () => postJson('/get_radar_data'),
-  getMMWaveHeatmap: () => postJson('/get_mmwave_heatmap_data'),
-  visualize3d: () => postJson('/visualize_3d_plot'),
+  getchAmplitudeData: () => getJson('/get_amplitude_data'),
+  getchPhaseData: () => getJson('/get_phase_data'),
+  getRadarData: () => getJson('/get_radar_data'),
+  getRdmData: () => getJson('/get_rdm_data'),
+  get3dPlotData: () => getJson('/get_3d_plot_data'),
   
-  listCsvFiles: () => postJson('/list_csv_files'),
-  loadCsvFile: (filename) => postJson('/visualize_csv_file', filename),
+  getCsvFiles: () => getJson('/get_csv_files'),
+  readcCsvFile: (filename) => postJson('/read_csv_file', filename),
 };

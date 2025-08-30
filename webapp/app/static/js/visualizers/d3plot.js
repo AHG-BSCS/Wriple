@@ -202,7 +202,7 @@ export class D3Plot {
 
   async tick() {
     try {
-      const data = await API.visualize3d();
+      const data = await API.get3dPlotData();
       this.xGrid = [];
       this.scatter = [];
       this.yLine = [];

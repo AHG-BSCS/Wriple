@@ -84,7 +84,7 @@ function stopVisualizers() {
 
 async function updateMonitorInfo() {
   try {
-    const data = await API.fetchMonitorStatus();
+    const data = await API.getMonitorStatus();
     if (data.modeStatus === -1) {
       UI.stopRecording();
       clearInterval(monitorInterval);
@@ -100,6 +100,10 @@ async function updateMonitorInfo() {
 }
 
 async function startRecording(recordModeBtn) {
+  if (UI.statusBarStates.esp32 === false) {
+    alert('ESP32 is not connected.');
+    return;
+  }
   await API.startRecording(OptionsUI.getSelectedParameters());
   UI.setButtonActive(recordModeBtn);
   monitorInterval = setInterval(() => updateMonitorInfo(), MAIN.delayMonitorInterval);
@@ -115,7 +119,14 @@ function stopMonitoring() {
 async function startMonitoring(monitorModeBtn) {
   // Disable the button to prevent multiple clicks during the API call delay
   UI.disableButton(monitorModeBtn);
-  try { await API.startMonitoring(); }
+  try {
+    if (UI.statusBarStates.esp32 === false) {
+      alert('ESP32 is not connected.');
+      UI.enableButton(monitorModeBtn);
+      return;
+    }
+    await API.startMonitoring();
+  }
   catch {
     // If the API call fails, re-enable the button
     UI.enableButton(monitorModeBtn);
@@ -220,12 +231,13 @@ function wireFloatingActionButtons() {
       clearInterval(monitorInterval);
     }
     else {
+      // TODO: Remove the radar to recording tab
       if (UI.isMonitoring()) {
         API.stopCapturing();
         radar.stop();
         UI.setHeaderTexts();
 
-        // Delay the recording due to suddent stop of monitoring
+        // Delay the recording due to sudden stop of monitoring
         setTimeout(() => startRecording(recordModeBtn), MAIN.delayRecordingAction);
       }
       else startRecording(recordModeBtn);
@@ -237,6 +249,7 @@ function wireFloatingActionButtons() {
   });
 
   UI.floatingButtonNodes.targetRadarBtn.addEventListener('click', async () => {
+    const targetRadarBtn = UI.floatingButtonNodes.targetRadarBtn;
     if (radar.visible) {
       if (UI.isMonitoring() && UI.isButtonActive(UI.sidebarNodes.datasetTabBtn)) {
         stopMonitoring();
@@ -251,15 +264,21 @@ function wireFloatingActionButtons() {
       // If the user is in dataset tab
       if (UI.isButtonActive(UI.sidebarNodes.datasetTabBtn)) {
         // Disable the button to prevent multiple clicks during the API call delay
-        UI.disableButton(UI.floatingButtonNodes.targetRadarBtn);
-        try { await API.startMonitoring(); }
-        catch {
+        UI.disableButton(targetRadarBtn);
+        try {
+          if (UI.statusBarStates.esp32 === false) {
+            alert('ESP32 is not connected.');
+            UI.enableButton(targetRadarBtn);
+            return;
+          }
+          await API.startMonitoring();
+        } catch {
           // If the API call fails, re-enable the button
-          UI.enableButton(UI.floatingButtonNodes.targetRadarBtn);
+          UI.enableButton(targetRadarBtn);
           radar.hide();
           return;
         }
-        UI.enableButton(UI.floatingButtonNodes.targetRadarBtn);
+        UI.enableButton(targetRadarBtn);
         UI.setButtonActive(UI.floatingButtonNodes.monitorModeBtn);
         radar.start();
       }
@@ -355,6 +374,7 @@ function init() {
   wireHeatmapSliders();
   wireSelections();
 
+  // TODO: Stop status bar update when monitoring or recording
   setInterval(UI.updateStatusBar.bind(UI), MAIN.delaySystemIconStatus);
   UI.list_csv_files();
   // TODO: Make some UI invisible by default

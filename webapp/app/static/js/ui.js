@@ -84,40 +84,60 @@ export const UI = {
     datasetList: $(SELECTORS.datasetList),
   },
 
+  statusBarStates: {
+    ap: false,
+    flask: false,
+    esp32: false,
+    ld2420: false,
+    model: false
+  },
+
   async updateStatusBar() {
-    const n = this.headerNodes;
+    const statusBarIcon = this.headerNodes;
+    const statusBarStates = this.statusBarStates;
     try {
-      const status = await API.fetchSystemIconStatus();
-      if (status.ap) n.apStatus.style.fill = UI_COLORS.statusBarActiveColor;
-      else n.apStatus.style.fill = UI_COLORS.statusBarInactiveColor;
-      
-      n.flaskStatus.style.fill = UI_COLORS.statusBarActiveColor;
+      const status = await API.getSystemStatus();
+      statusBarStates.ap = status.ap;
+      statusBarStates.flask = status.flask;
+      statusBarStates.esp32 = status.esp32;
+      statusBarStates.ld2420 = status.ld2420;
+      statusBarStates.model = status.model;
 
-      if (status.esp32) n.esp32Status.style.fill = UI_COLORS.statusBarActiveColor;
-      else n.esp32Status.style.fill = UI_COLORS.statusBarInactiveColor;
+      if (status.ap) statusBarIcon.apStatus.style.fill = UI_COLORS.statusBarActiveColor;
+      else statusBarIcon.apStatus.style.fill = UI_COLORS.statusBarInactiveColor;
       
-      if (status.ld2420) n.ld2420Status.style.fill = UI_COLORS.statusBarActiveColor;
-      else n.ld2420Status.style.fill = UI_COLORS.statusBarInactiveColor;
+      statusBarIcon.flaskStatus.style.fill = UI_COLORS.statusBarActiveColor;
 
-      if (status.model) n.modelStatus.style.fill = UI_COLORS.statusBarActiveColor;
-      else n.modelStatus.style.fill = UI_COLORS.statusBarInactiveColor;
+      if (status.esp32) statusBarIcon.esp32Status.style.fill = UI_COLORS.statusBarActiveColor;
+      else statusBarIcon.esp32Status.style.fill = UI_COLORS.statusBarInactiveColor;
+      
+      if (status.ld2420) statusBarIcon.ld2420Status.style.fill = UI_COLORS.statusBarActiveColor;
+      else statusBarIcon.ld2420Status.style.fill = UI_COLORS.statusBarInactiveColor;
+      
+      if (status.model) statusBarIcon.modelStatus.style.fill = UI_COLORS.statusBarActiveColor;
+      else statusBarIcon.modelStatus.style.fill = UI_COLORS.statusBarInactiveColor;
       // map status fields to UI nodes as needed
       // if (status && n.presenceStatus) {
       //   n.presenceStatus.textContent = status.presence ?? n.presenceStatus.textContent;
       // }
     } catch (err) {
-      console.warn('System status check failed', err);
-      n.flaskStatus.style.fill = UI_COLORS.statusBarInactiveColor;
-      n.esp32Status.style.fill = UI_COLORS.statusBarInactiveColor;
-      n.ld2420Status.style.fill = UI_COLORS.statusBarInactiveColor;
-      n.modelStatus.style.fill = UI_COLORS.statusBarInactiveColor;
+      statusBarStates.ap = false;
+      statusBarStates.flask = false;
+      statusBarStates.esp32 = false;
+      statusBarStates.ld2420 = false;
+      statusBarStates.model = false;
+
+      statusBarIcon.flaskStatus.style.fill = UI_COLORS.statusBarInactiveColor;
+      statusBarIcon.esp32Status.style.fill = UI_COLORS.statusBarInactiveColor;
+      statusBarIcon.ld2420Status.style.fill = UI_COLORS.statusBarInactiveColor;
+      statusBarIcon.modelStatus.style.fill = UI_COLORS.statusBarInactiveColor;
     }
   },
 
   async list_csv_files() {
     const n = this.nodes;
     try {
-      const files = await API.listCsvFiles();
+      const files = await API.getCsvFiles();
       // TODO: populate dataset list UI if needed
       if (n.datasetList && Array.isArray(files)) {
         // n.datasetList.innerHTML = ''; // Clear existing options
