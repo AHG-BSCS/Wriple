@@ -60,7 +60,7 @@ class HumanDetectionSystem:
         parsed_data = PacketParser.parse_csi_data(raw_data)
 
         if self.is_monitoring:
-            self.csi_processor.queue_amplitude_phase(parsed_data[6])
+            self.csi_processor.queue_csi(parsed_data[6])
 
             # Remove oldest mmwave data if it exceeds the limit
             while len(self.mmwave_data) > self.mmwave_queue_limit:
@@ -153,7 +153,8 @@ class HumanDetectionSystem:
             'packetCount': self.network_manager.packet_count,
             'packetLoss': self.network_manager.get_packet_loss(),
             'rssi': self.rssi,
-            'exp': self.mmwave_data[10][3]
+            'exp': self.csi_processor.highest_diff
+            # 'exp': self.mmwave_data[10][3]
         }
     
     def get_radar_status(self) -> dict:
