@@ -171,7 +171,7 @@ export const HEATMAP = {
   radius: 1,
   blur: 0,
   maxColumns: 150, // 5 seconds of data
-  subcarriers: 85, // TODO: Update the subcarrier count on launch
+  subcarriers: 79, // TODO: Update the subcarrier count on launch
   rangeGates: 16,
   dopplerBins: 20,
   delayCsi: 100,
@@ -184,8 +184,8 @@ export const LINECHART = {
   tension: 0.3,
   pointRadius: 0,
   maxDataPoints: 120, // 30 seconds of data at 1Hz
-  suggestedMin: -80,
-  suggestedMax: -20
+  suggestedMin: 0,
+  suggestedMax: 1
 }
 
 export const D3PLOT = {

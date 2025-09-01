@@ -154,7 +154,6 @@ class HumanDetectionSystem:
             'packetLoss': self.network_manager.get_packet_loss(),
             'rssi': self.rssi,
             'exp': self.csi_processor.highest_diff
-            # 'exp': self.mmwave_data[10][3]
         }
     
     def get_radar_status(self) -> dict:

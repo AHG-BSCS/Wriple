@@ -18,10 +18,10 @@ class CSIProcessor:
         self._phase_queue = []
         self._highest_diff = 0
 
-        self._heat_amp_start = VisualizerConfiguration.HEAT_AMP_START_SUB
-        self._heat_amp_end = VisualizerConfiguration.HEAT_AMP_END_SUB
-        self._heat_subcarrier_slice = slice(VisualizerConfiguration.HEAT_AMP_START_SUB,
-                                            VisualizerConfiguration.HEAT_AMP_END_SUB)
+        parts = [np.arange(sl[0], sl[1]) for sl in VisualizerConfiguration.HEAT_SUBCARRIER_SLICES]
+        self._heat_subcarrier_slices = np.concatenate(parts)
+        # Count number of values in the slices by summing the differences (end - start)
+        self._heat_subcarrier_count = sum(sl[1] - sl[0] for sl in VisualizerConfiguration.HEAT_SUBCARRIER_SLICES)
         self._heat_phase_start = VisualizerConfiguration.HEAT_PHASE_START_SUB
         self._heat_phase_end = VisualizerConfiguration.HEAT_PHASE_END_SUB
         self._heat_signal_window = VisualizerConfiguration.HEAT_SIGNAL_WINDOW
@@ -105,7 +105,8 @@ class CSIProcessor:
         """
 
         if len(self._amplitude_queue) < self._heat_signal_window:
-            return []
+            last = np.asarray(self._amplitude_queue[-1])
+            return last[self._heat_subcarrier_slices].tolist()
         
         latest_window = np.asarray(self._amplitude_queue[-self._heat_signal_window:])
         diff = self._compute_latest_diff(latest_window)
@@ -117,10 +118,11 @@ class CSIProcessor:
         Compute difference between the latest packet and the latest window mean
         over the configured subcarrier slice.
         """
-        mean_per_subcarrier = np.mean(latest_window[:, self._heat_subcarrier_slice], axis=0)
-        diff = latest_window[-1, self._heat_subcarrier_slice] - mean_per_subcarrier
+        
+        mean_per_subcarrier = np.mean(latest_window[:, self._heat_subcarrier_slices], axis=0)
+        diff = latest_window[-1, self._heat_subcarrier_slices] - mean_per_subcarrier
         # Store highest absolute diff for external use
-        self._highest_diff = diff.max()
+        self._highest_diff = diff.var()
         return diff
 
     def _apply_diff_threshold(self, diff: np.ndarray) -> list:
