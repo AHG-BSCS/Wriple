@@ -1,6 +1,7 @@
 """File Manager Module"""
 
 import csv
+import datetime
 import json
 import os
 import re
@@ -72,25 +73,77 @@ class FileManager:
             self._logger.error(f'Error listing CSV files: {e}')
             return []
     
-    def select_csv_file(self, filename: str) -> bool:
-        """
-        Set the file to be used for visualization
-
-        Args:
-            filename: Name of the CSV file to select
-
-        Returns:
-            bool: True if file exists and is selected, False otherwise
-        """
+    def read_csv_file_meta(self, filename: str) -> dict:
         self._selected_csv_file = os.path.join(FileConfiguration.CSV_DIRECTORY, filename)
         
+        self._logger.info(f'{filename} was selected')
         if os.path.exists(self._selected_csv_file):
-            self._logger.info(f'{filename} is selected for visualization')
-            return True
+            self._logger.info(f'{filename} was selected')
+            with open(self._selected_csv_file, mode='r', newline='') as file:
+                reader = csv.DictReader(file)
+
+                # Check if required headers exist
+                headers = ['Presence', 'Activity', 'Angle', 'Distance', 'Obstruction']
+                for header in headers:
+                    if header not in reader.fieldnames:
+                        self._logger.error(f'Missing required header: {header}')
+                        return None
+                
+                # Read first data row for metadata
+                first_row = next(reader, None)
+                metadata = {key: first_row[key] for key in headers if key in first_row}
+                metadata = self.convert_metadata_to_category(metadata)
+
+                # Count the number of samples
+                row_count = sum(1 for _ in reader) + 1 if first_row else 0
+                metadata['packet_count'] = row_count
+                
+                # Calculate the sampling rate based on transmit timestamps
+                file.seek(0)
+                next(reader)  # Skip header
+                timestamps = [float(row['Transmit_Timestamp']) for row in reader]
+                metadata['sampling_rate'] = self.compute_sampling_rate(timestamps)
+                
+                # Convert the transmit timestamp to a readable date
+                record_date = datetime.datetime.fromtimestamp(timestamps[0]).strftime('%Y-%m-%d %H:%M:%S')
+                metadata['recording_date'] = record_date
+                return metadata
         else:
-            self._selected_csv_file = None
-            self._logger.error(f'{filename} is not found')
-            return False
+            return None
+
+    def compute_sampling_rate(self, timestamps):
+        if len(timestamps) >= 2:
+            time_diffs = [t2 - t1 for t1, t2 in zip(timestamps[:-1], timestamps[1:])]
+            avg_time_diff = sum(time_diffs) / len(time_diffs)
+            sampling_rate = 1 / avg_time_diff
+            return round(sampling_rate, 2)
+        else:
+            return 'Missing'
+    
+    def convert_metadata_to_category(self, metadata: dict) -> dict:
+        """Convert metadata string values to numerical categories"""
+        category_map = {
+            # 'Presence': {'No': '0', 'Yes': '1'},
+            # 'Activity': {'N/A': '0', 'Stand': '1', 'Sit': '2', 'Walking': '3', 'Running': '4'},
+            # 'Angle': {'N/A': '0', '-60° to -21°': '1', '-20° to -6°': '2', '-5° to +5°': '3', '+6° to +20°': '4', '+21° to +60°': '5'},
+            # 'Obstruction': {'None': '0', 'Concrete': '1', 'Wood': '2', 'Metal': '3'}
+            'Presence': {'0': 'No', '1': 'Yes'},
+            'Activity': {'0': 'N/A', '1': 'Stand', '2': 'Sit', '3': 'Walking', '4': 'Running'},
+            'Angle': {'0': 'N/A', '1': '-60° to -21°', '2': '-20° to -6°', '3': '-5° to +5°', '4': '+6° to +20°', '5': '+21° to +60°'},
+            'Obstruction': {'0': 'None', '1': 'Concrete', '2': 'Wood', '3': 'Metal'}
+        }
+        
+        categorized = {}
+        for key, value in metadata.items():
+            if key in category_map and value in category_map[key]:
+                categorized[key] = category_map[key][value]
+            elif key == 'Distance':
+                categorized[key] = value + 'm' if value != '0' else 'N/A'
+            else:
+                print(type(value))
+                self._logger.warning(f'Unknown metadata field or value: {key}={value}')
+        
+        return categorized
     
     def init_new_csv(self) -> bool:
         """

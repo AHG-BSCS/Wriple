@@ -204,9 +204,7 @@ class NetworkManager:
         while self._transmitting:
             self._socket.sendto(NetworkConfig.TX_CSI_REQ_PAYLOAD,
                                 (NetworkConfig.TX_ESP32_IP, NetworkConfig.TX_PORT))
-            tx_time = time.time()
-            tx_time = int(tx_time * 1_000_000) % 1_000_000_000
-            self._tx_timestamps.append(tx_time)
+            self._tx_timestamps.append(time.time())
             self._tx_packet_count += 1
             time.sleep(NetworkConfig.TX_INTERVAL)
     

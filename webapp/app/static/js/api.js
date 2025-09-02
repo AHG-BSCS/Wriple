@@ -42,5 +42,5 @@ export const API = {
   get3dPlotData: () => getJson('/get_3d_plot_data'),
   
   getCsvFiles: () => getJson('/get_csv_files'),
-  readcCsvFile: (filename) => postJson('/read_csv_file', filename),
+  readCsvFileMeta: (filename) => postJson('/read_csv_file_meta', filename),
 };

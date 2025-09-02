@@ -48,7 +48,16 @@ export const UI = {
   asideNodes: {
     targetDistance: $(SELECTORS.targetDistance),
     targetAngle: $(SELECTORS.targetAngle),
-    targetEnergy: $(SELECTORS.targetEnergy)
+    targetEnergy: $(SELECTORS.targetEnergy),
+
+    metaClass: $(SELECTORS.metaClass),
+    metaTargetDistance: $(SELECTORS.metaTargetDistance),
+    metaAngleRange: $(SELECTORS.metaAngleRange),
+    metaActivity: $(SELECTORS.metaActivity),
+    metaObstruction: $(SELECTORS.metaObstruction),
+    metaPacketCount: $(SELECTORS.metaPacketCount),
+    metaSamplingRate: $(SELECTORS.metaSamplingRate),
+    metaRecordingDate: $(SELECTORS.metaRecordingDate)
   },
 
   visualizerNodes: {
@@ -135,13 +144,19 @@ export const UI = {
   },
 
   async list_csv_files() {
-    const n = this.nodes;
+    const fileSelection = this.nodes.datasetList;
     try {
       const files = await API.getCsvFiles();
-      // TODO: populate dataset list UI if needed
-      if (n.datasetList && Array.isArray(files)) {
-        // n.datasetList.innerHTML = ''; // Clear existing options
-        n.datasetList.innerHTML = files.map(f => `<option value="${f}">${f}</option>`).join('\n');
+      if (fileSelection && Array.isArray(files)) {
+        fileSelection.innerHTML = files.map(f => `<option value="${f}">${f}</option>`).join('\n');
+        
+        // Set the last file as selected by default
+        if (files.length > 0) {
+          fileSelection.value = files[files.length - 1];
+          fileSelection.dispatchEvent(new Event('change'));
+        } else {
+          fileSelection.value = '';
+        }
       }
     } catch(e) { console.warn('Could not load CSV list', e); }
   },
@@ -160,6 +175,18 @@ export const UI = {
     n.targetDistance.textContent = texts?.targetDistance || '0m';
     n.targetAngle.textContent = texts?.targetAngle || '0°';
     n.targetEnergy.textContent = texts?.targetEnergy || '0';
+  },
+
+  updateMetadataTexts(meta = {}) {
+    const n = this.asideNodes;
+    n.metaClass.textContent = meta?.Presence ?? '';
+    n.metaTargetDistance.textContent = meta?.Distance ?? '';
+    n.metaAngleRange.textContent = meta?.Angle ?? '';
+    n.metaActivity.textContent = meta?.Activity ?? '';
+    n.metaObstruction.textContent = meta?.Obstruction ?? '';
+    n.metaPacketCount.textContent = meta?.packet_count ?? '';
+    n.metaSamplingRate.textContent = meta?.sampling_rate ?? '';
+    n.metaRecordingDate.textContent = meta?.recording_date ?? '';
   },
 
   setButtonActive(buttonNode) {

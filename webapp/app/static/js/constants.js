@@ -40,6 +40,15 @@ export const SELECTORS = {
   targetDistance: '#target-distance',
   targetEnergy: '#target-energy',
 
+  metaClass: '#meta-class',
+  metaTargetDistance: '#meta-target-distance',
+  metaAngleRange: '#meta-angle-range',
+  metaActivity: '#meta-activity',
+  metaObstruction: '#meta-obstruction-type',
+  metaPacketCount: '#meta-packet-count',
+  metaSamplingRate: '#meta-sampling-rate',
+  metaRecordingDate: '#meta-recording-date',
+
   targetContainer: '#points',
   radarContainer: '#radar-container',
 

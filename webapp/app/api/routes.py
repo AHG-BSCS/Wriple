@@ -100,14 +100,16 @@ def create_api_routes(app, detection_system):
         files = detection_system.file_manager.list_csv_files()
         return jsonify(files), 200
     
-    @app.route('/read_csv_file', methods=['POST'])
-    def read_csv_file(filename):
-        """Set a CSV file for visualization"""
+    @app.route('/read_csv_file_meta', methods=['POST'])
+    def read_csv_file_meta():
+        """Read metadata of a selected CSV file"""
         filename = request.get_json()
-        if (detection_system.file_manager.select_csv_file(filename)):
-            return jsonify({'status': 'success'})
+        meta = detection_system.file_manager.read_csv_file_meta(filename)
+
+        if meta:
+            return jsonify(meta), 200
         else:
-            return jsonify({'status': 'error'}), 404
+            return jsonify({'message': 'File not found'}), 404
     
     # Error Handlers
     

@@ -349,9 +349,8 @@ function wireSelections() {
   UI.nodes.datasetList.addEventListener('change', async (e) => {
     const selectedDataset = e.target.value;
     if (selectedDataset) {
-      // TODO: Load the dataset and update the UI accordingly
-      // const response = await API.loadCsvFile(selectedDataset);
-      // if (response.status === 'error') throw new Error(response.error);
+      const meta = await API.readCsvFileMeta(selectedDataset);
+      UI.updateMetadataTexts(meta);
     }
   });
 
