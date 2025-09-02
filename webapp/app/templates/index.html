@@ -216,12 +216,26 @@
                     <div class="monitor-hidden">
                         <div class="p-4 space-y-4 history-hidden">
                             <div>
-                                <label class="font-semibold mb-1">Class Type:</label>
+                                <label class="font-bold bg-gray-800 text-white p-2 rounded-md">Target Parameters</label>
+                            </div>
+                            <div>
+                                <label class="font-semibold mb-1">Class:</label>
                                 <select id="class-selection" class="w-full border rounded px-2 py-1 mt-1 group-class-select"></select>
                             </div>
                             <div>
-                                <label class="font-semibold mb-1">Target Count:</label>
+                                <label class="font-semibold mb-1">Count:</label>
                                 <select id="target-selection" class="w-full border rounded px-2 py-1 mt-1 group-target-select"></select>
+                            </div>
+                            <div>
+                                <label class="font-semibold mb-1">Distance:</label>
+                                <select id="distance-selection" class="w-full border rounded px-2 py-1 mt-1 group-distance-select"></select>
+                            </div>
+                            <div>
+                                <label class="font-semibold mb-1">Angle Range:</label>
+                                <select id="angle-selection" class="w-full border rounded px-2 py-1 mt-1 group-angle-select"></select>
+                            </div>
+                            <div>
+                                <label class="font-bold bg-gray-800 text-white p-2 rounded-md">Activity Parameters</label>
                             </div>
                             <div>
                                 <label class="font-semibold mb-1">State:</label>
@@ -232,23 +246,18 @@
                                 <select id="activity-selection" class="w-full border rounded px-2 py-1 mt-1 group-target-select"></select>
                             </div>
                             <div>
-                                <label class="font-semibold mb-1">Angle of Target:</label>
-                                <select id="angle-selection" class="w-full border rounded px-2 py-1 mt-1 group-angle-select"></select>
+                                <label class="font-bold bg-gray-800 text-white p-2 rounded-md">Obstruction Parameters</label>
                             </div>
                             <div>
-                                <label class="font-semibold mb-1">Distance of Target:</label>
-                                <select id="distance-selection" class="w-full border rounded px-2 py-1 mt-1 group-distance-select"></select>
-                            </div>
-                            <div>
-                                <label class="font-semibold mb-1">Is Obstructed:</label>
+                                <label class="font-semibold mb-1">Obstructed:</label>
                                 <select id="obstructed-selection" class="w-full border rounded px-2 py-1 mt-1 group-obstructed-select"></select>
                             </div>
                             <div>
-                                <label class="font-semibold mb-1">Obstruction Type:</label>
+                                <label class="font-semibold mb-1">Type:</label>
                                 <select id="obstruction-selection" class="w-full border rounded px-2 py-1 mt-1 group-obstruction-select"></select>
                             </div>
                             <div>
-                                <label class="font-semibold mb-1">AP and ESP32 Spacing:</label>
+                                <label class="font-semibold mb-1">Setup Spacing:</label>
                                 <select id="spacing-selection" class="w-full border rounded px-2 py-1 mt-1 group-spacing-select"></select>
                             </div>
                         </div>
@@ -256,7 +265,10 @@
                     <!-- History -->
                     <div class="p-4 space-y-4 monitor-hidden">
                         <div>
-                            <label class="font-semibold">Dataset:</label>
+                            <label class="font-bold bg-gray-800 text-white p-2 rounded-md">History</label>
+                        </div>
+                        <div>
+                            <label class="font-semibold">Files:</label>
                             <select id="dataset-list" class="w-full border rounded px-2 py-1 mt-1"></select>
                         </div>
                     </div>
