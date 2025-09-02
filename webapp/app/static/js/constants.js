@@ -72,36 +72,60 @@ export const OPTIONS = {
       { value: '1', label: 'Presence' }
     ],
     target: [
-      { value: '0', label: 'No Target' },
+      { value: '0', label: 'N/A' },
       { value: '1', label: '1' },
       { value: '2', label: '2' },
       { value: '3', label: '3' }
     ],
     state: [
-      { value: '0', label: 'No State' },
+      { value: '0', label: 'N/A' },
       { value: '1', label: 'Motionless' },
       { value: '2', label: 'Moving' }
     ],
     activity: [
-      { value: '0', label: 'No Activity' },
+      { value: '0', label: 'N/A' },
       { value: '1', label: 'Stand' },
       { value: '2', label: 'Sit' },
       { value: '3', label: 'Walking' },
-      { value: '4', label: 'Running' },
+      { value: '4', label: 'Running' }
     ],
     angle: [
-      { value: '0', label: 'No Angle' },
-      { value: '1', label: '-60° to -41°' },
-      { value: '2', label: '-40° to -11°' },
-      { value: '3', label: '-10° to +10°' },
-      { value: '4', label: '+11° to +40°' },
-      { value: '5', label: '+41° to +60°' }
+      { value: '0', label: 'N/A' },
+      { value: '1', label: '-60° to -21°' },
+      { value: '2', label: '-20° to -6°' },
+      { value: '3', label: '-5° to +5°' },
+      { value: '4', label: '+6° to +20°' },
+      { value: '5', label: '+21° to +60°' }
     ],
     distance: [
-      { value: '0', label: 'No Distance' },
+      { value: '0', label: 'N/A' },
       { value: '1', label: '1m' },
       { value: '2', label: '2m' },
       { value: '3', label: '3m' },
+      { value: '4', label: '4m' },
+      { value: '5', label: '5m' },
+      { value: '6', label: '6m' },
+      { value: '7', label: '7m' },
+      { value: '8', label: '8m' },
+      { value: '9', label: '9m' },
+      { value: '10', label: '10m' },
+      { value: '11', label: '11m' },
+      { value: '12', label: '12m' },
+      { value: '13', label: '13m' },
+      { value: '14', label: '14m' },
+      { value: '15', label: '15m' }
+    ],
+    obstructed: [
+      { value: '0', label: 'No' },
+      { value: '1', label: 'Yes' }
+    ],
+    obstruction: [
+      { value: '0', label: 'None' },
+      { value: '1', label: 'Concrete' },
+      { value: '2', label: 'Wood' },
+      { value: '3', label: 'Metal' }
+    ],
+    setup_spacing: [
       { value: '4', label: '4m' },
       { value: '5', label: '5m' },
       { value: '6', label: '6m' },
@@ -119,40 +143,6 @@ export const OPTIONS = {
       { value: '18', label: '18m' },
       { value: '19', label: '19m' },
       { value: '20', label: '20m' }
-    ],
-    obstructed: [
-      { value: '0', label: 'No' },
-      { value: '1', label: 'Yes' }
-    ],
-    obstruction: [
-      { value: '0', label: 'None' },
-      { value: '1', label: 'Wood' },
-      { value: '2', label: 'Concrete' },
-      { value: '3', label: 'Metal' }
-    ],
-    spacing: [
-      { value: '4', label: '4m' },
-      { value: '5', label: '5m' },
-      { value: '6', label: '6m' },
-      { value: '7', label: '7m' },
-      { value: '8', label: '8m' },
-      { value: '9', label: '9m' },
-      { value: '10', label: '10m' },
-      { value: '11', label: '11m' },
-      { value: '12', label: '12m' },
-      { value: '13', label: '13m' },
-      { value: '14', label: '14m' },
-      { value: '15', label: '15m' },
-      { value: '16', label: '16m' },
-      { value: '17', label: '17m' },
-      { value: '18', label: '18m' },
-      { value: '19', label: '19m' },
-      { value: '20', label: '20m' },
-      { value: '21', label: '21m' },
-      { value: '22', label: '22m' },
-      { value: '23', label: '23m' },
-      { value: '24', label: '24m' },
-      { value: '25', label: '25m' }
     ]
   };
 

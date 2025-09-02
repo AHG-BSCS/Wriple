@@ -1,7 +1,7 @@
 import { OPTIONS } from './constants.js';
 
 let currentParams = {
-  class_label: null,
+  class: null,
   target_count: null,
   state: null,
   activity: null,
@@ -9,7 +9,7 @@ let currentParams = {
   distance: null,
   obstructed: null,
   obstruction: null,
-  spacing: null
+  setup_spacing: null
 };
 
 function populateSelect(selectElem, options, allowedValues = null) {
@@ -65,7 +65,7 @@ function updateActivityOptions(stateValue, activitySelection) {
 // Internal helper to update currentParams
 function captureParams(selects) {
   currentParams = {
-    class_label: selects.classSelection.value,
+    class: selects.classSelection.value,
     target_count: selects.targetSelection.value,
     state: selects.stateSelection.value,
     activity: selects.activitySelection.value,
@@ -73,7 +73,7 @@ function captureParams(selects) {
     distance: selects.distanceSelection.value,
     obstructed: selects.obstructedSelection.value,
     obstruction: selects.obstructionSelection.value,
-    spacing: selects.spacingSelection.value
+    setup_spacing: selects.spacingSelection.value
   };
 }
 
@@ -88,7 +88,7 @@ export const OptionsUI = {
     populateSelect(selects.distanceSelection, OPTIONS.distance);
     populateSelect(selects.obstructedSelection, OPTIONS.obstructed);
     populateSelect(selects.obstructionSelection, OPTIONS.obstruction);
-    populateSelect(selects.spacingSelection, OPTIONS.spacing);
+    populateSelect(selects.spacingSelection, OPTIONS.setup_spacing);
 
     // Apply initial restrictions
     updateOptionsForClass(selects.classSelection.value, selects);

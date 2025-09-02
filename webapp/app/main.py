@@ -173,38 +173,24 @@ class HumanDetectionSystem:
             'energy': 0
         }
     
-    def set_recording_parameters(self, params: dict) -> bool:
+    def set_recording_parameters(self, params: dict):
         """
         Set parameters for recording
         
         Args:
-            params: Dictionary with recording parameters including:
-                - class_label: Label for the presence class
-                - target_count: Number of targets to record
-                - angle: Angle of the target
-                - line_of_sight: Line of sight angle from the radar center point of view
-                - distance: Distance to target
-        
-        Returns:
-            bool: True if parameters were set successfully, False otherwise
+            params: Dictionary with recording parameters:
         """
-        try:
-            self.record_parameters = [
-                int(params['class_label']),
-                int(params['target_count']),
-                int(params['state']),
-                int(params['activity']),
-                int(params['angle']),
-                int(params['distance']),
-                int(params['obstructed']),
-                int(params['obstruction']),
-                int(params['spacing']),
-            ]
-            self.logger.info(f'Recording parameters set')
-            return True
-        except (ValueError, TypeError) as e:
-            self.logger.error(f'Error setting recording parameters exception: {e}')
-            return False
+        self.record_parameters = [
+            int(params['class']),
+            int(params['target_count']),
+            int(params['state']),
+            int(params['activity']),
+            int(params['angle']),
+            int(params['distance']),
+            int(params['obstructed']),
+            int(params['obstruction']),
+            int(params['setup_spacing']),
+        ]
 
 
 def create_app():

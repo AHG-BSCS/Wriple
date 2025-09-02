@@ -1,7 +1,7 @@
 """Route handlers for the Human Presence Detection System"""
 
 from flask import jsonify, request, render_template
-from .validators import validate_recording_parameters, validate_class, validate_obstruction, validate_activity
+from .validators import validate_recording_parameters
 
 
 def create_api_routes(app, detection_system):
@@ -40,16 +40,7 @@ def create_api_routes(app, detection_system):
         params = request.get_json()
         
         if not validate_recording_parameters(params):
-            return jsonify({'message': 'Missing required field'}), 400
-        
-        if not validate_class(params):
-            return jsonify({'message': 'Invalid recording class parameter'}), 400
-        
-        if not validate_obstruction(params):
-            return jsonify({'message': 'Invalid recording obstruction parameter'}), 400
-        
-        if not validate_activity(params):
-            return jsonify({'message': 'Invalid recording activity parameter'}), 400
+            return jsonify({'message': 'Invalid required field'}), 400
         
         detection_system.set_recording_parameters(params)
         detection_system.start_capturing(is_recording=True)

@@ -59,7 +59,7 @@ class FileConfiguration:
     CSV_FILE_PREFIX: str = 'WRIPLE_DATA_'
     CSV_COLUMNS: list = [
         'Presence', 'Target_Count', 'State', 'Activity', 'Angle', 'Distance',
-        'Obstructed', 'Obstruction', 'Spacing',
+        'Obstructed', 'Obstruction', 'Setup_Spacing',
         'Transmit_Timestamp', 'Received_Timestamp',
         'RSSI', 'Bandwidth', 'Channel', 'Antenna', 'Raw_CSI',
         'LD2420_Doppler_1', 'LD2420_Doppler_2', 'LD2420_Doppler_3', 'LD2420_Doppler_4',
