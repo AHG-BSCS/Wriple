@@ -189,7 +189,7 @@ export const LINECHART = {
 
 export const D3PLOT = {
   svgId: '#d3-plot',
-  delayD3Plot: 1000,
+  delayD3Plot: 333,
   gridStrokeColor: 'black',
   gridStrokeWidth: 0.3,
   gridFillOpacity: 0.8,
@@ -198,10 +198,12 @@ export const D3PLOT = {
   yScaleStrokeColor: 'black',
   yScaleStrokeWidth: 0.5,
   yTextFontFamily: 'system-ui, sans-serif',
-  origin: { x: 400, y: 200 }, // Center of the plot
-  startAngle: 180, // Initial rotation angle
-  scale: 20, // Scale factor for the plot
-  dragRotateFactor: 230,
+  center: { x: 400, y: 350 },
+  startYAngle: 90,
+  startXAngle: 90.5,
+  scale: 30,
+  row: 20,
+  dragRotateSensitivity: -360,
   animateDuration: 1000,
 };
 

@@ -18,14 +18,18 @@ export class D3Plot {
     this.scatter = [];
     this.yLine = [];
     this.xGrid = [];
+    this.x = 10;
+    this.z = 8;
 
-    this.beta = 0;
     this.alpha = 0;
+    this.beta = 0;
     this.mx = 0;
     this.my = 0;
     this.mouseX = 0;
     this.mouseY = 0;
-
+    this.startXAngle = D3PLOT.startXAngle;
+    this.startYAngle = D3PLOT.startYAngle;
+    
     this.svgSelector = select(D3PLOT.svgId)
       .call(
         drag()
@@ -36,23 +40,25 @@ export class D3Plot {
       .append('g');
 
     this.grid3d = gridPlanes3D()
-      .rows(20)
-      .origin(D3PLOT.origin)
-      .rotateY(D3PLOT.startAngle)
-      .rotateX(-D3PLOT.startAngle)
+      .rows(D3PLOT.row)
+      .origin(D3PLOT.center)
+      .rotateX(this.startXAngle)
+      .rotateY(this.startYAngle)
       .scale(D3PLOT.scale);
 
     this.points3d = points3D()
-      .origin(D3PLOT.origin)
-      .rotateY(D3PLOT.startAngle)
-      .rotateX(-D3PLOT.startAngle)
+      .origin(D3PLOT.center)
+      .rotateX(this.startXAngle)
+      .rotateY(this.startYAngle)
       .scale(D3PLOT.scale);
 
     this.yScale3d = lineStrips3D()
-      .origin(D3PLOT.origin)
-      .rotateY(D3PLOT.startAngle)
-      .rotateX(-D3PLOT.startAngle)
+      .origin(D3PLOT.center)
+      .rotateX(this.startXAngle)
+      .rotateY(this.startYAngle)
       .scale(D3PLOT.scale);
+
+    
   }
 
   processData(data, tt) {
@@ -141,24 +147,24 @@ export class D3Plot {
     return d.projected.y;
   }
 
-  dragged(event) {
-    if (this.scatter .length === 0) return;
-
-    this.beta = (event.x - this.mx + this.mouseX) * (Math.PI / D3PLOT.dragRotateFactor) * -1;
-    this.alpha = (event.y - this.my + this.mouseY) * (Math.PI / D3PLOT.dragRotateFactor) * -1;
-
-    const data = [
-      this.grid3d.rotateY(this.beta + D3PLOT.startAngle).rotateX(this.alpha - D3PLOT.startAngle)(this.xGrid),
-      this.points3d.rotateY(this.beta + D3PLOT.startAngle).rotateX(this.alpha - D3PLOT.startAngle)(this.scatter),
-      this.yScale3d.rotateY(this.beta + D3PLOT.startAngle).rotateX(this.alpha - D3PLOT.startAngle)([this.yLine]),
-    ];
-
-    this.processData(data, 0);
-  }
-
   dragStart(event) {
     this.mx = event.x;
     this.my = event.y;
+  }
+
+  dragged(event) {
+    if (this.scatter.length === 0) return;
+    // Up-Down
+    this.alpha = (event.y - this.my + this.mouseY) * (Math.PI / D3PLOT.dragRotateSensitivity);
+    // Left-Right
+    this.beta = (event.x - this.mx + this.mouseX) * (Math.PI / D3PLOT.dragRotateSensitivity);
+
+    const data = [
+      this.grid3d.rotateX(this.alpha + this.startXAngle).rotateY(this.beta + this.startYAngle)(this.xGrid),
+      this.points3d.rotateX(this.alpha + this.startXAngle).rotateY(this.beta + this.startYAngle)(this.scatter),
+      this.yScale3d.rotateX(this.alpha + this.startXAngle).rotateY(this.beta + this.startYAngle)([this.yLine]),
+    ];
+    this.processData(data, 0);
   }
 
   dragEnd(event) {
@@ -181,15 +187,19 @@ export class D3Plot {
   clear() {
     this.hide();
     this.svgSelector.selectAll('*').remove();
-    this.xGrid = [];
-    this.scatter = [];
-    this.yLine = [];
+    this.clearData();
     this.beta = 0;
     this.alpha = 0;
     this.mx = 0;
     this.my = 0;
     this.mouseX = 0;
     this.mouseY = 0;
+  }
+
+  clearData() {
+    this.xGrid = [];
+    this.scatter = [];
+    this.yLine = [];
   }
 
   start() {
@@ -203,26 +213,24 @@ export class D3Plot {
   async tick() {
     try {
       const data = await API.get3dPlotData();
-      this.xGrid = [];
-      this.scatter = [];
-      this.yLine = [];
-      let j = 10;
-      let cnt = 0;
-
-      this.scatter = data.signalCoordinates.map(pos => ({ x: pos[0], y: pos[1], z: pos[2], id: 'point-' + cnt++ }));
-      for (let z = -j; z < j; z++) {
-        for (let x = -j; x < j; x++) {
-          this.xGrid.push({ x: x, y: -10, z: z });
+      this.clearData();
+      // let cnt = 0;
+      // this.scatter = data.latestPhases.map(pos => ({ x: pos[0], y: pos[1], z: pos[2], id: 'point-' + cnt++ }));
+      this.scatter = data.latestPhases.map(pos => ({ x: pos[0], y: pos[1], z: pos[2] }));
+      for (let x = -this.x; x < this.x; x++) {
+        for (let z = -this.z; z < this.x; z++) {
+          this.xGrid.push({ x: x, y: -1, z: z });
         }
       }
-      range(-10, 0, 1).forEach((d) => {
-        this.yLine.push({ x: -j, y: -d, z: -j });
-      });
+
+      range(0, 5, 1).forEach((d) => { this.yLine.push({ x: 8, y: d, z: 10 }); });
+
       const datas = [
         this.grid3d(this.xGrid),
         this.points3d(this.scatter),
-        this.yScale3d([this.yLine]),
+        this.yScale3d([this.yLine])
       ];
+
       this.processData(datas, D3PLOT.animateDuration);
     } catch (err) {
       console.warn('Missing data for 3D plot.', err);

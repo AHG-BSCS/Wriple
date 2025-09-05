@@ -30,8 +30,8 @@ class HumanDetectionSystem:
 
         # Initialize parameters and data storage
         self.rssi = 0
-        self.mmwave_data = []
-        self.mmwave_queue_limit = RecordingConfiguration.MMWAVE_QUEUE_LIMIT
+        self.rdm_data = []
+        self.rdm_queue_limit = RecordingConfiguration.MMWAVE_QUEUE_LIMIT
         self.record_parameters = RecordingConfiguration.RECORD_PARAMETERS
         self.logger = setup_logger('HumanDetectionSystem')
     
@@ -62,12 +62,12 @@ class HumanDetectionSystem:
         if self.is_monitoring:
             self.csi_processor.queue_csi(parsed_data[6])
 
-            # Remove oldest mmwave data if it exceeds the limit
-            while len(self.mmwave_data) > self.mmwave_queue_limit:
-                self.mmwave_data.pop(0)
+            # Remove oldest rdm data if it exceeds the limits
+            while len(self.rdm_data) > self.rdm_queue_limit:
+                self.rdm_data.pop(0)
 
             if parsed_data[0]: # If ld24020 data is valid
-                self.mmwave_data.append(parsed_data[7:])
+                self.rdm_data.append(parsed_data[7:])
 
             self.rssi = parsed_data[2]
         
@@ -111,7 +111,7 @@ class HumanDetectionSystem:
         if self.model_manager.model_loaded:
             features = []
 
-            for data in self.mmwave_data:
+            for data in self.rdm_data:
                 features.append(data[9:12])
 
             return self.model_manager.predict(features)

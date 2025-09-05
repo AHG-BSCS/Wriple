@@ -72,7 +72,7 @@ def create_api_routes(app, detection_system):
     
     @app.route('/get_rdm_data', methods=['GET'])
     def get_rdm_data():
-        raw = detection_system.mmwave_data[-1]
+        raw = detection_system.rdm_data[-1]
         heatmap = []
         
         # Apply Thresholds
@@ -88,9 +88,9 @@ def create_api_routes(app, detection_system):
     
     @app.route('/get_3d_plot_data', methods=['GET'])
     def get_3d_plot_data():
-        """Get processed signal data for visualization"""
-        signal_coordinates = detection_system.csi_processor.get_3d_plot_data()
-        return jsonify({'signalCoordinates': signal_coordinates}), 200
+        # TODO: Visualize the phase using 3D plot
+        latestPhases = detection_system.csi_processor._phase_queue[-1]
+        return jsonify({'latestPhases': []}), 200
     
     # CSV File Management Routes
     
