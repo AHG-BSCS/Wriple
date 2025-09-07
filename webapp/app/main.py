@@ -1,14 +1,14 @@
 import threading
 from flask import Flask
 
-from config.settings import FlaskConfiguration, RecordingConfiguration
-from core.csi_processor import CSIProcessor
-from core.file_manager import FileManager
-from core.model_manager import ModelManager
-from core.network_manager import NetworkManager
-from utils.packet_parser import PacketParser
-from api.routes import create_api_routes
-from utils.logger import setup_logger
+from app.config.settings import RecordingConfiguration
+from app.core.csi_processor import CSIProcessor
+from app.core.file_manager import FileManager
+from app.core.model_manager import ModelManager
+from app.core.network_manager import NetworkManager
+from app.utils.packet_parser import PacketParser
+from app.api.routes import create_api_routes
+from app.utils.logger import setup_logger
 
 
 class HumanDetectionSystem:
@@ -200,12 +200,3 @@ def create_app():
     detection_system = HumanDetectionSystem()
     create_api_routes(app, detection_system)
     return app
-
-
-if __name__ == '__main__':
-    app = create_app()
-    app.run(
-        debug=FlaskConfiguration.DEBUG,
-        host=FlaskConfiguration.HOST,
-        port=FlaskConfiguration.PORT
-    )

@@ -1,6 +1,6 @@
 """Utility functions for parsing packet data from hardware devices"""
 
-from utils.logger import setup_logger
+from app.utils.logger import setup_logger
 
 
 class PacketParser:

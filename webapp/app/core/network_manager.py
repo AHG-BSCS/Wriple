@@ -4,8 +4,9 @@ import socket
 import subprocess
 import threading
 import time
-from config.settings import NetworkConfig
-from utils.logger import setup_logger
+
+from app.config.settings import NetworkConfig
+from app.utils.logger import setup_logger
 
 
 class NetworkManager:
@@ -15,7 +16,7 @@ class NetworkManager:
     """
     
     def __init__(self, file_manager):
-        from core.file_manager import FileManager
+        from app.core.file_manager import FileManager
         self.file_manager: FileManager = file_manager
         
         self._receiving = False

@@ -117,10 +117,3 @@ class ModelConfiguration:
 class PredictionConfiguration:
     """Configuration for data preprocessing and prediction"""
     PRED_SIGNAL_WINDOW: int = 7
-
-
-class FlaskConfiguration:
-    """Configuration for Flask application"""
-    DEBUG: bool = False
-    HOST: str = '0.0.0.0'
-    PORT: int = 3000

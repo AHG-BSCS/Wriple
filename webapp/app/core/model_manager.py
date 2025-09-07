@@ -7,8 +7,8 @@ import os
 
 # from tensorflow.keras.models import load_model
 
-from config.settings import ModelConfiguration, PredictionConfiguration
-from utils.logger import setup_logger
+from app.config.settings import ModelConfiguration, PredictionConfiguration
+from app.utils.logger import setup_logger
 
 
 class ModelManager:

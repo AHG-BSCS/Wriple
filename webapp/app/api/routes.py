@@ -8,7 +8,7 @@ def create_api_routes(app, detection_system):
     """Create and register all API routes with the Flask app"""
     
     # Set the detection_system instance object for usage reference
-    from main import HumanDetectionSystem
+    from app.main import HumanDetectionSystem
     detection_system: HumanDetectionSystem = detection_system
     
     @app.route('/')

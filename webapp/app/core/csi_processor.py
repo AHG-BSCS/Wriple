@@ -3,11 +3,10 @@
 import math
 
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler
 from scipy.signal import butter, filtfilt
 
-from config.settings import VisualizerConfiguration, PredictionConfiguration, RecordingConfiguration
-from utils.logger import setup_logger
+from app.config.settings import VisualizerConfiguration, PredictionConfiguration, RecordingConfiguration
+from app.utils.logger import setup_logger
 
 
 class CSIProcessor:
@@ -29,7 +28,6 @@ class CSIProcessor:
         self._heat_diff_threshold = VisualizerConfiguration.HEAT_DIFF_THRESHOLD
         # Use a scaler model based from dataset to avoid fit_transform()
         self._d3_std_threshold = VisualizerConfiguration.D3_STD_THRESHOLD
-        self._d3_scaler = MinMaxScaler(VisualizerConfiguration.D3_VISUALIZER_SCALE)
 
         self._cutoff = VisualizerConfiguration.CUTOFF
         self._fs = VisualizerConfiguration.FS

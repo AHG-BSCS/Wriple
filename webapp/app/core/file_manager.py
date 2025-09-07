@@ -7,9 +7,9 @@ import os
 import re
 import threading
 
-from config.settings import FileConfiguration
-from config.settings import NetworkConfig
-from utils.logger import setup_logger
+from app.config.settings import FileConfiguration
+from app.config.settings import NetworkConfig
+from app.utils.logger import setup_logger
 
 
 class FileManager:

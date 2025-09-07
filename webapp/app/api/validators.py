@@ -3,7 +3,7 @@ Input Validation Module
 Validates incoming API requests and data
 """
 
-from utils.logger import setup_logger
+from app.utils.logger import setup_logger
 
 _logger = setup_logger('Validators')
 
