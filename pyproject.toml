@@ -1,0 +1,14 @@
+[project]
+name = "WRIPLE"
+version = "0.4.0"
+description = "Human presence detection system using WLAN sensing"
+requires-python = ">=3.13.7"
+
+dependencies = [
+    "flask-cors==6.0.1",
+    "numpy==2.3.2",
+    "pandas==2.3.2",
+    "pywavelets==1.9.0",
+    "scipy==1.16.1",
+    "joblib==1.5.2",
+]

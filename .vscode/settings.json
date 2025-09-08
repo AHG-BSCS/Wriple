@@ -59,5 +59,23 @@
         "utility": "cpp",
         "variant": "cpp",
         "cstdint": "cpp"
+    },
+    "python.analysis.extraPaths": [
+        "webapp"
+    ],
+    "python.analysis.useLibraryCodeForTypes": false,
+    "python.analysis.autoSearchPaths": false,
+    "python.analysis.exclude": [
+        "**/__pycache__",
+        ".devcontainer",
+        "data/**",
+        "firmware/**",
+        "model/**",
+        "notebook/**",
+        "setting/**",
+        "webapp/app/static/**"
+    ],
+    "files.exclude": {
+        "**/__pycache__": true
     }
 }
