@@ -17,6 +17,8 @@ class CSIProcessor:
         self._amplitude_queue = []
         self._phase_queue = []
         self._highest_diff = 0
+        self._prev_amps_sum = None
+        self._amps_variance = None
 
         parts = [np.arange(sl[0], sl[1]) for sl in VisualizerConfiguration.HEAT_SUBCARRIER_SLICES]
         self._heat_subcarrier_slices = np.concatenate(parts)
@@ -30,7 +32,6 @@ class CSIProcessor:
         self._heat_diff_threshold = VisualizerConfiguration.HEAT_DIFF_THRESHOLD
         # Use a scaler model based from dataset to avoid fit_transform()
         self._d3_std_threshold = VisualizerConfiguration.D3_STD_THRESHOLD
-        self._prev_amps_sum = None
 
         self._cutoff = VisualizerConfiguration.CUTOFF
         self._fs = VisualizerConfiguration.FS
@@ -53,7 +54,7 @@ class CSIProcessor:
         # phases = np.unwrap(phases)
         # phases = self._apply_lowpass_filter(phases)
 
-        while len(self._amplitude_queue) >= self._queue_max_packets:
+        while len(self._amplitude_queue) > self._queue_max_packets:
             self._amplitude_queue.pop(0)
             self._phase_queue.pop(0)
         
@@ -209,6 +210,17 @@ class CSIProcessor:
             list: Amplitude data for the current signal window, or None if not enough data
         """
         return self.preprocess_amplitudes(self._amplitude_queue[-self._pred_signal_window:])
+    
+    def get_amplitude_variance(self) -> float:
+        """
+        Get the variance of the amplitude data in the queue
+
+        Returns:
+            float: Variance of the amplitude data, or None if not enough data
+        """
+        amp_array = np.array(self._amplitude_queue[:][:52])
+        self._amps_variance = np.mean(amp_array, axis=0).var()
+        return int(self._amps_variance)
     
     def clear_queues(self):
         """Clear amplitude and phase queues"""

@@ -152,19 +152,18 @@ class HumanDetectionSystem:
     def get_monitor_status(self) -> dict:
         mode_status = (0 if self.is_recording and self.network_manager.is_receiving else 
                        1 if self.is_monitoring else -1)
-        
         return {
             'modeStatus': mode_status,
             'packetCount': self.network_manager.packet_count,
-            'packetLoss': self.network_manager.get_packet_loss(),
-            'rssi': self.rssi[-1] if len(self.rssi) > 2 else 0,
+            'rssi': self.rssi[-1],
             'exp': self.csi_processor.highest_diff
         }
     
     def get_presence_status(self) -> dict:
         return {
             'presence': self.predict_presence(),
-            'targetDistance': 0, # Placeholder for target distance
+            'loss': self.network_manager.get_packet_loss(),
+            'noise': self.csi_processor.get_amplitude_variance()
         }
     
     def get_radar_status(self) -> dict:

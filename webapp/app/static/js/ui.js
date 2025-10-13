@@ -33,7 +33,7 @@ export const UI = {
 
   headerNodes: {
     presenceStatus: $(SELECTORS.presenceStatus),
-    targetDist: $(SELECTORS.targetDist),
+    signal_var: $(SELECTORS.signal_var),
     packetCount: $(SELECTORS.packetCount),
     packetLoss: $(SELECTORS.packetLoss),
     expValue: $(SELECTORS.expValue),
@@ -164,12 +164,14 @@ export const UI = {
   setHeaderTexts(text = {}) {
     const n = this.headerNodes;
     n.packetCount.textContent = text?.packetCount || '0';
-    n.packetLoss.textContent = text?.packetLoss || '0%';
     n.expValue.textContent = text?.rssi || '0';
   },
-
+  
   setPresenceTexts(text = {}) {
-    this.headerNodes.presenceStatus.textContent = text?.presence || '?';
+    const n = this.headerNodes;
+    n.presenceStatus.textContent = text?.presence || '?';
+    n.packetLoss.textContent = text?.loss || '0%';
+    n.signal_var.textContent = text?.noise || '0';
   },
 
   setAsidesTexts(texts = {}) {

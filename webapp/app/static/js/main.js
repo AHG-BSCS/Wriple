@@ -44,7 +44,7 @@ const radar = new RadarVisualizer({
   button: UI.floatingButtonNodes.targetRadarBtn,
   targetContainer: UI.visualizerNodes.targetContainer,
   radarContainer: UI.visualizerNodes.radarContainer,
-  targetDistance: UI.headerNodes.targetDist,
+  targetDistance: UI.headerNodes.signal_var,
   setAsidesTexts: UI.setAsidesTexts.bind(UI)
 });
 

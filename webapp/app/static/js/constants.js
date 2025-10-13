@@ -25,7 +25,7 @@ export const SELECTORS = {
   darkModeSwitch: '#dark-mode-switch',
 
   presenceStatus: '#presence-status',
-  targetDist: '#target-dist',
+  signal_var: '#signal-var',
   packetCount: '#packets-count',
   packetLoss: '#packet-loss',
   expValue: '#exp-value',
@@ -157,7 +157,7 @@ export const OPTIONS = {
 
 export const MAIN = {
   delaySystemIconStatus: 2000,
-  delayMonitorInterval: 100,
+  delayMonitorInterval: 125,
   delayPresenceInterval: 1000,
   delayRecordingAction: 1000
 };
