@@ -1,7 +1,9 @@
 import threading
 from flask import Flask
+import numpy as np
+import time
 
-from app.config.settings import RecordingConfiguration
+from app.config.settings import RecordingConfiguration, PredictionConfiguration
 from app.core.csi_processor import CSIProcessor
 from app.core.file_manager import FileManager
 from app.core.model_manager import ModelManager
@@ -29,9 +31,12 @@ class HumanDetectionSystem:
         self._is_esp32_active = False
 
         # Initialize parameters and data storage
-        self.rssi = 0
+        self.rssi = []
         self.rdm_data = []
+        self.prev_inference = 0
+        self.csi_queue_limit = RecordingConfiguration.MONITOR_QUEUE_LIMIT
         self.rdm_queue_limit = RecordingConfiguration.MMWAVE_QUEUE_LIMIT
+        self.pred_signal_window = PredictionConfiguration.PRED_SIGNAL_WINDOW
         self.record_parameters = RecordingConfiguration.RECORD_PARAMETERS
         self.logger = setup_logger('HumanDetectionSystem')
     
@@ -69,7 +74,9 @@ class HumanDetectionSystem:
             if parsed_data[0]: # If ld24020 data is valid
                 self.rdm_data.append(parsed_data[7:])
 
-            self.rssi = parsed_data[2]
+            while len(self.rssi) > self.csi_queue_limit:
+                self.rssi.pop(0)
+            self.rssi.append(parsed_data[2])
         
         # Record data to csv file if recording
         if self.is_recording:
@@ -108,13 +115,14 @@ class HumanDetectionSystem:
         Returns:
             int: Presence prediction (1 for presence, 0 for absence)
         """
-        if self.model_manager.model_loaded:
-            features = []
+        if len(self.rssi) > self.pred_signal_window and self.model_manager.model_loaded:
+            rssi_window = self.rssi[-120:]
+            rssi_std = np.std(rssi_window)
+            rssi_mean = np.mean(rssi_window)
+            amps_window = self.csi_processor.get_amplitude_window()
 
-            for data in self.rdm_data:
-                features.append(data[9:12])
-
-            return self.model_manager.predict(features)
+            X = [float(rssi_mean), float(rssi_std)] + amps_window
+            return self.model_manager.predict(X)
         else:
             return 'No'
     
@@ -142,18 +150,21 @@ class HumanDetectionSystem:
         }
     
     def get_monitor_status(self) -> dict:
-        presence_prediction = self.predict_presence()
         mode_status = (0 if self.is_recording and self.network_manager.is_receiving else 
                        1 if self.is_monitoring else -1)
         
         return {
             'modeStatus': mode_status,
-            'presence': presence_prediction,
-            'targetDistance': 0, # Placeholder for target distance
             'packetCount': self.network_manager.packet_count,
             'packetLoss': self.network_manager.get_packet_loss(),
-            'rssi': self.rssi,
+            'rssi': self.rssi[-1] if len(self.rssi) > 2 else 0,
             'exp': self.csi_processor.highest_diff
+        }
+    
+    def get_presence_status(self) -> dict:
+        return {
+            'presence': self.predict_presence(),
+            'targetDistance': 0, # Placeholder for target distance
         }
     
     def get_radar_status(self) -> dict:

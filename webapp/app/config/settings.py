@@ -77,7 +77,7 @@ class VisualizerConfiguration:
     AVERAGED_WINDOWS: list = [(0, 10), (10, -1)]
     SUBCARRIER_COUNT: int = 192
     HEAT_SUBCARRIER_SLICES: list = [[2, 27], [38, 64], [100, 128]]
-    # HEAT_SUBCARRIER_SLICES: list = [[2, 27], [38, 64], [65, 93], [100, 128], [129, 157], [164, 192]]
+    AMPS_SUBCARRIER: list = [(2, 27), (38, 64), (65, 93), (100, 128), (129, 157), (164, 192)]
 
     HEAT_SIGNAL_WINDOW: int = 60
     HEAT_AMP_START_SUB:int = 3
@@ -105,9 +105,10 @@ class ModelConfiguration:
     """Configuration for machine learning models directories and paths"""
     MODEL_DIR: str = 'model'
     LOGREG_PATH: str = 'model/wriple_v3_LogReg.pkl'
-    RANDFOR_PATH: str = 'model/wriple_v3_RandFor.pkl'
+    RANDFOR_PATH: str = 'model/rf_model.pkl'
     ADABOOST_PATH: str = 'model/wriple_v3_AdaBoost.pkl'
-    CONVLSTM_PATH: str = 'model/wriple_v3_ConvLSTM.keras'
+    CONVLSTM_PATH: str = 'model/convlstm_model.keras'
+    SCALER_PCA_PATH: str = 'model/scaler_pca_pipeline.pkl'
     TCN_PATH: str = 'model/wriple_v3_TCN.keras'
 
     THRESHOLD_MODEL_PATH: str = 'model/wriple_v3_Thres_Model.json'
@@ -116,4 +117,7 @@ class ModelConfiguration:
 
 class PredictionConfiguration:
     """Configuration for data preprocessing and prediction"""
-    PRED_SIGNAL_WINDOW: int = 7
+    PRED_SIGNAL_WINDOW: int = 120
+    FEATURE_XHEIGHT: int = 4
+    FEATURE_XWIDTH: int = 5
+    PRED_THRESHOLD: float = 0.9079

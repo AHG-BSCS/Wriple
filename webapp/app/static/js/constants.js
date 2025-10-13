@@ -158,6 +158,7 @@ export const OPTIONS = {
 export const MAIN = {
   delaySystemIconStatus: 2000,
   delayMonitorInterval: 100,
+  delayPresenceInterval: 1000,
   delayRecordingAction: 1000
 };
 

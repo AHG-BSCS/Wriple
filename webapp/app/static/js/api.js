@@ -30,6 +30,7 @@ async function getJson(url) {
 export const API = {
   getSystemStatus: () => getJson('/get_system_status'),
   getMonitorStatus: () => getJson('/get_monitor_status'),
+  getPresenceStatus: () => getJson('/get_presence_status'),
   
   startMonitoring: () => postJson(`/start_monitoring`),
   startRecording: (params) => postJson(`/start_recording`, params),

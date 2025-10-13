@@ -24,9 +24,15 @@ def create_api_routes(app, detection_system):
     
     @app.route('/get_monitor_status', methods=['GET'])
     def get_monitor_status():
-        """Get capturing data and presence predictions"""
+        """Get monitoring information"""
         radar_status = detection_system.get_monitor_status()
         return jsonify(radar_status), 200
+    
+    @app.route('/get_presence_status', methods=['GET'])
+    def get_presence_status():
+        """Get presence detection information"""
+        pred = detection_system.get_presence_status()
+        return jsonify(pred), 200
     
     @app.route('/start_monitoring', methods=['POST'])
     def start_monitoring():

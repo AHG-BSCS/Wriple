@@ -1,11 +1,12 @@
 """Model Manager Module"""
 
+import os
+
 import joblib
 import json
 import numpy as np
-import os
 
-# from tensorflow.keras.models import load_model
+from keras.models import load_model
 
 from app.config.settings import ModelConfiguration, PredictionConfiguration
 from app.utils.logger import setup_logger
@@ -18,16 +19,22 @@ class ModelManager:
     """
     
     def __init__(self):
+        self._mode = 4
         self._model_loaded = False
-        self._mode = 1
+
         self._presence_model = None
+        self._scaler_pca_pipeline = None
+
         self.thresholds = None
+        self._xheight = PredictionConfiguration.FEATURE_XHEIGHT
+        self._xwidth = PredictionConfiguration.FEATURE_XWIDTH
+        self._model_threshold = PredictionConfiguration.PRED_THRESHOLD
         self.mmWave_thresholds = None
-        self.signal_window = PredictionConfiguration.PRED_SIGNAL_WINDOW
+
         self._logger = setup_logger('ModelManager')
 
         self.load_threshold()
-        # self.load_models(self._mode)
+        self.load_models(self._mode)
     
     def load_threshold(self):
         try:
@@ -50,8 +57,9 @@ class ModelManager:
                 self._presence_model = joblib.load(ModelConfiguration.RANDFOR_PATH)
             elif mode == 3:
                 self._presence_model = joblib.load(ModelConfiguration.ADABOOST_PATH)
-            # elif mode == 4:
-            #     self._presence_model = load_model(ModelConfiguration.CONVLSTM_PATH)
+            elif mode == 4:
+                self._presence_model = load_model(ModelConfiguration.CONVLSTM_PATH)
+                self._scaler_pca_pipeline = joblib.load(ModelConfiguration.SCALER_PCA_PATH)
             # elif mode == 5:
             #     self._presence_model = load_model(ModelConfiguration.TCN_PATH)
             else:
@@ -65,113 +73,62 @@ class ModelManager:
         except Exception as e:
             self._logger.error(f'Error loading models: {e}')
     
-    def apply_thresholds(self, wriple_list, thresholds):
+    def predict_classical(self, X: list) -> int:
         """
-        Apply the threshold logic on each sample.
-        If (value * 2) < threshold → set to 1, else leave as is.
+        Detect human presence using classical ML models
 
         Args:
-            wriple_list: list of 3x16 samples
-            thresholds: 3x16 threshold matrix
-        
-        Returns:
-            return: list of 3x16 thresholded samples
-        """
-        result = []
-        for sample in wriple_list:
-            updated_sample = []
-            for d in range(3):
-                updated_doppler = []
-                for r in range(16):
-                    value = sample[d][r]
-                    thresh = thresholds[d][r]
-                    if value * 2 < thresh:
-                        updated_doppler.append(1.0)
-                    else:
-                        updated_doppler.append(value)
-                updated_sample.append(updated_doppler)
-            result.append(updated_sample)
-        return result
-    
-    def apply_moving_average(self, samples_3d, window):
-        """
-        Apply rolling mean (along time axis) over flattened 3x16 = 48 features.
-
-        Args:
-            samples_3d: list of 3x16 samples
-            window: number of samples to average over
-
-        Returns:
-            return: smoothed list of same shape
-        """
-        data = np.array([np.array(s).flatten() for s in samples_3d])  # (N, 48)
-        smoothed = np.array([
-            np.mean(data[i:i + window], axis=0)
-            for i in range(len(data) - window + 1)
-        ])
-        return smoothed
-    
-    def predict_classical(self, data: list) -> int:
-        """
-        Predict human presence from amplitude data
-
-        Args:
-            data: List of 7 samples of amplitude arrays (each sample: 3 doppler x 16 range gates)
+            data: List of RSSI mean, RSSI std, 163 amplitude values and amplitude sum difference
 
         Returns:
             str: Presence prediction
         """
         try:
-            if len(data) < self.signal_window:
-                return 'No'
-
-            thresholded_data = self.apply_thresholds(data, self.thresholds)
-            X = self.apply_moving_average(thresholded_data, window=self.signal_window)
-            
-            y_pred = self._presence_model.predict(X)
-            presence_pred = 'No' if 0 in y_pred else 'Yes'
-            self._logger.info(f'Prediction: {y_pred}')
-
-            return presence_pred
+            X2 = np.asarray(X).reshape(1, -1)
+            y_proba = self._presence_model.predict_proba(X2)[0]
+            label = 'Yes' if y_proba > self._model_threshold else 'No'
+            print(f'PRED PROBA: {y_proba}')
+            return label
         except Exception as e:
             self._logger.error(f'Error in Logistic Regression prediction: {e}')
             return 'No'
-
-    def predict_neural(self, data: list) -> int:
+    
+    def predict_convlstm(self, X: list) -> str:
         """
-        Predict human presence using ConvLSTM model
+        Detect human presence using ConvLSTM model
 
         Args:
-            data: List of 7 samples of amplitude arrays (each sample: 3 doppler x 16 range gates)
+            data: List of RSSI mean, RSSI std, 163 amplitude values and amplitude sum difference
 
         Returns:
             str: Presence prediction
         """
         try:
-            if len(data) < self.signal_window or not self._model_loaded:
-                return 'No'
-
-            thresholded_data = self.apply_thresholds(data, self.thresholds)
-            X = self.apply_moving_average(thresholded_data, window=self.signal_window)
-
-            num_sequences = len(X) // self.signal_window
-            X_trimmed = X[:num_sequences * self.signal_window]
-            X = X_trimmed.reshape((1, self.signal_window, 3, 16, 1))
-            
-            y_pred = self._presence_model.predict(X)
-            presence_pred = 'No' if y_pred[0][0] < 0.7 else 'Yes'
-            self._logger.info(f'Prediction: {presence_pred}')
-
-            return presence_pred
+            X = np.asarray(X).reshape(1, -1)            # shape (1, 166)
+            X_trans = self._scaler_pca_pipeline.transform(X) # shape (1, 20)
+            X_seq = X_trans.reshape(1, 1, self._xheight, self._xwidth, 1)
+            y_proba = self._presence_model.predict(X_seq, verbose=0).ravel()[0]
+            label = 'Yes' if y_proba > self._model_threshold else 'No'
+            print(f'PRED PROBA: {y_proba}')
+            return label
         except Exception as e:
             self._logger.error(f'Error in ConvLSTM prediction: {e}')
             return 'No'
 
     def predict(self, data: list) -> int:
+        """
+        Make presence prediction using the selected model
+
+        Args:
+            data: Input data for prediction
+        
+        Returns:
+            int: Presence prediction (1 for presence, 0 for absence)
+        """
         if self._mode in [1, 2, 3]:
             return self.predict_classical(data)
-        elif self._mode in {4, 5}:
-            return self.predict_neural(data)
+        elif self._mode == 4:
+            return self.predict_convlstm(data)
 
 
     @property

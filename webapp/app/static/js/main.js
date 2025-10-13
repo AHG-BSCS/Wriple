@@ -8,6 +8,7 @@ import { D3Plot } from './visualizers/d3plot.js';
 import { MAIN } from './constants.js';
 
 let monitorInterval = null;
+let predictionInterval = null;
 
 const ampHeatmap = new HeatmapVisualizer({
   canvas: UI.visualizerNodes.amplitudeCanvas,
@@ -82,21 +83,22 @@ function stopVisualizers() {
   }, 120);
 }
 
-async function updateMonitorInfo() {
-  try {
-    const data = await API.getMonitorStatus();
-    if (data.modeStatus === -1) {
-      UI.stopRecording();
-      clearInterval(monitorInterval);
-      return;
-    }
-    
-    UI.setHeaderTexts(data);
-    if (expChart.visible) expChart.push(data.exp);
-  } catch (err) {
-    UI.setHeaderTexts();
-    console.warn('Missing data for status bar.', err);
+async function updatePresenceDisplay() {
+  const data = await API.getPresenceStatus();
+  UI.setPresenceTexts(data);
+}
+
+async function updateMonitorDisplay() {
+  const data = await API.getMonitorStatus();
+  if (data.modeStatus === -1) {
+    UI.stopRecording();
+    clearInterval(monitorInterval);
+    return;
   }
+  
+  UI.setHeaderTexts(data);
+  if (expChart.visible)
+    expChart.push(data.exp);
 }
 
 async function startRecording(recordModeBtn) {
@@ -106,14 +108,16 @@ async function startRecording(recordModeBtn) {
   }
   await API.startRecording(OptionsUI.getSelectedParameters());
   UI.setButtonActive(recordModeBtn);
-  monitorInterval = setInterval(() => updateMonitorInfo(), MAIN.delayMonitorInterval);
+  monitorInterval = setInterval(() => updateMonitorDisplay(), MAIN.delayMonitorInterval);
 }
 
 function stopMonitoring() {
   clearInterval(monitorInterval);
+  clearInterval(predictionInterval);
   API.stopCapturing();
   UI.setButtonDefault(UI.floatingButtonNodes.monitorModeBtn);
   stopVisualizers();
+  UI.setPresenceTexts();
 }
 
 async function startMonitoring(monitorModeBtn) {
@@ -134,7 +138,8 @@ async function startMonitoring(monitorModeBtn) {
   }
   UI.enableButton(monitorModeBtn);
   UI.setButtonActive(monitorModeBtn);
-  monitorInterval = setInterval(() => updateMonitorInfo(), MAIN.delayMonitorInterval);
+  monitorInterval = setInterval(() => updateMonitorDisplay(), MAIN.delayMonitorInterval);
+  predictionInterval = setInterval(() => updatePresenceDisplay(), MAIN.delayPresenceInterval);
 
   if (radar.visible) radar.start();
   if (ampHeatmap.visible) ampHeatmap.start();
@@ -168,8 +173,10 @@ function wireSidebar() {
     if (UI.isButtonActive(UI.floatingButtonNodes.recordModeBtn)) {
       UI.stopRecording();
       clearInterval(monitorInterval);
+      clearInterval(predictionInterval);
     }
-    if (UI.isMonitoring()) stopMonitoring();
+    if (UI.isMonitoring())
+      stopMonitoring();
   });
 
   UI.sidebarNodes.historyTabBtn.addEventListener('click', () => {
@@ -190,8 +197,10 @@ function wireSidebar() {
     if (UI.isButtonActive(UI.floatingButtonNodes.recordModeBtn)) {
       UI.stopRecording();
       clearInterval(monitorInterval);
+      clearInterval(predictionInterval);
     }
-    if (UI.isMonitoring()) stopMonitoring();
+    if (UI.isMonitoring())
+      stopMonitoring();
   });
 
   UI.sidebarNodes.datasetTabBtn.addEventListener('click', () => {
@@ -247,7 +256,8 @@ function wireFloatingActionButtons() {
       radar.stop();
     } else {
       radar.show();
-      if (UI.isMonitoring()) radar.start();
+      if (UI.isMonitoring())
+        radar.start();
     }
   });
 
@@ -255,7 +265,8 @@ function wireFloatingActionButtons() {
     if (ampHeatmap.visible) ampHeatmap.clear();
     else {
       ampHeatmap.show();
-      if (UI.isMonitoring()) ampHeatmap.start();
+      if (UI.isMonitoring())
+        ampHeatmap.start();
     }
   });
 
@@ -263,7 +274,8 @@ function wireFloatingActionButtons() {
     if (phaseHeatmap.visible) phaseHeatmap.clear();
     else {
       phaseHeatmap.show();
-      if (UI.isMonitoring()) phaseHeatmap.start();
+      if (UI.isMonitoring())
+        phaseHeatmap.start();
     }
   });
 
@@ -271,7 +283,8 @@ function wireFloatingActionButtons() {
     if (gatesHeatmap.visible) gatesHeatmap.clear();
     else {
       gatesHeatmap.show();
-      if (UI.isMonitoring()) gatesHeatmap.start();
+      if (UI.isMonitoring())
+        gatesHeatmap.start();
     }
   });
 
@@ -286,7 +299,8 @@ function wireFloatingActionButtons() {
       d3plot.clear();
     } else {
       d3plot.show();
-      if (UI.isMonitoring()) d3plot.start();
+      if (UI.isMonitoring())
+        d3plot.start();
     }
   });
 }

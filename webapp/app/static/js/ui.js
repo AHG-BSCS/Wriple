@@ -163,11 +163,13 @@ export const UI = {
 
   setHeaderTexts(text = {}) {
     const n = this.headerNodes;
-    n.presenceStatus.textContent = text?.presence || '?';
-    n.targetDist.textContent = text?.targetDistance || '0m';
     n.packetCount.textContent = text?.packetCount || '0';
     n.packetLoss.textContent = text?.packetLoss || '0%';
     n.expValue.textContent = text?.rssi || '0';
+  },
+
+  setPresenceTexts(text = {}) {
+    this.headerNodes.presenceStatus.textContent = text?.presence || '?';
   },
 
   setAsidesTexts(texts = {}) {
