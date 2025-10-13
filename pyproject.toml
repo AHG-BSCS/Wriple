@@ -8,7 +8,8 @@ dependencies = [
     "flask-cors==6.0.1",
     "numpy==2.3.2",
     "pandas==2.3.2",
-    "pywavelets==1.9.0",
     "scipy==1.16.1",
     "joblib==1.5.2",
+    "tensorflow-cpu>=2.20.0",
+    "scikit-learn>=1.7.2",
 ]
