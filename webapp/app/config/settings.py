@@ -68,7 +68,7 @@ class FileConfiguration:
         'LD2420_Doppler_13', 'LD2420_Doppler_14', 'LD2420_Doppler_15', 'LD2420_Doppler_16',
         'LD2420_Doppler_17', 'LD2420_Doppler_18', 'LD2420_Doppler_19', 'LD2420_Doppler_20'
     ]
-    SETTING_FILE: str = 'setting/settings.json'
+    SETTING_FILE: str = 'webapp/app/config/settings.json'
 
 
 class VisualizerConfiguration:

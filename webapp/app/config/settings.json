@@ -6,6 +6,6 @@
     "tx_esp32_ip": "10.59.14.183",
     "tx_port": 5001,
     "tx_interval": 0.016,
-    "record_packet_limit": 240
+    "record_packet_limit": 250
   }
 }

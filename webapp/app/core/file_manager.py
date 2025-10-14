@@ -209,9 +209,16 @@ class FileManager:
             with open(FileConfiguration.SETTING_FILE, mode='r', encoding='utf-8') as file:
                 data: dict = json.load(file)
                 NetworkConfig.update(NetworkConfig, data['NetworkConfiguration'])
-
         except Exception as e:
             self._logger.error(f'Error loading settings from {FileConfiguration.SETTING_FILE}: {e}')
+            # Manually set the default values
+            NetworkConfig.AP_SSID = 'WRIPLE'
+            NetworkConfig.AP_PASSWORD = 'WRIPLE_ESP32'
+            NetworkConfig.AP_BROADCAST_IP = None
+            NetworkConfig.TX_ESP32_IP = None
+            NetworkConfig.TX_PORT = 5001
+            NetworkConfig.TX_INTERVAL = 0.016
+            NetworkConfig.RECORD_PACKET_LIMIT = 250
 
     def save_settings(self):
         """Save current settings to JSON file."""
