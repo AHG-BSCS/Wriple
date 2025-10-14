@@ -67,15 +67,17 @@
     "python.analysis.autoSearchPaths": false,
     "python.analysis.exclude": [
         "**/__pycache__",
-        ".devcontainer",
+        ".devcontainer/**",
+        ".venv/**",
         "data/**",
         "firmware/**",
         "model/**",
         "notebook/**",
-        "setting/**",
         "webapp/app/static/**"
     ],
     "files.exclude": {
-        "**/__pycache__": true
+        "**/__pycache__": true,
+        ".devcontainer": true,
+        ".venv": true,
     }
 }

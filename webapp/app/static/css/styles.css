@@ -40,3 +40,37 @@ input[type="range"]::-webkit-slider-thumb {
     border-radius: 8px;
     cursor: pointer;
 }
+
+/* Status Bar Tooltip */
+
+.status-wrapper {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.status-tooltip {
+  position: absolute;
+  top: 140%;
+  left: 50%;
+  transform: translate(-50%, 4px);
+  background: var(--primary-color);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 6px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  transition: opacity .18s ease;
+}
+
+.status-wrapper:hover .status-tooltip {
+  transition-delay: 1s;
+  opacity: 1;
+}
+
+.status-wrapper:not(:hover) .status-tooltip {
+  transition-delay: 0s;
+  opacity: 0;
+}
