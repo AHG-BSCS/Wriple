@@ -9,8 +9,8 @@
 
 #define CSI_TAG "CSI"
 
-#define LED_PIN GPIO_NUM_2
-#define LED_BLINK_INTERVAL  15 // Blink every 500 ms if 30 packets/sec
+#define LED_PIN GPIO_NUM_17
+#define LED_BLINK_INTERVAL  30 // Blink every 500 ms if 60 packets/sec
 #define CSI_PAYLOAD_SIZE    (1344 + RDM_PAYLOAD_SIZE)
 
 extern int server_sock;
@@ -32,9 +32,9 @@ void blink_led() {
 void _wifi_csi_callback(void *ctx, wifi_csi_info_t *data) {
     // Common signal length: 14, 114
     // ESP_LOGI(CSI_TAG, "%d bytes", data[0].rx_ctrl.sig_len);
-    // ESP_LOGI(CSI_TAG, "%d channel", data[0].rx_ctrl.cwb);
+    // ESP_LOGI(CSI_TAG, "%d bandwidth", data[0].rx_ctrl.cwb);
 
-    // If from 20Mhz Channel with specific payload length
+    // If from 20Mhz Bandwidth with specific payload length
     if (data[0].rx_ctrl.cwb == 0 && data[0].rx_ctrl.sig_len == 88) {
         wifi_csi_info_t d = data[0];
         std::string payload;
@@ -75,7 +75,7 @@ void _wifi_csi_callback(void *ctx, wifi_csi_info_t *data) {
         is_led_high = false;
         total_packet_count = 0;
         gpio_set_level(LED_PIN, is_led_high);
-        ESP_LOGI(CSI_TAG, "Stop signal received");
+        // ESP_LOGI(CSI_TAG, "Stop signal received");
     }
     // Update server port address
     else if (data[0].rx_ctrl.sig_len == 91) {
