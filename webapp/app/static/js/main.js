@@ -348,15 +348,14 @@ function wireSelections() {
 }
 
 function init() {
+  UI.hideElements();
   wireSidebar();
   wireFloatingActionButtons();
   wireHeatmapSliders();
   wireSelections();
 
-  // TODO: Stop status bar update when monitoring or recording
   setInterval(UI.updateStatusBar.bind(UI), MAIN.delaySystemIconStatus);
   UI.list_csv_files();
-  // TODO: Make some UI invisible by default
   UI.sidebarNodes.monitorTabBtn.click(); // Set default tab to monitor
 }
 

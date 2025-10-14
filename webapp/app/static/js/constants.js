@@ -36,6 +36,8 @@ export const SELECTORS = {
   ld2420Status: "#ld2420-status",
   modelStatus: "#model-status",
 
+  asideContainer: '#aside-container',
+  
   targetAngle: '#target-angle',
   targetDistance: '#target-distance',
   targetEnergy: '#target-energy',

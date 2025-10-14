@@ -19,6 +19,7 @@ export const UI = {
 
   sidebarNodes: {
     sidebarContainer: $(SELECTORS.sidebarContainer),
+    
     collapseBtn: $(SELECTORS.collapseBtn),
     sidebarText: $$(SELECTORS.sidebarText),
 
@@ -46,6 +47,8 @@ export const UI = {
   },
 
   asideNodes: {
+    asideContainer: $(SELECTORS.asideContainer),
+
     targetDistance: $(SELECTORS.targetDistance),
     targetAngle: $(SELECTORS.targetAngle),
     targetEnergy: $(SELECTORS.targetEnergy),
@@ -245,6 +248,14 @@ export const UI = {
     this.hideUI(n.gatesHeatmapContainer);
     this.hideUI(n.expLineChartContainer);
     this.hideUI(n.d3PlotContainer);
+  },
+
+  hideElements() {
+    this.sidebarNodes.historyTabBtn.classList.add('hidden');
+    this.sidebarNodes.datasetTabBtn.classList.add('hidden');
+    this.sidebarNodes.historyGroup.forEach(el => this.hideUI(el));
+    this.sidebarNodes.datasetGroup.forEach(el => this.hideUI(el));
+    this.asideNodes.asideContainer.classList.add('hidden');
   },
 
   stopRecording() {
