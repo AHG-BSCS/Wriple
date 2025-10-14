@@ -25,8 +25,6 @@ class CSIProcessor:
         self._amps_subcarriers = [i for s, e in VisualizerConfiguration.AMPS_SUBCARRIER for i in range(s, e)]
         # Count number of values in the slices by summing the differences (end - start)
         self._heat_subcarrier_count = sum(sl[1] - sl[0] for sl in VisualizerConfiguration.HEAT_SUBCARRIER_SLICES)
-        self._heat_phase_start = VisualizerConfiguration.HEAT_PHASE_START_SUB
-        self._heat_phase_end = VisualizerConfiguration.HEAT_PHASE_END_SUB
         self._heat_signal_window = VisualizerConfiguration.HEAT_SIGNAL_WINDOW
         self._heat_penalty_factor = VisualizerConfiguration.HEAT_PENALTY_FACTOR
         self._heat_diff_threshold = VisualizerConfiguration.HEAT_DIFF_THRESHOLD
@@ -48,18 +46,13 @@ class CSIProcessor:
         Args:
             raw_csi_data: Separated and validated Wi-Fi CSI data from ESP32
         """
-        amplitudes, phases = self._compute_csi(raw_csi_data)
+        amplitudes = self._compute_csi(raw_csi_data)
         amplitudes = np.array(amplitudes)[self._amps_subcarriers]
-        # amplitudes = self._apply_lowpass_filter(amplitudes)
-        # phases = np.unwrap(phases)
-        # phases = self._apply_lowpass_filter(phases)
 
         while len(self._amplitude_queue) > self._queue_max_packets:
             self._amplitude_queue.pop(0)
-            self._phase_queue.pop(0)
         
         self._amplitude_queue.append(amplitudes)
-        self._phase_queue.append(phases)
     
     def _compute_csi(self, csi_data: list) -> tuple[list, list]:
         """
@@ -72,19 +65,19 @@ class CSIProcessor:
             tuple: (Amplitudes, Phases)
         """
         amplitudes = []
-        phases = []
+        # phases = []
 
         if len(csi_data) % 2 != 0:
             self._logger.error('CSI data length must be even (I/Q pairs).')
-            return amplitudes, phases
+            return amplitudes
         
         for i in range(0, len(csi_data), 2):
             I = csi_data[i]
             Q = csi_data[i + 1]
             amplitudes.append(math.sqrt(I**2 + Q**2))
-            phases.append(math.atan2(Q, I))
+            # phases.append(math.atan2(Q, I))
         
-        return amplitudes, phases
+        return amplitudes
     
     def _apply_lowpass_filter(self, data) -> np.ndarray:
         """
@@ -116,6 +109,7 @@ class CSIProcessor:
             return last[self._heat_subcarrier_slices].tolist()
         
         latest_window = np.asarray(self._amplitude_queue[-self._heat_signal_window:])
+        latest_window = self._apply_lowpass_filter(latest_window)
         diff = self._compute_latest_diff(latest_window)
         filtered_data = self._apply_diff_threshold(diff)
         return filtered_data
@@ -143,34 +137,6 @@ class CSIProcessor:
             np.sign(diff) * (np.abs(diff) ** self._heat_penalty_factor),
             0.0
         ).tolist()
-        return highlighted
-    
-    def get_latest_phase(self) -> list:
-        """
-        Get the latest phases data, preprocessed by subtracting the rolling mean for each subcarrier,
-        and apply a penalty to values far from the mean to improve heatmap contrast.
-        
-        Returns:
-            list: Highlighted phases
-        """
-        if len(self._phase_queue) < self._heat_signal_window:
-            return []
-        
-        # Stack the last window_size packets
-        window = np.array(self._phase_queue[-self._heat_signal_window:])
-        mean_per_subcarrier = np.mean(window[:, self._heat_phase_start:self._heat_phase_end], axis=0)
-        # Subtract mean to highlight outliers
-        latest_phases = np.array(self._phase_queue[-1][self._heat_phase_start:self._heat_phase_end])
-        diff = latest_phases - mean_per_subcarrier
-
-        # Apply penalty: suppress small differences, amplify large ones
-        highlighted = []
-        for d in diff:
-            if abs(d) < self._heat_diff_threshold:
-                highlighted.append(0.0)
-            else:
-                # Amplify outliers (e.g., square the difference and keep the sign)
-                highlighted.append(np.sign(d) * (abs(d) ** self._heat_penalty_factor))
         return highlighted
     
     def preprocess_amplitudes(self, amplitudes):

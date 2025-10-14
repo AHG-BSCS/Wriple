@@ -18,14 +18,6 @@ const ampHeatmap = new HeatmapVisualizer({
   maxValue: parseFloat(UI.sliderNodes.amplitudeMaxSlider.value)
 });
 
-const phaseHeatmap = new HeatmapVisualizer({
-  canvas: UI.visualizerNodes.phaseCanvas,
-  button: UI.floatingButtonNodes.phaseHeatmapBtn,
-  container: UI.visualizerNodes.phaseHeatmapContainer,
-  type: 'phase',
-  maxValue: parseFloat(UI.sliderNodes.phaseMaxSlider.value)
-});
-
 const gatesHeatmap = new HeatmapVisualizer({
   canvas: UI.visualizerNodes.gatesCanvas,
   button: UI.floatingButtonNodes.gatesHeatmapBtn,
@@ -57,7 +49,6 @@ function clearVisualizers() {
   // Assuming that monitoring is stopped
   radar.clear();
   ampHeatmap.clear();
-  phaseHeatmap.clear();
   gatesHeatmap.clear();
   expChart.clear();
   d3plot.clear();
@@ -69,7 +60,6 @@ function clearVisualizers() {
 function stopVisualizers() {
   radar.stop();
   ampHeatmap.stop();
-  phaseHeatmap.stop();
   gatesHeatmap.stop();
   d3plot.stop();
 
@@ -143,7 +133,6 @@ async function startMonitoring(monitorModeBtn) {
 
   if (radar.visible) radar.start();
   if (ampHeatmap.visible) ampHeatmap.start();
-  if (phaseHeatmap.visible) phaseHeatmap.start();
   if (gatesHeatmap.visible) gatesHeatmap.start();
   if (d3plot.visible) d3plot.start();
 }
@@ -270,15 +259,6 @@ function wireFloatingActionButtons() {
     }
   });
 
-  UI.floatingButtonNodes.phaseHeatmapBtn.addEventListener('click', () => {
-    if (phaseHeatmap.visible) phaseHeatmap.clear();
-    else {
-      phaseHeatmap.show();
-      if (UI.isMonitoring())
-        phaseHeatmap.start();
-    }
-  });
-
   UI.floatingButtonNodes.gatesHeatmapBtn.addEventListener('click', () => {
     if (gatesHeatmap.visible) gatesHeatmap.clear();
     else {
@@ -310,12 +290,6 @@ function wireHeatmapSliders() {
     const newMax = parseFloat(e.target.value);
     UI.sliderNodes.amplitudeMaxValue.textContent = newMax;
     ampHeatmap.setMaxValue(newMax);
-  });
-
-  UI.sliderNodes.phaseMaxSlider.addEventListener('input', (e) => {
-    const newMax = parseFloat(e.target.value);
-    UI.sliderNodes.phaseMaxValue.textContent = newMax;
-    phaseHeatmap.setMaxValue(newMax);
   });
 
   UI.sliderNodes.gatesMaxSlider.addEventListener('input', (e) => {

@@ -4,7 +4,6 @@ export const SELECTORS = {
 
   targetRadarBtn: '#target-radar-btn',
   amplitudeHeatmapBtn: '#amplitude-heatmap-btn',
-  phaseHeatmapBtn: '#phase-heatmap-btn',
   gatesHeatmapBtn: '#gates-heatmap-btn',
   expChartBtn: '#exp-line-chart-btn',
   d3PlotBtn: '#d3-plot-btn',
@@ -59,11 +58,6 @@ export const SELECTORS = {
   amplitudeMaxSlider: '#amplitude-max-slider',
   amplitudeMaxValue: '#amplitude-max-value',
 
-  phaseCanvas: '#phase-heatmap',
-  phaseHeatmapContainer: '#phase-heatmap-container',
-  phaseMaxSlider: '#phase-max-slider',
-  phaseMaxValue: '#phase-max-value',
-  
   gatesCanvas: '#gates-heatmap',
   gatesHeatmapContainer: '#gates-heatmap-container',
   gatesMaxSlider: '#gates-max-slider',

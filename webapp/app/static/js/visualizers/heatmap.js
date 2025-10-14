@@ -79,12 +79,12 @@ export class HeatmapVisualizer {
 
   async fetchAndDrawCsi() {
     try {
-      const data = (this.type === 'phase') ? await API.getchPhaseData() : await API.getchAmplitudeData();
-      const arr = (this.type === 'phase') ? data.latestPhases : data.latestAmplitudes;
+      const data = await API.getchAmplitudeData();
 
-      arr.forEach((val, i) => {
+      data.latestAmplitudes.forEach((val, i) => {
         this.buffer[i].push(val);
-        if (this.buffer[i].length > this.maxCols) this.buffer[i].shift();
+        if (this.buffer[i].length > this.maxCols)
+          this.buffer[i].shift();
       });
       this.heat.data(this.flattenBufferHorizontal(this.buffer)).draw();
     } catch (err) {

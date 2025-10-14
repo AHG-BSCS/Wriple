@@ -82,14 +82,12 @@ class VisualizerConfiguration:
     HEAT_SIGNAL_WINDOW: int = 60
     HEAT_AMP_START_SUB:int = 3
     HEAT_AMP_END_SUB:int = 88
-    HEAT_PHASE_START_SUB:int = 6
-    HEAT_PHASE_END_SUB:int = 27
     HEAT_PENALTY_FACTOR: int = 1
     HEAT_DIFF_THRESHOLD: int = 5
 
     CUTOFF:float = 0.1
     FS:int = 1
-    ORDER:int = 5
+    ORDER:int = 1
 
     D3_STD_THRESHOLD: float = 1.75
     D3_VISUALIZER_SCALE: tuple = (-10, 10)

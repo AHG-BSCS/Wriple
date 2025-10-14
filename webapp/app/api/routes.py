@@ -64,12 +64,6 @@ def create_api_routes(app, detection_system):
         latest_amplitudes = detection_system.csi_processor.get_heatmap_data()
         return jsonify({'latestAmplitudes': latest_amplitudes}), 200
     
-    @app.route('/get_phase_data', methods=['GET'])
-    def get_phase_data():
-        """Get latest phase data subset"""
-        latest_phases = detection_system.csi_processor.get_latest_phase()
-        return jsonify({'latestPhases': latest_phases}), 200
-    
     @app.route('/get_radar_data', methods=['GET'])
     def get_radar_data():
         """Get radar data and presence predictions"""
@@ -94,9 +88,9 @@ def create_api_routes(app, detection_system):
     
     @app.route('/get_3d_plot_data', methods=['GET'])
     def get_3d_plot_data():
-        # TODO: Visualize the phase using 3D plot
-        latestPhases = detection_system.csi_processor._phase_queue[-1]
-        return jsonify({'latestPhases': []}), 200
+        # TODO: Visualize the amps using 3D plot
+        latestAmps = detection_system.csi_processor._amplitude_queue[-1]
+        return jsonify({'latestAmps': []}), 200
     
     # CSV File Management Routes
     

@@ -37,7 +37,6 @@ export const API = {
   stopCapturing: () => postJson('/stop_capturing'),
   
   getchAmplitudeData: () => getJson('/get_amplitude_data'),
-  getchPhaseData: () => getJson('/get_phase_data'),
   getRadarData: () => getJson('/get_radar_data'),
   getRdmData: () => getJson('/get_rdm_data'),
   get3dPlotData: () => getJson('/get_3d_plot_data'),

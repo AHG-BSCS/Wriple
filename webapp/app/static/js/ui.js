@@ -11,7 +11,6 @@ export const UI = {
 
     targetRadarBtn: $(SELECTORS.targetRadarBtn),
     amplitudeHeatmapBtn: $(SELECTORS.amplitudeHeatmapBtn),
-    phaseHeatmapBtn: $(SELECTORS.phaseHeatmapBtn),
     gatesHeatmapBtn: $(SELECTORS.gatesHeatmapBtn),
     expChartBtn: $(SELECTORS.expChartBtn),
     d3PlotBtn: $(SELECTORS.d3PlotBtn)
@@ -70,9 +69,6 @@ export const UI = {
     amplitudeCanvas: $(SELECTORS.amplitudeCanvas),
     amplitudeHeatmapContainer: $(SELECTORS.amplitudeHeatmapContainer),
 
-    phaseCanvas: $(SELECTORS.phaseCanvas),
-    phaseHeatmapContainer: $(SELECTORS.phaseHeatmapContainer),
-
     gatesCanvas: $(SELECTORS.gatesCanvas),
     gatesHeatmapContainer: $(SELECTORS.gatesHeatmapContainer),
 
@@ -84,11 +80,9 @@ export const UI = {
 
   sliderNodes: {
     amplitudeMaxSlider: $(SELECTORS.amplitudeMaxSlider),
-    phaseMaxSlider: $(SELECTORS.phaseMaxSlider),
     gatesMaxSlider: $(SELECTORS.gatesMaxSlider),
 
     amplitudeMaxValue: $(SELECTORS.amplitudeMaxValue),
-    phaseMaxValue: $(SELECTORS.phaseMaxValue),
     gatesMaxValue: $(SELECTORS.gatesMaxValue)
   },
 
@@ -244,7 +238,6 @@ export const UI = {
     const n = this.visualizerNodes;
     // this.hideUI(n.radarContainer);
     this.hideUI(n.amplitudeHeatmapContainer);
-    this.hideUI(n.phaseHeatmapContainer);
     this.hideUI(n.gatesHeatmapContainer);
     this.hideUI(n.expLineChartContainer);
     this.hideUI(n.d3PlotContainer);

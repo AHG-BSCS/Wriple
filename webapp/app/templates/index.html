@@ -177,14 +177,6 @@
                     </div>
                     <canvas id="amplitude-heatmap" class="w-full h-52 rounded-t shadow"></canvas>
                 </div>
-                <!-- Phase Heatmap -->
-                <div id="phase-heatmap-container" class="flex justify-center dataset-hidden">
-                    <div class="flex flex-col items-center mr-4">
-                        <span id="phase-max-value" class="font-semibold text-gray-800">10</span>
-                        <input id="phase-max-slider" type="range" min="-30" max="30" step="1" value="10" class="w-4 h-44 bg-slate-400 rounded-lg appearance-none"/>
-                    </div>
-                    <canvas id="phase-heatmap" class="w-full h-52 rounded-b shadow"></canvas>
-                </div>
                 <!-- Range Gates Heatmap -->
                 <div id="gates-heatmap-container" class="flex justify-center dataset-hidden">
                     <div class="flex flex-col items-center mr-4">
@@ -356,12 +348,6 @@
             <button id="amplitude-heatmap-btn" class="bg-gray-800 p-2 hover:scale-110 transition relative group rounded-2xl dataset-hidden">
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#f5f5f5" viewBox="0 0 256 256" data-darkreader-inline-fill="" style="--darkreader-inline-fill: var(--darkreader-background-f5f5f5, #1e2021);"><path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm-4.78,91.44c-16.68,35-31.06,50.56-46.65,50.56-19.68,0-31.39-24.56-43.79-50.56C112,113,101,90,91.43,90c-3.74,0-14.37,4-32.21,41.44a8,8,0,0,1-14.44-6.88C61.46,89.59,75.84,74,91.43,74c19.68,0,31.39,24.56,43.79,50.56C144,143,155,166,164.57,166c3.74,0,14.37-4,32.21-41.44a8,8,0,1,1,14.44,6.88Z"></path></svg><span class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-gray-700 rounded opacity-0 group-hover:opacity-100 transition-opacity">
                     Amplitude Heatmap
-                </span>
-            </button>
-            <button id="phase-heatmap-btn" class="bg-gray-800 p-2 hover:scale-110 transition relative group rounded-2xl dataset-hidden">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#f5f5f5" viewBox="0 0 256 256" data-darkreader-inline-fill="" style="--darkreader-inline-fill: var(--darkreader-background-f5f5f5, #1e2021);"><path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm-11.56,94.66-72,48A8,8,0,0,1,128,184a8,8,0,0,1-8-8V95L60.44,134.66a8,8,0,1,1-8.88-13.32l72-48A8,8,0,0,1,136,80v81.05l59.56-39.71a8,8,0,0,1,8.88,13.32Z"></path></svg>
-                <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-gray-700 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                    Phase Heatmap
                 </span>
             </button>
             <button id="gates-heatmap-btn" class="bg-gray-800 p-2 hover:scale-110 transition relative group rounded-2xl dataset-hidden">

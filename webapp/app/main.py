@@ -155,16 +155,23 @@ class HumanDetectionSystem:
         return {
             'modeStatus': mode_status,
             'packetCount': self.network_manager.packet_count,
-            'rssi': self.rssi[-1],
+            'rssi': self.rssi[-1] if self.rssi else 0,
             'exp': self.csi_processor.highest_diff
         }
     
     def get_presence_status(self) -> dict:
-        return {
-            'presence': self.predict_presence(),
-            'loss': self.network_manager.get_packet_loss(),
-            'noise': self.csi_processor.get_amplitude_variance()
-        }
+        if self.rssi: 
+            return {
+                'presence': self.predict_presence(),
+                'loss': self.network_manager.get_packet_loss(),
+                'noise': self.csi_processor.get_amplitude_variance()
+            }
+        else:
+            return {
+                'presence': '?',
+                'loss': -1,
+                'noise': -1
+            }
     
     def get_radar_status(self) -> dict:
         """
