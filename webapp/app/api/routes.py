@@ -61,7 +61,7 @@ def create_api_routes(app, detection_system):
     @app.route('/get_amplitude_data', methods=['GET'])
     def get_amplitude_data():
         """Get latest amplitude data subset"""
-        latest_amplitudes = detection_system.csi_processor.get_heatmap_data()
+        latest_amplitudes = detection_system.csi_processor.get_amps_heatmap_data()
         return jsonify({'latestAmplitudes': latest_amplitudes}), 200
     
     @app.route('/get_radar_data', methods=['GET'])

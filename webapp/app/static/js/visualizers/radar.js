@@ -71,19 +71,19 @@ export class RadarVisualizer {
   async tick() {
     try {
       const data = await API.getRadarData();
-      this.targetDistance.textContent = `${data.distance}m`
+      // this.targetDistance.textContent = `${data.distance}m`
 
       if (data.modeStatus === 1) {
         this.setAsidesTexts({
           targetAngle: `${data.angle}°`,
           targetDistance: `${data.distance}m`,
-          targetEnergy: data.energy
         });
       }
 
       this.targetContainer.innerHTML = '';
       const x = 0;
-      const y = 0;
+      const y = data.distance;
+      this.createRadarPoint(this.centerX + x, this.radarRect.height - y * 45);
       this.createRadarPoint(this.centerX + x, this.radarRect.height - y);
     } catch (err) {
       this.stop();

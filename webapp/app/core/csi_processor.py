@@ -36,7 +36,7 @@ class CSIProcessor:
         self._order = VisualizerConfiguration.ORDER
         
         self._pred_signal_window = PredictionConfiguration.PRED_SIGNAL_WINDOW
-        self._queue_max_packets = RecordingConfiguration.MONITOR_QUEUE_LIMIT
+        self._queue_max_packets = RecordingConfiguration.CSI_QUEUE_LIMIT
         self._logger = setup_logger('CSIProcessor')
     
     def queue_csi(self, raw_csi_data: list):
@@ -95,7 +95,7 @@ class CSIProcessor:
         y = filtfilt(b, a, data, axis=0)
         return y
     
-    def get_heatmap_data(self) -> list:
+    def get_amps_heatmap_data(self) -> list:
         """
         Get the latest amplitude data, preprocessed by subtracting the mean for each subcarrier,
         and apply a penalty to values far from the mean to improve heatmap contrast.
@@ -184,8 +184,11 @@ class CSIProcessor:
         Returns:
             float: Variance of the amplitude data, or None if not enough data
         """
-        amp_array = np.array(self._amplitude_queue[:][:52])
-        self._amps_variance = np.mean(amp_array, axis=0).var()
+        if len(self._amplitude_queue) > 1:
+            amp_array = np.array(self._amplitude_queue[:][:52])
+            self._amps_variance = np.mean(amp_array, axis=0).var()
+        else:
+            return 0
         return int(self._amps_variance)
     
     def clear_queues(self):

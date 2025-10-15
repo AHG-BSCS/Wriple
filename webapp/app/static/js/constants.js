@@ -159,7 +159,7 @@ export const MAIN = {
 };
 
 export const RADAR = {
-  refreshRate: 100,
+  refreshRate: 333,
   maxDistance: 10_000
 };
 

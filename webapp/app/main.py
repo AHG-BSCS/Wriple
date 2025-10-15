@@ -5,6 +5,7 @@ import time
 
 from app.config.settings import RecordingConfiguration, PredictionConfiguration
 from app.core.csi_processor import CSIProcessor
+from app.core.rdm_processor import RDMProcessor
 from app.core.file_manager import FileManager
 from app.core.model_manager import ModelManager
 from app.core.network_manager import NetworkManager
@@ -21,6 +22,7 @@ class HumanDetectionSystem:
         self.file_manager = FileManager()
         self.file_manager.load_settings()
         self.csi_processor = CSIProcessor()
+        self.rdm_processor = RDMProcessor()
         self.model_manager = ModelManager()
         self.network_manager = NetworkManager(self.file_manager)
         
@@ -34,8 +36,8 @@ class HumanDetectionSystem:
         self.rssi = []
         self.rdm_data = []
         self.prev_inference = 0
-        self.csi_queue_limit = RecordingConfiguration.MONITOR_QUEUE_LIMIT
-        self.rdm_queue_limit = RecordingConfiguration.MMWAVE_QUEUE_LIMIT
+        self.csi_queue_limit = RecordingConfiguration.CSI_QUEUE_LIMIT
+        self.rdm_queue_limit = RecordingConfiguration.RDM_QUEUE_LIMIT
         self.pred_signal_window = PredictionConfiguration.PRED_SIGNAL_WINDOW
         self.record_parameters = RecordingConfiguration.RECORD_PARAMETERS
         self.logger = setup_logger('HumanDetectionSystem')
@@ -186,8 +188,7 @@ class HumanDetectionSystem:
         return {
             'modeStatus': mode_status,
             'angle': 0,
-            'distance': 0,
-            'energy': 0
+            'distance': self.rdm_processor.estimate_distance(self.rdm_data[-1][9]),
         }
     
     def set_recording_parameters(self, params: dict):

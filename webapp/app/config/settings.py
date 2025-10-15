@@ -47,8 +47,8 @@ class RecordingConfiguration:
     Configuration for CSI data recording
     Packet and queue limits are based on TX interval
     """
-    MONITOR_QUEUE_LIMIT: int = 180
-    MMWAVE_QUEUE_LIMIT: int = 12
+    CSI_QUEUE_LIMIT: int = 180
+    RDM_QUEUE_LIMIT: int = 12
     RECORD_PARAMETERS: list = [None, None, None, None, None, None, None, None, None]
 
 
@@ -88,6 +88,11 @@ class VisualizerConfiguration:
     CUTOFF:float = 0.1
     FS:int = 1
     ORDER:int = 1
+
+    RDM_GATE_DISTANCE: float = 0.7  # meters
+    RDM_ABSENCE_TOLERANCE: int = 6  # Number of consecutive 0m before reset
+    RDM_SMOOTHING_ALPHA: float = 0.5 # 0.5 => Average of current and last non-zero
+    RDM_GATES_THRESHOLD: list = [16000,5000,500,250,150,120,100,80,80,80,70,70,70,70,70,70]
 
     D3_STD_THRESHOLD: float = 1.75
     D3_VISUALIZER_SCALE: tuple = (-10, 10)
