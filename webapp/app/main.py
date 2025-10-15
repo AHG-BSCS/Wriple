@@ -157,12 +157,11 @@ class HumanDetectionSystem:
         return {
             'modeStatus': mode_status,
             'packetCount': self.network_manager.packet_count,
-            'rssi': self.rssi[-1] if self.rssi else 0,
-            'exp': self.csi_processor.highest_diff
+            'rssi': self.rssi[-1] if self.rssi else 0
         }
     
     def get_presence_status(self) -> dict:
-        if self.rssi: 
+        if self.rssi:
             return {
                 'presence': self.predict_presence(),
                 'loss': self.network_manager.get_packet_loss(),
@@ -172,7 +171,7 @@ class HumanDetectionSystem:
             return {
                 'presence': '?',
                 'loss': -1,
-                'noise': -1
+                'noise': 0.0
             }
     
     def get_radar_status(self) -> dict:
@@ -182,12 +181,7 @@ class HumanDetectionSystem:
         Returns:
             dict: Dictionary with radar data and presence prediction
         """
-        mode_status = (0 if self.is_recording and self.network_manager.is_receiving else 
-                       1 if self.is_monitoring else -1)
-        
         return {
-            'modeStatus': mode_status,
-            'angle': 0,
             'distance': self.rdm_processor.estimate_distance(self.rdm_data[-1][9]),
         }
     

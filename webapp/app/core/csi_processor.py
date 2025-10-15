@@ -16,14 +16,12 @@ class CSIProcessor:
     def __init__(self):
         self._amplitude_queue = []
         self._phase_queue = []
-        self._highest_diff = 0
+        self._amps_variance = 0
         self._prev_amps_sum = None
-        self._amps_variance = None
 
         parts = [np.arange(sl[0], sl[1]) for sl in VisualizerConfiguration.HEAT_SUBCARRIER_SLICES]
         self._heat_subcarrier_slices = np.concatenate(parts)
         self._amps_subcarriers = [i for s, e in VisualizerConfiguration.AMPS_SUBCARRIER for i in range(s, e)]
-        # Count number of values in the slices by summing the differences (end - start)
         self._heat_subcarrier_count = sum(sl[1] - sl[0] for sl in VisualizerConfiguration.HEAT_SUBCARRIER_SLICES)
         self._heat_signal_window = VisualizerConfiguration.HEAT_SIGNAL_WINDOW
         self._heat_penalty_factor = VisualizerConfiguration.HEAT_PENALTY_FACTOR
@@ -94,7 +92,7 @@ class CSIProcessor:
         b, a = butter(self._order, normal_cutoff, btype='low', analog=False)
         y = filtfilt(b, a, data, axis=0)
         return y
-    
+
     def get_amps_heatmap_data(self) -> list:
         """
         Get the latest amplitude data, preprocessed by subtracting the mean for each subcarrier,
@@ -103,13 +101,12 @@ class CSIProcessor:
         Returns:
             list: Highlighted amplitudes
         """
-
         if len(self._amplitude_queue) < self._heat_signal_window:
             last = np.asarray(self._amplitude_queue[-1])
             return last[self._heat_subcarrier_slices].tolist()
         
         latest_window = np.asarray(self._amplitude_queue[-self._heat_signal_window:])
-        latest_window = self._apply_lowpass_filter(latest_window)
+        # latest_window = self._apply_lowpass_filter(latest_window)
         diff = self._compute_latest_diff(latest_window)
         filtered_data = self._apply_diff_threshold(diff)
         return filtered_data
@@ -119,11 +116,10 @@ class CSIProcessor:
         Compute difference between the latest packet and the latest window mean
         over the configured subcarrier slice.
         """
-        
         mean_per_subcarrier = np.mean(latest_window[:, self._heat_subcarrier_slices], axis=0)
         diff = latest_window[-1, self._heat_subcarrier_slices] - mean_per_subcarrier
-        # Store highest absolute diff for external use
-        self._highest_diff = diff.var()
+        # Store highest absolute diff
+        self._amps_variance = diff.var()
         return diff
 
     def _apply_diff_threshold(self, diff: np.ndarray) -> list:
@@ -184,12 +180,13 @@ class CSIProcessor:
         Returns:
             float: Variance of the amplitude data, or None if not enough data
         """
-        if len(self._amplitude_queue) > 1:
-            amp_array = np.array(self._amplitude_queue[:][:52])
-            self._amps_variance = np.mean(amp_array, axis=0).var()
-        else:
-            return 0
-        return int(self._amps_variance)
+        if len(self._amplitude_queue) < self._heat_signal_window:
+            return 0.0
+        
+        latest_window = np.asarray(self._amplitude_queue[-self._heat_signal_window:])
+        # latest_window = self._apply_lowpass_filter(latest_window)
+        self._compute_latest_diff(latest_window)
+        return round(self._amps_variance, 1)
     
     def clear_queues(self):
         """Clear amplitude and phase queues"""
@@ -197,16 +194,6 @@ class CSIProcessor:
         self._phase_queue.clear()
         self._logger.info('Cleared amplitude and phase queues.')
     
-    @property
-    def highest_diff(self) -> float:
-        """
-        Get the highest difference value from the latest amplitude processing
-        
-        Returns:
-            float: Highest difference value
-        """
-        return self._highest_diff
-
     @property
     def max_packets(self) -> int:
         """

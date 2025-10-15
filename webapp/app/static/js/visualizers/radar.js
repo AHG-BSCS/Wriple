@@ -61,6 +61,7 @@ export class RadarVisualizer {
   }
 
   createRadarPoint(x, y) {
+    // TODO: Add a distance text beside marker
     const point = document.createElement('div');
     point.className = 'point';
     point.style.left = `${x}px`;
@@ -71,14 +72,13 @@ export class RadarVisualizer {
   async tick() {
     try {
       const data = await API.getRadarData();
-      // this.targetDistance.textContent = `${data.distance}m`
 
-      if (data.modeStatus === 1) {
-        this.setAsidesTexts({
-          targetAngle: `${data.angle}°`,
-          targetDistance: `${data.distance}m`,
-        });
-      }
+      // if (data.modeStatus === 1) {
+      //   this.setAsidesTexts({
+      //     targetAngle: `${data.angle}°`,
+      //     targetDistance: `${data.distance}m`,
+      //   });
+      // }
 
       this.targetContainer.innerHTML = '';
       const x = 0;

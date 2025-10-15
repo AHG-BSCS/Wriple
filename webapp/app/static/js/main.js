@@ -36,7 +36,7 @@ const radar = new RadarVisualizer({
   button: UI.floatingButtonNodes.targetRadarBtn,
   targetContainer: UI.visualizerNodes.targetContainer,
   radarContainer: UI.visualizerNodes.radarContainer,
-  targetDistance: UI.headerNodes.signal_var,
+  targetDistance: UI.headerNodes.signalVar,
   setAsidesTexts: UI.setAsidesTexts.bind(UI)
 });
 
@@ -76,6 +76,9 @@ function stopVisualizers() {
 async function updatePresenceDisplay() {
   const data = await API.getPresenceStatus();
   UI.setPresenceTexts(data);
+
+  if (expChart.visible)
+    expChart.push(data.noise);
 }
 
 async function updateMonitorDisplay() {
@@ -87,8 +90,6 @@ async function updateMonitorDisplay() {
   }
   
   UI.setHeaderTexts(data);
-  if (expChart.visible)
-    expChart.push(data.exp);
 }
 
 async function startRecording(recordModeBtn) {

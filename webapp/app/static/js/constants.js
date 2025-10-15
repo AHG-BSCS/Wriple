@@ -24,7 +24,7 @@ export const SELECTORS = {
   darkModeSwitch: '#dark-mode-switch',
 
   presenceStatus: '#presence-status',
-  signal_var: '#signal-var',
+  signalVar: '#signal-var',
   packetCount: '#packets-count',
   packetLoss: '#packet-loss',
   expValue: '#exp-value',
@@ -166,8 +166,8 @@ export const RADAR = {
 export const HEATMAP = {
   radius: 1,
   blur: 0,
-  maxColumns: 150, // 5 seconds of data
-  subcarriers: 79, // TODO: Update the subcarrier count on launch
+  maxColumns: 150,
+  subcarriers: 40, // TODO: Update the subcarrier count on launch
   rangeGates: 16,
   dopplerBins: 20,
   delayCsi: 100,

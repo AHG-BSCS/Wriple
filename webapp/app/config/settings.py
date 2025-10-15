@@ -76,7 +76,7 @@ class VisualizerConfiguration:
     AVERAGED: bool = True
     AVERAGED_WINDOWS: list = [(0, 10), (10, -1)]
     SUBCARRIER_COUNT: int = 192
-    HEAT_SUBCARRIER_SLICES: list = [[2, 27], [38, 64], [100, 128]]
+    HEAT_SUBCARRIER_SLICES: list = [[30, 70]]
     AMPS_SUBCARRIER: list = [(2, 27), (38, 64), (65, 93), (100, 128), (129, 157), (164, 192)]
 
     HEAT_SIGNAL_WINDOW: int = 60
@@ -123,4 +123,5 @@ class PredictionConfiguration:
     PRED_SIGNAL_WINDOW: int = 120
     FEATURE_XHEIGHT: int = 4
     FEATURE_XWIDTH: int = 5
-    PRED_THRESHOLD: float = 0.9079
+    PRED_THRESHOLD: float = 0.93
+    # PRED_THRESHOLD: float = 0.9079
