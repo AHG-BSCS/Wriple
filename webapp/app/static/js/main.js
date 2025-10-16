@@ -26,7 +26,7 @@ const gatesHeatmap = new HeatmapVisualizer({
   maxValue: parseFloat(UI.sliderNodes.gatesMaxSlider.value)
 });
 
-const expChart = new LineChart({
+const noiseLineChart = new LineChart({
   context: UI.visualizerNodes.expLineChartCanvasCtx,
   button: UI.floatingButtonNodes.expChartBtn,
   container: UI.visualizerNodes.expLineChartContainer
@@ -50,7 +50,7 @@ function clearVisualizers() {
   radar.clear();
   ampHeatmap.clear();
   gatesHeatmap.clear();
-  expChart.clear();
+  noiseLineChart.clear();
   d3plot.clear();
   
   UI.setHeaderTexts();
@@ -61,6 +61,7 @@ function stopVisualizers() {
   radar.stop();
   ampHeatmap.stop();
   gatesHeatmap.stop();
+  noiseLineChart.stop();
   d3plot.stop();
 
   UI.setHeaderTexts();
@@ -76,9 +77,6 @@ function stopVisualizers() {
 async function updatePresenceDisplay() {
   const data = await API.getPresenceStatus();
   UI.setPresenceTexts(data);
-
-  if (expChart.visible)
-    expChart.push(data.noise);
 }
 
 async function updateMonitorDisplay() {
@@ -135,6 +133,7 @@ async function startMonitoring(monitorModeBtn) {
   if (radar.visible) radar.start();
   if (ampHeatmap.visible) ampHeatmap.start();
   if (gatesHeatmap.visible) gatesHeatmap.start();
+  if (noiseLineChart.visible) noiseLineChart.start();
   if (d3plot.visible) d3plot.start();
 }
 
@@ -270,8 +269,9 @@ function wireFloatingActionButtons() {
   });
 
   UI.floatingButtonNodes.expChartBtn.addEventListener('click', () => {
-    if (expChart.visible) expChart.clear();
-    else expChart.init();
+    if (noiseLineChart.visible) noiseLineChart.clear();
+    else if (UI.isMonitoring()) noiseLineChart.start();
+    else noiseLineChart.init();
   });
 
   UI.floatingButtonNodes.d3PlotBtn.addEventListener('click', () => {

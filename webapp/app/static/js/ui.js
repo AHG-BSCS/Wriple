@@ -167,8 +167,8 @@ export const UI = {
   setPresenceTexts(text = {}) {
     const n = this.headerNodes;
     n.presenceStatus.textContent = text?.presence || '?';
-    n.packetLoss.textContent = text?.loss || '0%';
-    n.signalVar.textContent = text?.noise || '0.0';
+    n.packetLoss.textContent = text?.packetLoss || '0%';
+    n.signalVar.textContent = text?.ampVariance || '0.0';
   },
 
   setAsidesTexts(texts = {}) {

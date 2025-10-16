@@ -181,7 +181,8 @@ export const LINECHART = {
   pointRadius: 0,
   maxDataPoints: 120, // 30 seconds of data at 1Hz
   suggestedMin: 0,
-  suggestedMax: 1
+  suggestedMax: 1,
+  delayLineChart: 120
 }
 
 export const D3PLOT = {

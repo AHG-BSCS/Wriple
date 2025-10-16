@@ -86,6 +86,11 @@ def create_api_routes(app, detection_system):
         
         return jsonify({'latestDoppler': heatmap}), 200
     
+    @app.route('/get_signal_var', methods=['GET'])
+    def get_signal_var():
+        ampVariance = detection_system.csi_processor.get_amplitude_variance()
+        return jsonify({'ampVariance': ampVariance}), 200
+    
     @app.route('/get_3d_plot_data', methods=['GET'])
     def get_3d_plot_data():
         # TODO: Visualize the amps using 3D plot

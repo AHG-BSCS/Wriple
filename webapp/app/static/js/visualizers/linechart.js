@@ -1,3 +1,4 @@
+import { API } from '../api.js';
 import { LINECHART, UI_COLORS } from '../constants.js';
 
 export class LineChart {
@@ -8,6 +9,7 @@ export class LineChart {
     this.chart = null;
 
     this.visible = false;
+    this.interval = null;
     this.tick = 0;
 
     this.context.canvas.height = LINECHART.height;
@@ -35,7 +37,7 @@ export class LineChart {
       data: {
         labels: [],
         datasets: [{
-          label: 'Amplitude',
+          label: 'Variance',
           data: [],
           borderColor: 'rgb(31, 41, 55)',
           backgroundColor: 'rgba(148, 163, 183, 0.1)',
@@ -57,7 +59,7 @@ export class LineChart {
             }
           },
           y: { 
-            title: { display: true, text: 'Amplitude' },
+            title: { display: true, text: 'Variance' },
             suggestedMin: LINECHART.suggestedMin,
             suggestedMax: LINECHART.suggestedMax
           }
@@ -65,6 +67,21 @@ export class LineChart {
         plugins: { legend: { display: false }}
       }
     });
+  }
+
+  async pushData() {
+    if (!this.visible) return;
+    const data = await API.getSignalVar();
+    this.push(data.ampVariance);
+  }
+
+  start() {
+    this.init();
+    this.interval = setInterval(() => this.pushData(), LINECHART.delayLineChart);
+  }
+
+  stop() {
+    clearInterval(this.interval);
   }
 
   clear() {
@@ -79,7 +96,6 @@ export class LineChart {
   }
 
   push(value) {
-    if (!this.chart) this.init();
     // 30 seconds of data at 1Hz
     if (this.chart.data.labels.length >= LINECHART.maxDataPoints) {
       this.chart.data.labels.shift();

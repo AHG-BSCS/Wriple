@@ -164,14 +164,14 @@ class HumanDetectionSystem:
         if self.rssi:
             return {
                 'presence': self.predict_presence(),
-                'loss': self.network_manager.get_packet_loss(),
-                'noise': self.csi_processor.get_amplitude_variance()
+                'packetLoss': self.network_manager.get_packet_loss(),
+                'ampVariance': self.csi_processor.get_amplitude_variance()
             }
         else:
             return {
                 'presence': '?',
-                'loss': -1,
-                'noise': 0.0
+                'packetLoss': -1,
+                'ampVariance': 0.0
             }
     
     def get_radar_status(self) -> dict:
