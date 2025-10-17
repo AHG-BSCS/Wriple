@@ -7,7 +7,6 @@ export const SELECTORS = {
   gatesHeatmapBtn: '#gates-heatmap-btn',
   noiseChartBtn: '#noise-chart-btn',
   detectionChartBtn: '#detection-chart-btn',
-  d3PlotBtn: '#d3-plot-btn',
 
   sidebarContainer: '#sidebar-container',
   collapseBtn: '#collapse-btn',
@@ -69,8 +68,6 @@ export const SELECTORS = {
 
   detectionChartCanvas: '#detection-chart-canvas',
   detectionChartContainer: '#detection-chart-container',
-
-  d3PlotContainer: '#d3-plot-container',
 
   datasetList: '#dataset-list',
 };
@@ -189,26 +186,6 @@ export const LINECHART = {
   noiseChartDelay: 500,
   detectionChartDelay: 1000 // The same as delayPresenceInterval
 }
-
-export const D3PLOT = {
-  svgId: '#d3-plot',
-  delayD3Plot: 333,
-  gridStrokeColor: 'black',
-  gridStrokeWidth: 0.3,
-  gridFillOpacity: 0.8,
-  pointRadius: 3,
-  pointOpacity: 1,
-  yScaleStrokeColor: 'black',
-  yScaleStrokeWidth: 0.5,
-  yTextFontFamily: 'system-ui, sans-serif',
-  center: { x: 400, y: 350 },
-  startYAngle: 90,
-  startXAngle: 90.5,
-  scale: 30,
-  row: 20,
-  dragRotateSensitivity: -360,
-  animateDuration: 1000,
-};
 
 export const UI_COLORS = {
   tabSelectedColor: '#D1D5DB',

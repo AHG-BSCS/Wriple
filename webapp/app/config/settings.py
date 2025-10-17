@@ -94,9 +94,6 @@ class VisualizerConfiguration:
     RDM_SMOOTHING_ALPHA: float = 0.5 # 0.5 => Average of current and last non-zero
     RDM_GATES_THRESHOLD: list = [16000,5000,500,250,150,120,100,80,80,80,70,70,70,70,70,70]
 
-    D3_STD_THRESHOLD: float = 1.75
-    D3_VISUALIZER_SCALE: tuple = (-10, 10)
-
     # 20 * doppler with 16 gates
     MMWAVE_DATA: list = [[0] * 16, [0] * 16, [0] * 16, [0] * 16,
                         [0] * 16, [0] * 16, [0] * 16, [0] * 16,

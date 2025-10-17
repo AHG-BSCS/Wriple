@@ -40,7 +40,6 @@ export const API = {
   getchAmplitudeData: () => getJson('/get_amplitude_data'),
   getRadarData: () => getJson('/get_radar_data'),
   getRdmData: () => getJson('/get_rdm_data'),
-  get3dPlotData: () => getJson('/get_3d_plot_data'),
   
   getCsvFiles: () => getJson('/get_csv_files'),
   readCsvFileMeta: (filename) => postJson('/read_csv_file_meta', filename),

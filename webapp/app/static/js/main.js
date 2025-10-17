@@ -4,7 +4,6 @@ import { OptionsUI } from './options.js';
 import { HeatmapVisualizer } from './visualizers/heatmap.js';
 import { RadarVisualizer } from './visualizers/radar.js';
 import { LineChart } from './visualizers/linechart.js';
-import { D3Plot } from './visualizers/d3plot.js';
 import { MAIN } from './constants.js';
 
 let monitorInterval = null;
@@ -48,18 +47,12 @@ const radar = new RadarVisualizer({
   setAsidesTexts: UI.setAsidesTexts.bind(UI)
 });
 
-const d3plot = new D3Plot({
-  button: UI.floatingButtonNodes.d3PlotBtn,
-  container: UI.visualizerNodes.d3PlotContainer,
-});
-
 function clearVisualizers() {
   // Assuming that monitoring is stopped
   radar.clear();
   ampHeatmap.clear();
   gatesHeatmap.clear();
   noiseChart.clear();
-  d3plot.clear();
   
   UI.setHeaderTexts();
   UI.setAsidesTexts();
@@ -70,7 +63,6 @@ function stopVisualizers() {
   ampHeatmap.stop();
   gatesHeatmap.stop();
   noiseChart.stop();
-  d3plot.stop();
 
   UI.setHeaderTexts();
   UI.setAsidesTexts();
@@ -146,7 +138,6 @@ async function startMonitoring(monitorModeBtn) {
   if (ampHeatmap.visible) ampHeatmap.start();
   if (gatesHeatmap.visible) gatesHeatmap.start();
   if (noiseChart.visible) noiseChart.start();
-  if (d3plot.visible) d3plot.start();
 }
 
 function wireSidebar() {
@@ -289,17 +280,6 @@ function wireFloatingActionButtons() {
   UI.floatingButtonNodes.detectionChartBtn.addEventListener('click', () => {
     if (detectionChart.visible) detectionChart.clear();
     else detectionChart.init();
-  });
-
-  UI.floatingButtonNodes.d3PlotBtn.addEventListener('click', () => {
-    if (d3plot.visible) {
-      d3plot.stop();
-      d3plot.clear();
-    } else {
-      d3plot.show();
-      if (UI.isMonitoring())
-        d3plot.start();
-    }
   });
 }
 

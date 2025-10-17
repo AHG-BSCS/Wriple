@@ -14,7 +14,6 @@ export const UI = {
     gatesHeatmapBtn: $(SELECTORS.gatesHeatmapBtn),
     noiseChartBtn: $(SELECTORS.noiseChartBtn),
     detectionChartBtn: $(SELECTORS.detectionChartBtn),
-    d3PlotBtn: $(SELECTORS.d3PlotBtn)
   },
 
   sidebarNodes: {
@@ -78,8 +77,6 @@ export const UI = {
   
     detectionChartCanvasCtx: document.querySelector(SELECTORS.detectionChartCanvas).getContext('2d'),
     detectionChartContainer: $(SELECTORS.detectionChartContainer),
-
-    d3PlotContainer: $(SELECTORS.d3PlotContainer),
   },
 
   sliderNodes: {
@@ -245,7 +242,6 @@ export const UI = {
     this.hideUI(n.gatesHeatmapContainer);
     this.hideUI(n.noiseChartContainer);
     this.hideUI(n.detectionChartContainer);
-    this.hideUI(n.d3PlotContainer);
   },
 
   hideElements() {

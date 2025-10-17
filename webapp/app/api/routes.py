@@ -91,12 +91,6 @@ def create_api_routes(app, detection_system):
         ampVariance = detection_system.csi_processor.get_amplitude_variance()
         return jsonify({'ampVariance': ampVariance}), 200
     
-    @app.route('/get_3d_plot_data', methods=['GET'])
-    def get_3d_plot_data():
-        # TODO: Visualize the amps using 3D plot
-        latestAmps = detection_system.csi_processor._amplitude_queue[-1]
-        return jsonify({'latestAmps': []}), 200
-    
     # CSV File Management Routes
     
     @app.route('/get_csv_files', methods=['GET'])

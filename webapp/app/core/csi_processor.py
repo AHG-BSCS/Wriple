@@ -26,8 +26,6 @@ class CSIProcessor:
         self._heat_signal_window = VisualizerConfiguration.HEAT_SIGNAL_WINDOW
         self._heat_penalty_factor = VisualizerConfiguration.HEAT_PENALTY_FACTOR
         self._heat_diff_threshold = VisualizerConfiguration.HEAT_DIFF_THRESHOLD
-        # Use a scaler model based from dataset to avoid fit_transform()
-        self._d3_std_threshold = VisualizerConfiguration.D3_STD_THRESHOLD
 
         self._cutoff = VisualizerConfiguration.CUTOFF
         self._fs = VisualizerConfiguration.FS
