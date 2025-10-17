@@ -12,7 +12,8 @@ export const UI = {
     targetRadarBtn: $(SELECTORS.targetRadarBtn),
     amplitudeHeatmapBtn: $(SELECTORS.amplitudeHeatmapBtn),
     gatesHeatmapBtn: $(SELECTORS.gatesHeatmapBtn),
-    expChartBtn: $(SELECTORS.expChartBtn),
+    noiseChartBtn: $(SELECTORS.noiseChartBtn),
+    detectionChartBtn: $(SELECTORS.detectionChartBtn),
     d3PlotBtn: $(SELECTORS.d3PlotBtn)
   },
 
@@ -72,8 +73,11 @@ export const UI = {
     gatesCanvas: $(SELECTORS.gatesCanvas),
     gatesHeatmapContainer: $(SELECTORS.gatesHeatmapContainer),
 
-    expLineChartCanvasCtx: document.querySelector(SELECTORS.expLineChartCanvas).getContext('2d'),
-    expLineChartContainer: $(SELECTORS.expLineChartContainer),
+    noiseChartCanvasCtx: document.querySelector(SELECTORS.noiseChartCanvas).getContext('2d'),
+    noiseChartContainer: $(SELECTORS.noiseChartContainer),
+  
+    detectionChartCanvasCtx: document.querySelector(SELECTORS.detectionChartCanvas).getContext('2d'),
+    detectionChartContainer: $(SELECTORS.detectionChartContainer),
 
     d3PlotContainer: $(SELECTORS.d3PlotContainer),
   },
@@ -239,7 +243,8 @@ export const UI = {
     // this.hideUI(n.radarContainer);
     this.hideUI(n.amplitudeHeatmapContainer);
     this.hideUI(n.gatesHeatmapContainer);
-    this.hideUI(n.expLineChartContainer);
+    this.hideUI(n.noiseChartContainer);
+    this.hideUI(n.detectionChartContainer);
     this.hideUI(n.d3PlotContainer);
   },
 

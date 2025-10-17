@@ -26,10 +26,18 @@ const gatesHeatmap = new HeatmapVisualizer({
   maxValue: parseFloat(UI.sliderNodes.gatesMaxSlider.value)
 });
 
-const noiseLineChart = new LineChart({
-  context: UI.visualizerNodes.expLineChartCanvasCtx,
-  button: UI.floatingButtonNodes.expChartBtn,
-  container: UI.visualizerNodes.expLineChartContainer
+const noiseChart = new LineChart({
+  context: UI.visualizerNodes.noiseChartCanvasCtx,
+  button: UI.floatingButtonNodes.noiseChartBtn,
+  container: UI.visualizerNodes.noiseChartContainer,
+  type: 'noise'
+});
+
+const detectionChart = new LineChart({
+  context: UI.visualizerNodes.detectionChartCanvasCtx,
+  button: UI.floatingButtonNodes.detectionChartBtn,
+  container: UI.visualizerNodes.detectionChartContainer,
+  type: 'detection'
 });
 
 const radar = new RadarVisualizer({
@@ -50,7 +58,7 @@ function clearVisualizers() {
   radar.clear();
   ampHeatmap.clear();
   gatesHeatmap.clear();
-  noiseLineChart.clear();
+  noiseChart.clear();
   d3plot.clear();
   
   UI.setHeaderTexts();
@@ -61,7 +69,7 @@ function stopVisualizers() {
   radar.stop();
   ampHeatmap.stop();
   gatesHeatmap.stop();
-  noiseLineChart.stop();
+  noiseChart.stop();
   d3plot.stop();
 
   UI.setHeaderTexts();
@@ -77,6 +85,10 @@ function stopVisualizers() {
 async function updatePresenceDisplay() {
   const data = await API.getPresenceStatus();
   UI.setPresenceTexts(data);
+  if (detectionChart.visible) {
+    if (data.presence === 'Yes') detectionChart.push(1);
+    else detectionChart.push(0);
+  }
 }
 
 async function updateMonitorDisplay() {
@@ -133,7 +145,7 @@ async function startMonitoring(monitorModeBtn) {
   if (radar.visible) radar.start();
   if (ampHeatmap.visible) ampHeatmap.start();
   if (gatesHeatmap.visible) gatesHeatmap.start();
-  if (noiseLineChart.visible) noiseLineChart.start();
+  if (noiseChart.visible) noiseChart.start();
   if (d3plot.visible) d3plot.start();
 }
 
@@ -268,10 +280,15 @@ function wireFloatingActionButtons() {
     }
   });
 
-  UI.floatingButtonNodes.expChartBtn.addEventListener('click', () => {
-    if (noiseLineChart.visible) noiseLineChart.clear();
-    else if (UI.isMonitoring()) noiseLineChart.start();
-    else noiseLineChart.init();
+  UI.floatingButtonNodes.noiseChartBtn.addEventListener('click', () => {
+    if (noiseChart.visible) noiseChart.clear();
+    else if (UI.isMonitoring()) noiseChart.start();
+    else noiseChart.init();
+  });
+
+  UI.floatingButtonNodes.detectionChartBtn.addEventListener('click', () => {
+    if (detectionChart.visible) detectionChart.clear();
+    else detectionChart.init();
   });
 
   UI.floatingButtonNodes.d3PlotBtn.addEventListener('click', () => {

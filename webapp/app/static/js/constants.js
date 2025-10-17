@@ -5,7 +5,8 @@ export const SELECTORS = {
   targetRadarBtn: '#target-radar-btn',
   amplitudeHeatmapBtn: '#amplitude-heatmap-btn',
   gatesHeatmapBtn: '#gates-heatmap-btn',
-  expChartBtn: '#exp-line-chart-btn',
+  noiseChartBtn: '#noise-chart-btn',
+  detectionChartBtn: '#detection-chart-btn',
   d3PlotBtn: '#d3-plot-btn',
 
   sidebarContainer: '#sidebar-container',
@@ -63,8 +64,11 @@ export const SELECTORS = {
   gatesMaxSlider: '#gates-max-slider',
   gatesMaxValue: '#gates-max-value',
   
-  expLineChartCanvas: '#exp-chart',
-  expLineChartContainer: '#exp-chart-container',
+  noiseChartCanvas: '#noise-chart-canvas',
+  noiseChartContainer: '#noise-chart-container',
+
+  detectionChartCanvas: '#detection-chart-canvas',
+  detectionChartContainer: '#detection-chart-container',
 
   d3PlotContainer: '#d3-plot-container',
 
@@ -175,14 +179,15 @@ export const HEATMAP = {
 };
 
 export const LINECHART = {
-  height: 200,
-  width: 680,
+  height: 250,
+  width: 900,
   tension: 0.3,
   pointRadius: 0,
-  maxDataPoints: 120, // 30 seconds of data at 1Hz
+  maxDataPoints: 52,
   suggestedMin: 0,
   suggestedMax: 1,
-  delayLineChart: 120
+  noiseChartDelay: 500,
+  detectionChartDelay: 1000 // The same as delayPresenceInterval
 }
 
 export const D3PLOT = {
