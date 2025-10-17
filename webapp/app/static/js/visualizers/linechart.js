@@ -42,7 +42,7 @@ export class LineChart {
     this.show();
     if (this.chart) return;
     
-    const yLabel = this.type === 'noise' ? 'Variance' : 'Detection';
+    const yLabel = this.type === 'noise' ? 'Variance' : 'Presence';
     const xAxisTickDelay = this.xAxisTickDelay;
     const xAxisTickDivider = this.xAxisTickDivider;
     const fontSize = 18

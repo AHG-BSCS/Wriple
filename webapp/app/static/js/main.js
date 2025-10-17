@@ -340,7 +340,7 @@ function wireSelections() {
 }
 
 function init() {
-  UI.hideElements();
+  // UI.hideElements();
   wireSidebar();
   wireFloatingActionButtons();
   wireHeatmapSliders();

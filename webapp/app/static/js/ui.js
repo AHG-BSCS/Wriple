@@ -251,8 +251,8 @@ export const UI = {
   hideElements() {
     this.sidebarNodes.historyTabBtn.classList.add('hidden');
     this.sidebarNodes.datasetTabBtn.classList.add('hidden');
-    this.sidebarNodes.historyGroup.forEach(el => this.hideUI(el));
-    this.sidebarNodes.datasetGroup.forEach(el => this.hideUI(el));
+    // this.sidebarNodes.historyGroup.forEach(el => this.hideUI(el));
+    // this.sidebarNodes.datasetGroup.forEach(el => this.hideUI(el));
     this.asideNodes.asideContainer.classList.add('hidden');
   },
 

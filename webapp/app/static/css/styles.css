@@ -59,10 +59,13 @@ input[type="range"]::-webkit-slider-thumb {
   color: #fff;
   font-size: 16px;
   font-weight: 500;
-  padding: 6px 6px;
-  border-radius: 4px;
+  padding-top: 2px;
+  padding-bottom: 4px;
+  padding-inline: 6px;
+  border-radius: 6px;
   white-space: nowrap;
   transition: opacity .18s ease;
+  pointer-events: none;
 }
 
 .status-wrapper:hover .status-tooltip {
@@ -73,4 +76,54 @@ input[type="range"]::-webkit-slider-thumb {
 .status-wrapper:not(:hover) .status-tooltip {
   transition-delay: 0s;
   opacity: 0;
+}
+
+
+/* Floating Button Tooltip */
+
+.button-tooltip {
+  position: absolute;
+  bottom: 110%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--primary-color);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+  padding-top: 4px;
+  padding-bottom: 6px;
+  padding-inline: 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  transition: opacity .3s ease, visibility .3s ease;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.button-wrapper:hover .button-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 1s;
+}
+
+.button-wrapper:not(:hover) .button-tooltip {
+  transition-delay: 0s;
+}
+
+/* Hide Dataset Related Elements */
+
+#aside-container {
+  visibility: hidden;
+}
+
+#record-mode-btn {
+  visibility: hidden;
+}
+
+#history-tab-btn {
+  visibility: hidden;
+}
+
+#dataset-tab-btn {
+  visibility: hidden;
 }
