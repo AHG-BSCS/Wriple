@@ -128,7 +128,7 @@ class CSIProcessor:
         mask = np.abs(diff) >= self._heat_diff_threshold
         highlighted = np.where(
             mask,
-            np.sign(diff) * (np.abs(diff) ** self._heat_penalty_factor),
+            (np.abs(diff) ** self._heat_penalty_factor),
             0.0
         ).tolist()
         return highlighted

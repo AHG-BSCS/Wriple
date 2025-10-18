@@ -74,6 +74,7 @@ def create_api_routes(app, detection_system):
     def get_rdm_data():
         raw = detection_system.rdm_data[-1]
         heatmap = []
+        max = 10000
         
         # Apply Thresholds
         thresholds = detection_system.model_manager.mmWave_thresholds
@@ -82,6 +83,8 @@ def create_api_routes(app, detection_system):
                 threshold = thresholds[doppler_idx][gate_idx]
                 if value <= threshold:
                     value = 0.0
+                else:
+                    value = value / max
                 heatmap.append([doppler_idx, gate_idx, value])
         
         return jsonify({'latestDoppler': heatmap}), 200

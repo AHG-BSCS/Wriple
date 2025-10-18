@@ -4,12 +4,14 @@
     --background-color: #94A3B7;
 }
 
+/* Visualizers */
+
 .point {
     width: 15px;
     height: 15px;
     background-color: var(--secondary-color);
     border-radius: 50%;
-    box-shadow: 0px 0px 0px 15px rgba(120, 53, 15, 0.2);
+    box-shadow: 0px 0px 0px 25px rgba(120, 53, 15, 0.2);
     position: absolute;
     transform: translate(-50%, -50%);
 }
@@ -20,25 +22,10 @@
     vertical-align: middle;
 }
 
-#phase-max-slider {
+#doppler-max-slider {
     writing-mode: vertical-lr;
     direction: rtl;
     vertical-align: middle;
-}
-
-#gates-max-slider {
-    writing-mode: vertical-lr;
-    direction: rtl;
-    vertical-align: middle;
-}
-
-input[type="range"]::-webkit-slider-thumb {
-    appearance: none;
-    width: 15px;
-    height: 15px;
-    background: var(--primary-color);
-    border-radius: 8px;
-    cursor: pointer;
 }
 
 #visualizer-title {
@@ -48,27 +35,40 @@ input[type="range"]::-webkit-slider-thumb {
   border-radius: 6px 6px 0 0;
   font-weight: 500;
   font-size: 16px;
+  pointer-events: none;
 }
 
-.heatmap-y-axis {
+#heatmap-y-axis-label {
   display: flex;
   justify-content: center;
   writing-mode: vertical-rl;
   transform: rotate(180deg);
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 500;
+  pointer-events: none;
+}
+
+#heatmap-x-axis-label {
+  display: block;
+  width: 100%;
+  height: 0;
+  text-align: center;
+  font-size: 18px;
+  transform: translateY(-2.25rem);
+  font-weight: 500;
+  pointer-events: none;
 }
 
 /* Status Bar Tooltip */
 
-.status-wrapper {
+#status-bar-wrapper {
   position: relative;
   display: inline-flex;
   flex-direction: column;
   align-items: center;
 }
 
-.status-tooltip {
+#status-bar-tooltip {
   position: absolute;
   top: 140%;
   left: 50%;
@@ -85,20 +85,26 @@ input[type="range"]::-webkit-slider-thumb {
   pointer-events: none;
 }
 
-.status-wrapper:hover .status-tooltip {
+#status-bar-wrapper:hover #status-bar-tooltip {
   transition-delay: 1s;
   opacity: 1;
 }
 
-.status-wrapper:not(:hover) .status-tooltip {
+#status-bar-wrapper:not(:hover) #status-bar-tooltip {
   transition-delay: 0s;
   opacity: 0;
 }
 
-
 /* Floating Button Tooltip */
 
-.button-tooltip {
+.button-wrapper {
+  position: relative;
+  background-color: (var(--primary-color));
+  padding: 0.5rem;
+  border-radius: 1rem;
+}
+
+#button-tooltip {
   position: absolute;
   bottom: 110%;
   left: 50%;
@@ -115,14 +121,36 @@ input[type="range"]::-webkit-slider-thumb {
   pointer-events: none;
 }
 
-.button-wrapper:hover .button-tooltip {
+.button-wrapper:hover {
+  transform: scale(1.1);
+  transition: transform .18s ease;
+}
+
+.button-wrapper:hover #button-tooltip {
   opacity: 1;
   transition-delay: 1s;
 }
 
-.button-wrapper:not(:hover) .button-tooltip {
+.button-wrapper:not(:hover) #button-tooltip {
   opacity: 0;
   transition-delay: 0s;
+}
+
+#svg-button-icon {
+  width: 32px;
+  height: 32px;
+  fill: #ffffff;
+}
+
+/* Asides */
+
+input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 15px;
+    height: 15px;
+    background: var(--primary-color);
+    border-radius: 8px;
+    cursor: pointer;
 }
 
 /* Scroll Bar */

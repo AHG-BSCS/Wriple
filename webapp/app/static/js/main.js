@@ -17,12 +17,12 @@ const ampHeatmap = new HeatmapVisualizer({
   maxValue: parseFloat(UI.sliderNodes.amplitudeMaxSlider.value)
 });
 
-const gatesHeatmap = new HeatmapVisualizer({
-  canvas: UI.visualizerNodes.gatesCanvas,
+const dopplerHeatmap = new HeatmapVisualizer({
+  canvas: UI.visualizerNodes.dopplerCanvas,
   button: UI.floatingButtonNodes.gatesHeatmapBtn,
-  container: UI.visualizerNodes.gatesHeatmapContainer,
-  type: 'mmwave',
-  maxValue: parseFloat(UI.sliderNodes.gatesMaxSlider.value)
+  container: UI.visualizerNodes.dopplerHeatmapContainer,
+  type: 'doppler',
+  maxValue: parseFloat(UI.sliderNodes.dopplerMaxSlider.value)
 });
 
 const noiseChart = new LineChart({
@@ -51,7 +51,7 @@ function clearVisualizers() {
   // Assuming that monitoring is stopped
   radar.clear();
   ampHeatmap.clear();
-  gatesHeatmap.clear();
+  dopplerHeatmap.clear();
   noiseChart.clear();
   
   UI.setHeaderTexts();
@@ -61,7 +61,7 @@ function clearVisualizers() {
 function stopVisualizers() {
   radar.stop();
   ampHeatmap.stop();
-  gatesHeatmap.stop();
+  dopplerHeatmap.stop();
   noiseChart.stop();
 
   UI.setHeaderTexts();
@@ -136,7 +136,7 @@ async function startMonitoring(monitorModeBtn) {
 
   if (radar.visible) radar.start();
   if (ampHeatmap.visible) ampHeatmap.start();
-  if (gatesHeatmap.visible) gatesHeatmap.start();
+  if (dopplerHeatmap.visible) dopplerHeatmap.start();
   if (noiseChart.visible) noiseChart.start();
 }
 
@@ -263,11 +263,11 @@ function wireFloatingActionButtons() {
   });
 
   UI.floatingButtonNodes.gatesHeatmapBtn.addEventListener('click', () => {
-    if (gatesHeatmap.visible) gatesHeatmap.clear();
+    if (dopplerHeatmap.visible) dopplerHeatmap.clear();
     else {
-      gatesHeatmap.show();
+      dopplerHeatmap.show();
       if (UI.isMonitoring())
-        gatesHeatmap.start();
+        dopplerHeatmap.start();
     }
   });
 
@@ -290,10 +290,10 @@ function wireHeatmapSliders() {
     ampHeatmap.setMaxValue(newMax);
   });
 
-  UI.sliderNodes.gatesMaxSlider.addEventListener('input', (e) => {
+  UI.sliderNodes.dopplerMaxSlider.addEventListener('input', (e) => {
     const newMax = parseFloat(e.target.value);
-    UI.sliderNodes.gatesMaxValue.textContent = newMax;
-    gatesHeatmap.setMaxValue(newMax);
+    UI.sliderNodes.dopplerMaxValue.textContent = newMax;
+    dopplerHeatmap.setMaxValue(newMax);
   });
 }
 

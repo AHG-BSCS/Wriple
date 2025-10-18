@@ -58,10 +58,10 @@ export const SELECTORS = {
   amplitudeMaxSlider: '#amplitude-max-slider',
   amplitudeMaxValue: '#amplitude-max-value',
 
-  gatesCanvas: '#gates-heatmap',
-  gatesHeatmapContainer: '#gates-heatmap-container',
-  gatesMaxSlider: '#gates-max-slider',
-  gatesMaxValue: '#gates-max-value',
+  dopplerCanvas: '#doppler-heatmap',
+  dopplerHeatmapContainer: '#doppler-heatmap-container',
+  dopplerMaxSlider: '#doppler-max-slider',
+  dopplerMaxValue: '#doppler-max-value',
   
   noiseChartCanvas: '#noise-chart-canvas',
   noiseChartContainer: '#noise-chart-container',
@@ -153,7 +153,7 @@ export const OPTIONS = {
   };
 
 export const MAIN = {
-  delaySystemIconStatus: 10000,
+  delaySystemIconStatus: 2000,
   delayMonitorInterval: 125,
   delayPresenceInterval: 1000,
   delayRecordingAction: 1000
@@ -172,7 +172,16 @@ export const HEATMAP = {
   rangeGates: 16,
   dopplerBins: 20,
   delayCsi: 100,
-  delayMmwave: 333 // Maximum LD2420 refresh rate
+  delayMmwave: 333, // LD2420 maximum refresh rate
+  gradientWriple: {
+    0.00: '#94A3B7',
+    0.30: '#64748B',
+    0.50: '#475569',
+    0.70: '#334155',
+    0.89: '#1F2937',
+    0.90: '#D97706',
+    1.00: '#78350F'
+  },
 };
 
 export const LINECHART = {

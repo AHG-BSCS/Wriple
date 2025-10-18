@@ -12,22 +12,23 @@ export class HeatmapVisualizer {
 
     this.heat = simpleheat(canvas);
     this.heat.radius(HEATMAP.radius, HEATMAP.blur);
+    this.heat.gradient(HEATMAP.gradientWriple);
     this.heat.max(maxValue);
     this.buffer = Array.from({length: HEATMAP.subcarriers}, () => []);
 
-    if (type !== 'mmwave') {
+    if (type === 'amplitude') {
       this.rows = HEATMAP.subcarriers;
       this.maxCols = HEATMAP.maxColumns;
       // Crop the heatmaps to canvas
       canvas.height = HEATMAP.subcarriers - 1;
       canvas.width = HEATMAP.maxColumns - 1;
     }
-    else {
-      this.rows = HEATMAP.dopplerBins;
-      this.maxCols = HEATMAP.rangeGates;
+    else if (type === 'doppler') {
+      this.rows = HEATMAP.rangeGates;
+      this.maxCols = HEATMAP.dopplerBins;
       // Crop the heatmaps to canvas
-      canvas.height = HEATMAP.dopplerBins - 1;
-      canvas.width = HEATMAP.rangeGates - 1;
+      canvas.height = HEATMAP.rangeGates - 1;
+      canvas.width = HEATMAP.dopplerBins - 1;
     }
   }
 
@@ -51,7 +52,7 @@ export class HeatmapVisualizer {
   }
 
   start() {
-    if (this.type !== 'mmwave')
+    if (this.type === 'amplitude')
       this.interval = setInterval(() => this.fetchAndDrawCsi(), HEATMAP.delayCsi);
     else
       this.interval = setInterval(() => this.fetchAndDrawMmwave(), HEATMAP.delayMmwave);

@@ -69,8 +69,8 @@ export const UI = {
     amplitudeCanvas: $(SELECTORS.amplitudeCanvas),
     amplitudeHeatmapContainer: $(SELECTORS.amplitudeHeatmapContainer),
 
-    gatesCanvas: $(SELECTORS.gatesCanvas),
-    gatesHeatmapContainer: $(SELECTORS.gatesHeatmapContainer),
+    dopplerCanvas: $(SELECTORS.dopplerCanvas),
+    dopplerHeatmapContainer: $(SELECTORS.dopplerHeatmapContainer),
 
     noiseChartCanvasCtx: document.querySelector(SELECTORS.noiseChartCanvas).getContext('2d'),
     noiseChartContainer: $(SELECTORS.noiseChartContainer),
@@ -81,10 +81,10 @@ export const UI = {
 
   sliderNodes: {
     amplitudeMaxSlider: $(SELECTORS.amplitudeMaxSlider),
-    gatesMaxSlider: $(SELECTORS.gatesMaxSlider),
+    dopplerMaxSlider: $(SELECTORS.dopplerMaxSlider),
 
     amplitudeMaxValue: $(SELECTORS.amplitudeMaxValue),
-    gatesMaxValue: $(SELECTORS.gatesMaxValue)
+    dopplerMaxValue: $(SELECTORS.dopplerMaxValue)
   },
 
   nodes: {
@@ -239,7 +239,7 @@ export const UI = {
     const n = this.visualizerNodes;
     // this.hideUI(n.radarContainer);
     this.hideUI(n.amplitudeHeatmapContainer);
-    this.hideUI(n.gatesHeatmapContainer);
+    this.hideUI(n.dopplerHeatmapContainer);
     this.hideUI(n.noiseChartContainer);
     this.hideUI(n.detectionChartContainer);
   },
