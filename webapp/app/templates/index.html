@@ -65,7 +65,7 @@
             </ul>
         </div>
         <!-- Lower Sidebar -->
-        <!-- <div class="space-y-4">
+        <div id="lower-sidebar" class="space-y-4">
             <ul>
                 <li id="setting-tab-btn" class="flex items-center gap-2 cursor-pointer hover:bg-gray-300 p-2 rounded" data-active="0">
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#1f2937" viewBox="0 0 256 256">
@@ -93,10 +93,10 @@
             </ul>
             <hr class="border-gray-800 my-2">
             <span class="sidebar-collapse text-xs text-center block">©2025 AHG Graphene</span>
-        </div> -->
+        </div>
     </nav>
 
-    <div class="flex flex-col flex-1 h-full">
+    <div class="flex flex-col flex-1">
         <header class="bg-gray-800 text-white px-4 py-3 flex justify-between items-center">
             <!-- Left Header -->
             <div class="space-x-2 flex items-center gap-2 min-w-fit mr-6">
@@ -122,7 +122,7 @@
                 </div>
                 <div class="border-l border-slate-400 h-8"></div>
                 <div class="space-x-1">
-                    <label class="font-semibold">RSSI:</label>
+                    <label class="font-semibold">STRENGTH:</label>
                     <span id="exp-value" class="font-bold text-3xl">0</span>
                 </div>
             </div>
@@ -154,7 +154,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" id="ld2420-status" width="32" height="32" fill="limegreen" viewBox="0 0 256 256">
                         <path d="M240,116H219.22A92.21,92.21,0,0,0,140,36.78V16a12,12,0,0,0-24,0V36.78A92.21,92.21,0,0,0,36.78,116H16a12,12,0,0,0,0,24H36.78A92.21,92.21,0,0,0,116,219.22V240a12,12,0,0,0,24,0V219.22A92.21,92.21,0,0,0,219.22,140H240a12,12,0,0,0,0-24ZM128,196a68,68,0,1,1,68-68A68.07,68.07,0,0,1,128,196Zm0-112a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,84Zm0,64a20,20,0,1,1,20-20A20,20,0,0,1,128,148Z"></path>
                     </svg>
-                    <span class="status-tooltip">mmWave</span>
+                    <span class="status-tooltip">LD2420</span>
                 </div>
                 <!-- Model -->
                 <div class="hover:scale-110 transition status-wrapper">
@@ -166,38 +166,63 @@
             </div>
         </header>
 
-        <div class="flex flex-1 overflow-hidden">
+        <div class="flex flex-1 overflow-y-auto scroll-container">
             <!-- Main Section -->
-            <main class="pt-4 pb-28 overflow-y-auto mx-auto space-y-4">
+            <main class="pt-4 pb-28 mx-auto space-y-6">
                 <!-- Target Radar -->
-                <div id="radar-container" class="max-w-4xl rounded shadow relative inline-block">
+                <div id="radar-container" class="max-w-4xl shadow-lg relative inline-block">
+                    <span id="visualizer-title" class="absolute">
+                        Target Radar
+                    </span>
                     <img src="static/images/radar-bg.png"/>
                     <div id="points" class="absolute top-0 left-0 w-full h-full"></div>
                 </div>
                 <!-- Amplitude Heatmap -->
-                <div id="amplitude-heatmap-container" class="flex justify-center dataset-hidden">
-                    <div class="flex flex-col items-center mr-4">
-                        <span id="amplitude-max-value" class="font-semibold text-gray-800">20</span>
-                        <input id="amplitude-max-slider" type="range" min="-30" max="50" step="1" value="20" class="w-4 h-44 bg-slate-400 rounded-lg appearance-none"/>
+                <div id="amplitude-heatmap-container" class="dataset-hidden">
+                    <span id="visualizer-title">
+                        Amplitude Heatmap
+                    </span>
+                    <div class="flex my-2 rounded-b-md shadow-md">
+                        <span class="heatmap-y-axis">Subcarrier</span>
+                        <canvas id="amplitude-heatmap" class="w-full h-56 mb-8 mt-2 border-2"></canvas>
+                        <div class="flex flex-col mx-2">
+                            <span id="amplitude-max-value" class="font-semibold text-gray-800">20</span>
+                            <input id="amplitude-max-slider" type="range" min="-30" max="50" step="1" value="20" class="w-4 h-52 bg-slate-400 rounded-lg appearance-none"/>
+                        </div>
                     </div>
-                    <canvas id="amplitude-heatmap" class="w-full h-52 rounded-t shadow"></canvas>
+                    <span class="block w-full h-0 text-center -translate-y-10 text-lg">Time</span>
                 </div>
                 <!-- Range Gates Heatmap -->
-                <div id="gates-heatmap-container" class="flex justify-center dataset-hidden">
-                    <div class="flex flex-col items-center mr-4">
-                        <span id="gates-max-value" class="font-semibold text-gray-800">10</span>
-                        <input id="gates-max-slider" type="range" min="1" max="20" step="1" value="1" class="w-4 h-44 bg-slate-400 rounded-lg appearance-none"/>
+                <div id="gates-heatmap-container" class="dataset-hidden">
+                    <span id="visualizer-title">
+                        Range-Doppler Heatmap
+                    </span>
+                    <div class="flex my-2 rounded-b-md shadow-md">
+                        <span class="heatmap-y-axis">Range Gate</span>
+                        <canvas id="gates-heatmap" class="w-full h-56 mb-8 mt-2 border-2"></canvas>
+                        <div class="flex flex-col mx-2">
+                            <span id="gates-max-value" class="font-semibold text-gray-800">10</span>
+                            <input id="gates-max-slider" type="range" min="1" max="20" step="1" value="1" class="w-4 h-52 bg-slate-400 rounded-lg appearance-none"/>
+                        </div>
                     </div>
-                    <canvas id="gates-heatmap" class="w-full h-52 rounded-b shadow"></canvas>
+                    <span class="block w-full h-0 text-center -translate-y-10 text-lg">Doppler</span>
                 </div>
                 <!-- Noise Line Chart -->
-                <div id="noise-chart-container" class="w-fit m-auto dataset-hidden">
-                    <canvas id="noise-chart-canvas" class="rounded shadow"></canvas>
+                <div id="noise-chart-container" class="dataset-hidden">
+                    <span id="visualizer-title">
+                        Noise Line Chart
+                    </span>
+                    <canvas id="noise-chart-canvas" class="mt-2 rounded-b-md shadow-md"></canvas>
                 </div>
                 <!-- Detection Line Chart -->
-                <div id="detection-chart-container" class="w-fit m-auto dataset-hidden">
-                    <canvas id="detection-chart-canvas" class="rounded shadow"></canvas>
+                <div id="detection-chart-container" class="dataset-hidden">
+                    <span id="visualizer-title">
+                        Detection Line Chart
+                    </span>
+                    <canvas id="detection-chart-canvas" class="mt-2 rounded-b-md shadow-md"></canvas>
                 </div>
+                <!-- Bottom Padding -->
+                <div class="h-20"></div>
             </main>
 
             <!-- Aside Section -->
@@ -351,7 +376,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#f5f5f5" viewBox="0 0 256 256" data-darkreader-inline-fill="" style="--darkreader-inline-fill: var(--darkreader-background-f5f5f5, #1e2021);">
                     <path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm-11.56,94.66-72,48A8,8,0,0,1,128,184a8,8,0,0,1-8-8V95L60.44,134.66a8,8,0,1,1-8.88-13.32l72-48A8,8,0,0,1,136,80v81.05l59.56-39.71a8,8,0,0,1,8.88,13.32Z"></path>
                 </svg>
-                <span class="button-tooltip">Range Gate</span>
+                <span class="button-tooltip">Range-Doppler</span>
             </button>
             <button id="noise-chart-btn" class="bg-gray-800 p-2 hover:scale-110 transition relative group rounded-2xl dataset-hidden button-wrapper">
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#f5f5f5" viewBox="0 0 256 256" data-darkreader-inline-fill="" style="--darkreader-inline-fill: var(--darkreader-background-f5f5f5, #1e2021);">

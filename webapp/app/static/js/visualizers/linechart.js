@@ -42,10 +42,10 @@ export class LineChart {
     this.show();
     if (this.chart) return;
     
-    const yLabel = this.type === 'noise' ? 'Variance' : 'Presence';
+    const yLabel = this.type === 'noise' ? 'Noise' : 'Presence';
     const xAxisTickDelay = this.xAxisTickDelay;
     const xAxisTickDivider = this.xAxisTickDivider;
-    const fontSize = 18
+    const fontSize = 18;
 
     this.chart = new Chart(this.context, {
       type: 'line',

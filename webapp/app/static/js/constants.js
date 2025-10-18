@@ -153,7 +153,7 @@ export const OPTIONS = {
   };
 
 export const MAIN = {
-  delaySystemIconStatus: 2000,
+  delaySystemIconStatus: 10000,
   delayMonitorInterval: 125,
   delayPresenceInterval: 1000,
   delayRecordingAction: 1000
@@ -177,7 +177,7 @@ export const HEATMAP = {
 
 export const LINECHART = {
   height: 250,
-  width: 900,
+  width: 890,
   tension: 0.3,
   pointRadius: 0,
   maxDataPoints: 52,

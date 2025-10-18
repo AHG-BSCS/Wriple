@@ -41,6 +41,24 @@ input[type="range"]::-webkit-slider-thumb {
     cursor: pointer;
 }
 
+#visualizer-title {
+  background-color: var(--primary-color);
+  color: #FFFFFF;
+  padding: 6px 10px;
+  border-radius: 6px 6px 0 0;
+  font-weight: 500;
+  font-size: 16px;
+}
+
+.heatmap-y-axis {
+  display: flex;
+  justify-content: center;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: 20px;
+  font-weight: 500;
+}
+
 /* Status Bar Tooltip */
 
 .status-wrapper {
@@ -57,14 +75,13 @@ input[type="range"]::-webkit-slider-thumb {
   transform: translate(-50%, 4px);
   background: var(--primary-color);
   color: #fff;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
-  padding-top: 2px;
-  padding-bottom: 4px;
+  padding-block: 4px;
   padding-inline: 6px;
   border-radius: 6px;
   white-space: nowrap;
-  transition: opacity .18s ease;
+  transition: opacity .3s ease;
   pointer-events: none;
 }
 
@@ -88,31 +105,46 @@ input[type="range"]::-webkit-slider-thumb {
   transform: translateX(-50%);
   background: var(--primary-color);
   color: #fff;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
-  padding-top: 4px;
-  padding-bottom: 6px;
+  padding-block: 6px;
   padding-inline: 8px;
   border-radius: 6px;
   white-space: nowrap;
-  transition: opacity .3s ease, visibility .3s ease;
-  visibility: hidden;
+  transition: opacity .3s ease;
   pointer-events: none;
 }
 
 .button-wrapper:hover .button-tooltip {
   opacity: 1;
-  visibility: visible;
   transition-delay: 1s;
 }
 
 .button-wrapper:not(:hover) .button-tooltip {
+  opacity: 0;
   transition-delay: 0s;
 }
 
-/* Hide Dataset Related Elements */
+/* Scroll Bar */
+
+.scroll-container {
+  scrollbar-width: thin;       /* Firefox */
+  scrollbar-color: #94A3B7 transparent;
+}
+
+/* Chrome/Edge/Safari */
+.scroll-container::-webkit-scrollbar {
+  width: 10px;
+}
+
+/* Hide Non-User Elements */
+
+#lower-sidebar {
+  visibility: hidden;
+}
 
 #aside-container {
+  width: 0;
   visibility: hidden;
 }
 
