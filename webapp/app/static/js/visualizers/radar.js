@@ -60,13 +60,22 @@ export class RadarVisualizer {
     return Math.atan2(x, y) * (180 / Math.PI);
   }
 
-  createRadarPoint(x, y) {
-    // TODO: Add a distance text beside marker
+  createRadarPoint(x, y, distance) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'point-wrapper';
+    wrapper.style.left = `${x}px`;
+    wrapper.style.top = `${y}px`;
+
     const point = document.createElement('div');
     point.className = 'point';
-    point.style.left = `${x}px`;
-    point.style.top = `${y}px`;
-    this.targetContainer.appendChild(point);
+
+    const label = document.createElement('span');
+    label.className = 'point-label';
+    label.textContent = `${distance} m`;
+
+    wrapper.appendChild(point);
+    wrapper.appendChild(label);
+    this.targetContainer.appendChild(wrapper);
   }
 
   async tick() {
@@ -83,8 +92,8 @@ export class RadarVisualizer {
       this.targetContainer.innerHTML = '';
       const x = 0;
       const y = data.distance;
-      this.createRadarPoint(this.centerX + x, this.radarRect.height - y * 45);
-      this.createRadarPoint(this.centerX + x, this.radarRect.height - y);
+      if (y > 0)
+        this.createRadarPoint(this.centerX + x, this.radarRect.height - y * 45, y);
     } catch (err) {
       this.stop();
       console.warn('Missing data for radar.', err);

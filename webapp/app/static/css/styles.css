@@ -6,14 +6,35 @@
 
 /* Visualizers */
 
+.point-wrapper {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
 .point {
-    width: 15px;
-    height: 15px;
-    background-color: var(--secondary-color);
-    border-radius: 50%;
-    box-shadow: 0px 0px 0px 25px rgba(120, 53, 15, 0.2);
-    position: absolute;
-    transform: translate(-50%, -50%);
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  background-color: var(--secondary-color);
+  border-radius: 50%;
+  box-shadow: 0px 0px 0px 25px rgba(120, 53, 15, 0.2);
+  transform: translate(-50%, -50%);
+}
+
+.point-label {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(31,41,55,0.9);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 #amplitude-max-slider {
@@ -59,7 +80,13 @@
   pointer-events: none;
 }
 
-/* Status Bar Tooltip */
+/* Status Bar */
+
+/* Per-wave colors for Wi‑Fi icon */
+#ap-status #wave-1 { stroke: #38cd3b; }
+#ap-status #wave-2 { stroke: #38cd3b; }
+#ap-status #wave-3 { stroke: #38cd3b; }
+#ap-status #ap-dot { fill:   #38cd3b; }
 
 #status-bar-wrapper {
   position: relative;
@@ -127,13 +154,13 @@
 }
 
 .button-wrapper:hover #button-tooltip {
-  opacity: 1;
   transition-delay: 1s;
+  opacity: 1;
 }
 
 .button-wrapper:not(:hover) #button-tooltip {
-  opacity: 0;
   transition-delay: 0s;
+  opacity: 0;
 }
 
 #svg-button-icon {

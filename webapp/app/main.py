@@ -148,7 +148,8 @@ class HumanDetectionSystem:
             'ap': ap_status,
             'esp32': self._is_esp32_active,
             'ld2420': self._is_ld2420_active,
-            'model': self.model_manager.model_loaded
+            'model': self.model_manager.model_loaded,
+            'rssi': self.rssi[-1] if self.rssi else 0
         }
     
     def get_monitor_status(self) -> dict:

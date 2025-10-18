@@ -99,7 +99,7 @@
     <div class="flex flex-col flex-1">
         <header class="bg-gray-800 text-white px-4 py-3 flex justify-between items-center">
             <!-- Left Header -->
-            <div class="space-x-2 flex items-center gap-2 min-w-fit mr-6">
+            <div class="space-x-2 flex items-center gap-2 min-w-fit mr-6 pointer-events-none">
                 <div class="space-x-1">
                     <label class="font-semibold">PRESENCE:</label>
                     <span id="presence-status" class="font-bold text-3xl">?</span>
@@ -123,15 +123,27 @@
                 <div class="border-l border-slate-400 h-8"></div>
                 <div class="space-x-1">
                     <label class="font-semibold">RSSI:</label>
-                    <span id="exp-value" class="font-bold text-3xl">0</span>
+                    <span id="signal-strength" class="font-bold text-3xl">0</span>
                 </div>
             </div>
             <!-- Right Header -->
             <div class="flex items-center gap-4">
                 <!-- Access Point -->
-                <div id="status-bar-wrapper" class="hover:scale-110 transition">
+                <!-- <div id="status-bar-wrapper" class="hover:scale-110 transition">
                     <svg id="ap-status" width="32" height="32" fill="limegreen" viewBox="0 0 256 256">
                         <path d="M144,204a16,16,0,1,1-16-16A16,16,0,0,1,144,204ZM239.61,83.91a176,176,0,0,0-223.22,0,12,12,0,1,0,15.23,18.55,152,152,0,0,1,192.76,0,12,12,0,1,0,15.23-18.55Zm-32.16,35.73a128,128,0,0,0-158.9,0,12,12,0,0,0,14.9,18.81,104,104,0,0,1,129.1,0,12,12,0,0,0,14.9-18.81ZM175.07,155.3a80.05,80.05,0,0,0-94.14,0,12,12,0,0,0,14.14,19.4,56,56,0,0,1,65.86,0,12,12,0,1,0,14.14-19.4Z"></path>
+                    </svg>
+                    <span id="status-bar-tooltip">Wi-Fi</span>
+                </div> -->
+                <div id="status-bar-wrapper" class="hover:scale-110 transition">
+                <!-- Wi‑Fi (Multi-part) -->
+                    <svg id="ap-status" width="32" height="32" viewBox="0 0 256 256">
+                        <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="24">
+                            <path id="wave-3" d="M16 90a176 186 0 0 1 224 0"></path>
+                            <path id="wave-2" d="M40 132a128 128 0 0 1 176 0"></path>
+                            <path id="wave-1" d="M80 162a80 80 0 0 1 96 0"></path>
+                        </g>
+                        <circle id="ap-dot" cx="128" cy="200" r="16"></circle>
                     </svg>
                     <span id="status-bar-tooltip">Wi-Fi</span>
                 </div>
@@ -186,7 +198,7 @@
                         <span id="heatmap-y-axis-label">Subcarrier</span>
                         <canvas id="amplitude-heatmap" class="w-full h-56 mb-7 mt-2 border-2"></canvas>
                         <div class="flex flex-col mx-2 items-center">
-                            <span id="amplitude-max-value" class="font-semibold text-gray-800">20</span>
+                            <span id="amplitude-max-value" class="font-semibold text-gray-800 pointer-events-none">20</span>
                             <input id="amplitude-max-slider" type="range" min="10" max="50" step="2" value="20" class="w-4 h-52 bg-slate-400 rounded-lg appearance-none"/>
                         </div>
                     </div>
@@ -201,7 +213,7 @@
                         <span id="heatmap-y-axis-label">Range Gate</span>
                         <canvas id="doppler-heatmap" class="w-full h-56 mb-7 mt-2 border-2"></canvas>
                         <div class="flex flex-col mx-2 items-center">
-                            <span id="doppler-max-value" class="font-semibold text-gray-800">1</span>
+                            <span id="doppler-max-value" class="font-semibold text-gray-800 pointer-events-none">1</span>
                             <input id="doppler-max-slider" type="range" min="1" max="20" step="1" value="1" class="w-4 h-52 bg-slate-400 rounded-lg appearance-none"/>
                         </div>
                     </div>
@@ -360,7 +372,7 @@
                 </svg>
                 <span id="button-tooltip">Monitor</span>
             </button>
-            <button id="target-radar-btn" class="cursor-pointer dataset-hidden button-wrapper">
+            <button id="target-radar-btn" class="dataset-hidden button-wrapper">
                 <svg id="svg-button-icon" viewBox="0 0 256 256">
                     <path d="M120,199.54v27.74a4,4,0,0,1-4.46,4,104.22,104.22,0,0,1-90.8-90.8,4,4,0,0,1,4-4.46H56.46A72.11,72.11,0,0,0,120,199.54ZM183.42,136H136v47.42A56.11,56.11,0,0,0,183.42,136ZM136,72.58V120h47.42A56.11,56.11,0,0,0,136,72.58ZM227.28,136H199.54A72.11,72.11,0,0,1,136,199.54v27.74a4,4,0,0,0,4.46,4,104.22,104.22,0,0,0,90.8-90.8A4,4,0,0,0,227.28,136Zm-27.74-16h27.74a4,4,0,0,0,4-4.46,104.22,104.22,0,0,0-90.8-90.8,4,4,0,0,0-4.46,4V56.46A72.11,72.11,0,0,1,199.54,120Zm-84-95.26a104.22,104.22,0,0,0-90.8,90.8,4,4,0,0,0,4,4.46H56.46A72.11,72.11,0,0,1,120,56.46V28.72A4,4,0,0,0,115.54,24.74ZM72.58,120H120V72.58A56.11,56.11,0,0,0,72.58,120ZM120,183.42V136H72.58A56.11,56.11,0,0,0,120,183.42Z"></path>
                 </svg>

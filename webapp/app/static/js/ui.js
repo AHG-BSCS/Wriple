@@ -36,13 +36,18 @@ export const UI = {
     signalVar: $(SELECTORS.signalVar),
     packetCount: $(SELECTORS.packetCount),
     packetLoss: $(SELECTORS.packetLoss),
-    expValue: $(SELECTORS.expValue),
+    signalStrength: $(SELECTORS.signalStrength),
 
     apStatus: $(SELECTORS.apStatus),
     flaskStatus: $(SELECTORS.flaskStatus),
     esp32Status: $(SELECTORS.esp32Status),
     ld2420Status: $(SELECTORS.ld2420Status),
-    modelStatus: $(SELECTORS.modelStatus)
+    modelStatus: $(SELECTORS.modelStatus),
+
+    apWave1: $(SELECTORS.apWave1),
+    apWave2: $(SELECTORS.apWave2),
+    apWave3: $(SELECTORS.apWave3),
+    apDot: $(SELECTORS.apDot),
   },
 
   asideNodes: {
@@ -123,10 +128,35 @@ export const UI = {
       
       if (status.model) statusBarIcon.modelStatus.style.fill = UI_COLORS.statusBarActiveColor;
       else statusBarIcon.modelStatus.style.fill = UI_COLORS.statusBarInactiveColor;
-      // map status fields to UI nodes as needed
-      // if (status && n.presenceStatus) {
-      //   n.presenceStatus.textContent = status.presence ?? n.presenceStatus.textContent;
-      // }
+      const rssi = status.rssi;
+
+      if (rssi !== 0){
+        if (rssi > -60){
+          statusBarIcon.apWave1.style.stroke = UI_COLORS.statusBarActiveColorRgb;
+          statusBarIcon.apWave2.style.stroke = UI_COLORS.statusBarActiveColorRgb;
+          statusBarIcon.apWave3.style.stroke = UI_COLORS.statusBarActiveColorRgb;
+          statusBarIcon.apDot.style.fill = UI_COLORS.statusBarActiveColorRgb;
+        }
+        else if (rssi > -70){
+          statusBarIcon.apWave1.style.stroke = UI_COLORS.statusBarActiveColorRgb;
+          statusBarIcon.apWave2.style.stroke = UI_COLORS.statusBarActiveColorRgb;
+          statusBarIcon.apWave3.style.stroke = UI_COLORS.statusBarInactiveColorRgb;
+          statusBarIcon.apDot.style.fill = UI_COLORS.statusBarActiveColorRgb;
+        }
+        else if (rssi > -80){
+          statusBarIcon.apWave1.style.stroke = UI_COLORS.statusBarActiveColorRgb;
+          statusBarIcon.apWave2.style.stroke = UI_COLORS.statusBarInactiveColorRgb;
+          statusBarIcon.apWave3.style.stroke = UI_COLORS.statusBarInactiveColorRgb;
+          statusBarIcon.apDot.style.fill = UI_COLORS.statusBarActiveColorRgb;
+        }
+        else {
+          statusBarIcon.apWave1.style.stroke = UI_COLORS.statusBarInactiveColorRgb;
+          statusBarIcon.apWave2.style.stroke = UI_COLORS.statusBarInactiveColorRgb;
+          statusBarIcon.apWave3.style.stroke = UI_COLORS.statusBarInactiveColorRgb;
+          statusBarIcon.apDot.style.fill = UI_COLORS.statusBarActiveColorRgb;
+        }
+      }
+      
     } catch (err) {
       statusBarStates.ap = false;
       statusBarStates.flask = false;
@@ -138,6 +168,11 @@ export const UI = {
       statusBarIcon.esp32Status.style.fill = UI_COLORS.statusBarInactiveColor;
       statusBarIcon.ld2420Status.style.fill = UI_COLORS.statusBarInactiveColor;
       statusBarIcon.modelStatus.style.fill = UI_COLORS.statusBarInactiveColor;
+
+      statusBarIcon.apWave1.style.stroke = UI_COLORS.statusBarInactiveColorRgb;
+      statusBarIcon.apWave2.style.stroke = UI_COLORS.statusBarInactiveColorRgb;
+      statusBarIcon.apWave3.style.stroke = UI_COLORS.statusBarInactiveColorRgb;
+      statusBarIcon.apDot.style.fill = UI_COLORS.statusBarInactiveColorRgb;
     }
   },
 
@@ -162,7 +197,7 @@ export const UI = {
   setHeaderTexts(text = {}) {
     const n = this.headerNodes;
     n.packetCount.textContent = text?.packetCount || '0';
-    n.expValue.textContent = text?.rssi || '0';
+    n.signalStrength.textContent = text?.rssi || '0';
   },
   
   setPresenceTexts(text = {}) {

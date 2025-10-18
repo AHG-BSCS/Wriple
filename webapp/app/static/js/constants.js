@@ -27,13 +27,18 @@ export const SELECTORS = {
   signalVar: '#signal-var',
   packetCount: '#packets-count',
   packetLoss: '#packet-loss',
-  expValue: '#exp-value',
+  signalStrength: '#signal-strength',
 
   apStatus: "#ap-status",
   flaskStatus: "#flask-status",
   esp32Status: "#esp32-status",
   ld2420Status: "#ld2420-status",
   modelStatus: "#model-status",
+
+  apWave1: "#wave-1",
+  apWave2: "#wave-2",
+  apWave3: "#wave-3",
+  apDot: "#ap-dot",
 
   asideContainer: '#aside-container',
   
@@ -204,5 +209,8 @@ export const UI_COLORS = {
   btnDefaultColor: '#1F2937',
 
   statusBarActiveColor: 'limegreen',
-  statusBarInactiveColor: 'brown'
+  statusBarInactiveColor: 'brown',
+
+  statusBarActiveColorRgb: '#3ecd42',
+  statusBarInactiveColorRgb: '#a4282b'
 };
