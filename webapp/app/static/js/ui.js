@@ -107,7 +107,8 @@ export const UI = {
   updateStatusBar(status) {
     const statusBarIcon = this.headerNodes;
     const statusBarStates = this.statusBarStates;
-    try {
+
+    if (status) {
       statusBarStates.ap = status.ap;
       statusBarStates.flask = status.flask;
       statusBarStates.esp32 = status.esp32;
@@ -156,7 +157,7 @@ export const UI = {
         }
       }
       
-    } catch (err) {
+    } else {
       statusBarStates.ap = false;
       statusBarStates.flask = false;
       statusBarStates.esp32 = false;

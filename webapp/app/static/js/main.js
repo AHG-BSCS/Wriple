@@ -4,7 +4,7 @@ import { OptionsUI } from './options.js';
 import { HeatmapVisualizer } from './visualizers/heatmap.js';
 import { RadarVisualizer } from './visualizers/radar.js';
 import { LineChart } from './visualizers/linechart.js';
-import { MAIN_DELAYS, UI_COLORS } from './constants.js';
+import { MAIN_DELAYS } from './constants.js';
 
 let monitorInterval = null;
 let predictionInterval = null;
@@ -141,17 +141,23 @@ async function startMonitoring(monitorModeBtn) {
 }
 
 async function updateStatusBar() {
-  const status = await API.getSystemStatus();
-  const monitorModeBtn = UI.floatingButtonNodes.monitorModeBtn;
+  let status = null;
+  try {
+    status = await API.getSystemStatus();
+    const monitorModeBtn = UI.floatingButtonNodes.monitorModeBtn;
 
-  if (!status.esp32) {
-    if (UI.isMonitoring()) stopMonitoring();
-    if (!monitorModeBtn.disabled) UI.disableButton(monitorModeBtn);
+    if (!status.esp32) {
+      if (UI.isMonitoring()) stopMonitoring();
+      if (!monitorModeBtn.disabled) UI.disableButton(monitorModeBtn);
+    }
+    else {
+      if (monitorModeBtn.disabled) UI.enableButton(monitorModeBtn);
+    }
+    UI.updateStatusBar(status);
+  } catch {
+    UI.updateStatusBar(status);
+    console.error('Server is down');
   }
-  else {
-    if (monitorModeBtn.disabled) UI.enableButton(monitorModeBtn);
-  }
-  UI.updateStatusBar(status);
 }
 
 function wireSidebar() {
