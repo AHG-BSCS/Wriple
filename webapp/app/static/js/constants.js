@@ -157,7 +157,7 @@ export const OPTIONS = {
     ]
   };
 
-export const MAIN = {
+export const MAIN_DELAYS = {
   delaySystemIconStatus: 2000,
   delayMonitorInterval: 125,
   delayPresenceInterval: 1000,
@@ -207,6 +207,7 @@ export const UI_COLORS = {
 
   btnActiveColor: '#78350F',
   btnDefaultColor: '#1F2937',
+  btnDisabletColor: '#999999',
 
   statusBarActiveColor: 'limegreen',
   statusBarInactiveColor: 'brown',

@@ -4,7 +4,7 @@ import { OptionsUI } from './options.js';
 import { HeatmapVisualizer } from './visualizers/heatmap.js';
 import { RadarVisualizer } from './visualizers/radar.js';
 import { LineChart } from './visualizers/linechart.js';
-import { MAIN } from './constants.js';
+import { MAIN_DELAYS, UI_COLORS } from './constants.js';
 
 let monitorInterval = null;
 let predictionInterval = null;
@@ -101,7 +101,7 @@ async function startRecording(recordModeBtn) {
   }
   await API.startRecording(OptionsUI.getSelectedParameters());
   UI.setButtonActive(recordModeBtn);
-  monitorInterval = setInterval(() => updateMonitorDisplay(), MAIN.delayMonitorInterval);
+  monitorInterval = setInterval(() => updateMonitorDisplay(), MAIN_DELAYS.delayMonitorInterval);
 }
 
 function stopMonitoring() {
@@ -131,13 +131,27 @@ async function startMonitoring(monitorModeBtn) {
   }
   UI.enableButton(monitorModeBtn);
   UI.setButtonActive(monitorModeBtn);
-  monitorInterval = setInterval(() => updateMonitorDisplay(), MAIN.delayMonitorInterval);
-  predictionInterval = setInterval(() => updatePresenceDisplay(), MAIN.delayPresenceInterval);
+  monitorInterval = setInterval(() => updateMonitorDisplay(), MAIN_DELAYS.delayMonitorInterval);
+  predictionInterval = setInterval(() => updatePresenceDisplay(), MAIN_DELAYS.delayPresenceInterval);
 
   if (radar.visible) radar.start();
   if (ampHeatmap.visible) ampHeatmap.start();
   if (dopplerHeatmap.visible) dopplerHeatmap.start();
   if (noiseChart.visible) noiseChart.start();
+}
+
+async function updateStatusBar() {
+  const status = await API.getSystemStatus();
+  const monitorModeBtn = UI.floatingButtonNodes.monitorModeBtn;
+
+  if (!status.esp32) {
+    if (UI.isMonitoring()) stopMonitoring();
+    if (!monitorModeBtn.disabled) UI.disableButton(monitorModeBtn);
+  }
+  else {
+    if (monitorModeBtn.disabled) UI.enableButton(monitorModeBtn);
+  }
+  UI.updateStatusBar(status);
 }
 
 function wireSidebar() {
@@ -235,7 +249,7 @@ function wireFloatingActionButtons() {
 
     // Temporarily disable button to prevent multiple clicks
     UI.disableButton(recordModeBtn);
-    setTimeout(() => UI.enableButton(recordModeBtn), MAIN.delayRecordingAction);
+    setTimeout(() => UI.enableButton(recordModeBtn), MAIN_DELAYS.delayRecordingAction);
   });
 
   UI.floatingButtonNodes.targetRadarBtn.addEventListener('click', async () => {
@@ -326,7 +340,7 @@ function init() {
   wireHeatmapSliders();
   wireSelections();
 
-  setInterval(UI.updateStatusBar.bind(UI), MAIN.delaySystemIconStatus);
+  setInterval(() => updateStatusBar(), MAIN_DELAYS.delaySystemIconStatus);
   UI.list_csv_files();
   UI.sidebarNodes.monitorTabBtn.click(); // Set default tab to monitor
 }

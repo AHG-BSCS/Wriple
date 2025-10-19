@@ -104,23 +104,22 @@
                     <label class="font-semibold">PRESENCE:</label>
                     <span id="presence-status" class="font-bold text-3xl">?</span>
                 </div>
-                <div class="border-l border-slate-400 h-8"></div>
-                
+                <div class="h-8 w-0.5 bg-white"></div>
                 <div class="space-x-1">
                     <label class="font-semibold">PACKETS:</label>
                     <span id="packets-count" class="font-bold text-3xl">0</span>
                 </div>
-                <div class="border-l border-slate-400 h-8"></div>
+                <div class="h-8 w-0.5 bg-white"></div>
                 <div class="space-x-1">
                     <label class="font-semibold">LOSS:</label>
                     <span id="packet-loss" class="font-bold text-3xl">0%</span>
                 </div>
-                <div class="border-l border-slate-400 h-8"></div>
+                <div class="h-8 w-0.5 bg-white"></div>
                 <div class="space-x-1">
                     <label class="font-semibold">NOISE:</label>
                     <span id="signal-var" class="font-bold text-3xl">0.0</span>
                 </div>
-                <div class="border-l border-slate-400 h-8"></div>
+                <div class="h-8 w-0.5 bg-white"></div>
                 <div class="space-x-1">
                     <label class="font-semibold">RSSI:</label>
                     <span id="signal-strength" class="font-bold text-3xl">0</span>
@@ -148,7 +147,7 @@
                     <span id="status-bar-tooltip">Wi-Fi</span>
                 </div>
                 <!-- Flask Server -->
-                <div id="status-bar-wrapper" class="hover:scale-110 transition">
+                <div id="status-bar-wrapper" class="hover:scale-110 transition-all">
                     <svg id="flask-status" width="32" height="32" fill="limegreen" viewBox="0 0 256 256">
                         <path d="M84,76A12,12,0,0,1,96,64h64a12,12,0,0,1,0,24H96A12,12,0,0,1,84,76Zm12,52h64a12,12,0,0,0,0-24H96a12,12,0,0,0,0,24ZM212,40V216a20,20,0,0,1-20,20H64a20,20,0,0,1-20-20V40A20,20,0,0,1,64,20H192A20,20,0,0,1,212,40Zm-24,4H68V212H188ZM128,168a16,16,0,1,0,16,16A16,16,0,0,0,128,168Z"></path>
                     </svg>
@@ -195,14 +194,14 @@
                         Amplitude Heatmap
                     </span>
                     <div class="flex my-2 rounded-b-md shadow-md">
-                        <span id="heatmap-y-axis-label">Subcarrier</span>
+                        <span id="heatmap-y-axis-label">Subcarrier (44-84)</span>
                         <canvas id="amplitude-heatmap" class="w-full h-56 mb-7 mt-2 border-2"></canvas>
                         <div class="flex flex-col mx-2 items-center">
                             <span id="amplitude-max-value" class="font-semibold text-gray-800 pointer-events-none">20</span>
                             <input id="amplitude-max-slider" type="range" min="10" max="50" step="2" value="20" class="w-4 h-52 bg-slate-400 rounded-lg appearance-none"/>
                         </div>
                     </div>
-                    <span id="heatmap-x-axis-label">Time</span>
+                    <span id="heatmap-x-axis-label">Time (15s)</span>
                 </div>
                 <!-- Range Gates Heatmap -->
                 <div id="doppler-heatmap-container" class="dataset-hidden">
@@ -210,14 +209,14 @@
                         Range-Doppler Heatmap
                     </span>
                     <div class="flex my-2 rounded-b-md shadow-md">
-                        <span id="heatmap-y-axis-label">Range Gate</span>
+                        <span id="heatmap-y-axis-label">Range Gate (1-16)</span>
                         <canvas id="doppler-heatmap" class="w-full h-56 mb-7 mt-2 border-2"></canvas>
                         <div class="flex flex-col mx-2 items-center">
                             <span id="doppler-max-value" class="font-semibold text-gray-800 pointer-events-none">1</span>
                             <input id="doppler-max-slider" type="range" min="1" max="20" step="1" value="1" class="w-4 h-52 bg-slate-400 rounded-lg appearance-none"/>
                         </div>
                     </div>
-                    <span id="heatmap-x-axis-label">Doppler</span>
+                    <span id="heatmap-x-axis-label">Doppler (1-20)</span>
                 </div>
                 <!-- Noise Line Chart -->
                 <div id="noise-chart-container" class="dataset-hidden">
@@ -372,33 +371,34 @@
                 </svg>
                 <span id="button-tooltip">Monitor</span>
             </button>
+            <div class="h-12 w-0.5 bg-white"></div>
             <button id="target-radar-btn" class="dataset-hidden button-wrapper">
                 <svg id="svg-button-icon" viewBox="0 0 256 256">
-                    <path d="M120,199.54v27.74a4,4,0,0,1-4.46,4,104.22,104.22,0,0,1-90.8-90.8,4,4,0,0,1,4-4.46H56.46A72.11,72.11,0,0,0,120,199.54ZM183.42,136H136v47.42A56.11,56.11,0,0,0,183.42,136ZM136,72.58V120h47.42A56.11,56.11,0,0,0,136,72.58ZM227.28,136H199.54A72.11,72.11,0,0,1,136,199.54v27.74a4,4,0,0,0,4.46,4,104.22,104.22,0,0,0,90.8-90.8A4,4,0,0,0,227.28,136Zm-27.74-16h27.74a4,4,0,0,0,4-4.46,104.22,104.22,0,0,0-90.8-90.8,4,4,0,0,0-4.46,4V56.46A72.11,72.11,0,0,1,199.54,120Zm-84-95.26a104.22,104.22,0,0,0-90.8,90.8,4,4,0,0,0,4,4.46H56.46A72.11,72.11,0,0,1,120,56.46V28.72A4,4,0,0,0,115.54,24.74ZM72.58,120H120V72.58A56.11,56.11,0,0,0,72.58,120ZM120,183.42V136H72.58A56.11,56.11,0,0,0,120,183.42Z"></path>
+                    <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,40a16,16,0,1,1-16,16A16,16,0,0,1,128,64Zm48,56H136v13.58l30.66,46a8,8,0,0,1-13.32,8.88l-25.34-38-25.34,38a8,8,0,1,1-13.32-8.88l30.66-46V120H80a8,8,0,0,1,0-16h96a8,8,0,0,1,0,16Z"></path>
                 </svg>
                 <span id="button-tooltip">Radar</span>
             </button>
             <button id="amplitude-heatmap-btn" class="dataset-hidden button-wrapper">
-                <svg id="svg-button-icon" viewBox="0 0 256 256" data-darkreader-inline-fill="" style="--darkreader-inline-fill: var(--darkreader-background-f5f5f5, #1e2021);">
-                    <path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm-4.78,91.44c-16.68,35-31.06,50.56-46.65,50.56-19.68,0-31.39-24.56-43.79-50.56C112,113,101,90,91.43,90c-3.74,0-14.37,4-32.21,41.44a8,8,0,0,1-14.44-6.88C61.46,89.59,75.84,74,91.43,74c19.68,0,31.39,24.56,43.79,50.56C144,143,155,166,164.57,166c3.74,0,14.37-4,32.21-41.44a8,8,0,1,1,14.44,6.88Z"></path>
+                <svg id="svg-button-icon" viewBox="0 0 256 256">
+                    <path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM72,152a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm32,32a8,8,0,0,1-16,0V72a8,8,0,0,1,16,0Zm32-16a8,8,0,0,1-16,0V88a8,8,0,0,1,16,0Zm32-16a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm32,8a8,8,0,0,1-16,0V96a8,8,0,0,1,16,0Z"></path>
                 </svg>
                 <span id="button-tooltip">Amplitude</span>
             </button>
             <button id="gates-heatmap-btn" class="dataset-hidden button-wrapper">
-                <svg id="svg-button-icon" viewBox="0 0 256 256" data-darkreader-inline-fill="" style="--darkreader-inline-fill: var(--darkreader-background-f5f5f5, #1e2021);">
-                    <path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm-11.56,94.66-72,48A8,8,0,0,1,128,184a8,8,0,0,1-8-8V95L60.44,134.66a8,8,0,1,1-8.88-13.32l72-48A8,8,0,0,1,136,80v81.05l59.56-39.71a8,8,0,0,1,8.88,13.32Z"></path>
+                <svg id="svg-button-icon" viewBox="0 0 256 256">
+                    <path d="M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM197.2,176.87c-13.07,11.18-24.9,15.1-35.64,15.1-14.26,0-26.62-6.92-37.47-13-18.41-10.31-32.95-18.45-54.89.31a8,8,0,1,1-10.4-12.16c30.42-26,54.09-12.76,73.11-2.11,18.41,10.31,33,18.45,54.89-.31a8,8,0,0,1,10.4,12.16Zm0-44c-13.07,11.18-24.9,15.1-35.64,15.1-14.26,0-26.62-6.92-37.47-13-18.41-10.31-32.95-18.45-54.89.31a8,8,0,0,1-10.4-12.16c30.42-26,54.09-12.76,73.11-2.11,18.41,10.31,33,18.45,54.89-.31a8,8,0,1,1,10.4,12.16Zm0-44c-13.07,11.18-24.9,15.1-35.64,15.1-14.26,0-26.62-6.92-37.47-13-18.41-10.31-32.95-18.45-54.89.31A8,8,0,0,1,58.8,79.13c30.42-26,54.09-12.76,73.11-2.11,18.41,10.31,33,18.45,54.89-.31a8,8,0,1,1,10.4,12.16Z"></path>
                 </svg>
                 <span id="button-tooltip">Range-Doppler</span>
             </button>
             <button id="noise-chart-btn" class="dataset-hidden button-wrapper">
                 <svg id="svg-button-icon" viewBox="0 0 256 256" data-darkreader-inline-fill="" style="--darkreader-inline-fill: var(--darkreader-background-f5f5f5, #1e2021);">
-                    <path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM200,176a8,8,0,0,1,0,16H56a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v62.92l34.88-29.07a8,8,0,0,1,9.56-.51l43,28.69,43.41-36.18a8,8,0,0,1,10.24,12.3l-48,40a8,8,0,0,1-9.56.51l-43-28.69L64,155.75V176Z"></path>
+                    <path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm-4.78,91.44c-16.68,35-31.06,50.56-46.65,50.56-19.68,0-31.39-24.56-43.79-50.56C112,113,101,90,91.43,90c-3.74,0-14.37,4-32.21,41.44a8,8,0,0,1-14.44-6.88C61.46,89.59,75.84,74,91.43,74c19.68,0,31.39,24.56,43.79,50.56C144,143,155,166,164.57,166c3.74,0,14.37-4,32.21-41.44a8,8,0,1,1,14.44,6.88Z"></path>
                 </svg>
                 <span id="button-tooltip">Noise</span>
             </button>
             <button id="detection-chart-btn" class="dataset-hidden button-wrapper">
-                <svg id="svg-button-icon" viewBox="0 0 256 256" data-darkreader-inline-fill="" style="--darkreader-inline-fill: var(--darkreader-background-f5f5f5, #1e2021);">
-                    <path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM200,176a8,8,0,0,1,0,16H56a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v62.92l34.88-29.07a8,8,0,0,1,9.56-.51l43,28.69,43.41-36.18a8,8,0,0,1,10.24,12.3l-48,40a8,8,0,0,1-9.56.51l-43-28.69L64,155.75V176Z"></path>
+                <svg id="svg-button-icon" viewBox="0 0 256 256">
+                    <path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm-8,96H188.64L159,188a8,8,0,0,1-6.95,4h-.46a8,8,0,0,1-6.89-4.84L103,89.92,79,132a8,8,0,0,1-7,4H48a8,8,0,0,1,0-16H67.36L97.05,68a8,8,0,0,1,14.3.82L153,166.08l24-42.05a8,8,0,0,1,6.95-4h24a8,8,0,0,1,0,16Z"></path>
                 </svg>
                 <span id="button-tooltip">Detection</span>
             </button>

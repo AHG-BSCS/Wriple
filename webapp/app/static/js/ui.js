@@ -104,11 +104,10 @@ export const UI = {
     model: false
   },
 
-  async updateStatusBar() {
+  updateStatusBar(status) {
     const statusBarIcon = this.headerNodes;
     const statusBarStates = this.statusBarStates;
     try {
-      const status = await API.getSystemStatus();
       statusBarStates.ap = status.ap;
       statusBarStates.flask = status.flask;
       statusBarStates.esp32 = status.esp32;
@@ -248,10 +247,12 @@ export const UI = {
 
   enableButton(buttonNode) {
     buttonNode.disabled = false;
+    buttonNode.style.backgroundColor = UI_COLORS.btnDefaultColor;
   },
 
   disableButton(buttonNode) {
     buttonNode.disabled = true;
+    buttonNode.style.backgroundColor = UI_COLORS.btnDisabletColor;
   },
 
   isButtonActive(buttonNode) {
