@@ -42,18 +42,16 @@ class NetworkConfig:
         self.RECORD_PACKET_LIMIT = config.get('record_packet_limit', self.RECORD_PACKET_LIMIT)
 
 
-class RecordingConfiguration:
-    """
-    Configuration for CSI data recording
-    Packet and queue limits are based on TX interval
-    """
+class RecordConfig:
+    """Configuration for CSI data recording"""
     CSI_QUEUE_LIMIT: int = 180
     RDM_QUEUE_LIMIT: int = 12
     RECORD_PARAMETERS: list = [None, None, None, None, None, None, None, None, None]
 
 
-class FileConfiguration:
+class FileConfig:
     """Configuration for CSV file and its columns"""
+    SETTING_FILE: str = 'webapp/app/config/settings.json'
     CSV_DIRECTORY: str = 'data/recorded'
     CSV_FILE_PATTERN: str = r'^WRIPLE_DATA_.*$'
     CSV_FILE_PREFIX: str = 'WRIPLE_DATA_'
@@ -68,20 +66,14 @@ class FileConfiguration:
         'LD2420_Doppler_13', 'LD2420_Doppler_14', 'LD2420_Doppler_15', 'LD2420_Doppler_16',
         'LD2420_Doppler_17', 'LD2420_Doppler_18', 'LD2420_Doppler_19', 'LD2420_Doppler_20'
     ]
-    SETTING_FILE: str = 'webapp/app/config/settings.json'
 
 
-class VisualizerConfiguration:
+class CsiConfig:
     """Configuration for data visualizers"""
-    AVERAGED: bool = True
-    AVERAGED_WINDOWS: list = [(0, 10), (10, -1)]
-    SUBCARRIER_COUNT: int = 192
     HEAT_SUBCARRIER_SLICES: list = [[30, 70]]
     AMPS_SUBCARRIER: list = [(2, 27), (38, 64), (65, 93), (100, 128), (129, 157), (164, 192)]
 
     HEAT_SIGNAL_WINDOW: int = 60
-    HEAT_AMP_START_SUB:int = 3
-    HEAT_AMP_END_SUB:int = 88
     HEAT_PENALTY_FACTOR: int = 1
     HEAT_DIFF_THRESHOLD: int = 5
 
@@ -90,7 +82,7 @@ class VisualizerConfiguration:
     ORDER:int = 1
 
 
-class RdmProcessorConfiguration:
+class RdmConfig:
     """Configuration for RDM data processing and visualization"""
     HEATMAP_MAX_SCALER: int = 10000
     GATE_DISTANCE: float = 0.7      # Meters
@@ -107,23 +99,13 @@ class RdmProcessorConfiguration:
                                   [0] * 16, [0] * 16, [0] * 16, [0] * 16]
 
 
-class ModelConfiguration:
+class ModelConfig:
     """Configuration for machine learning models directories and paths"""
-    MODEL_DIR: str = 'model'
-    LOGREG_PATH: str = 'model/wriple_v3_LogReg.pkl'
-    RANDFOR_PATH: str = 'model/rf_model.pkl'
-    ADABOOST_PATH: str = 'model/wriple_v3_AdaBoost.pkl'
+    RANDOM_FOROREST_PATH: str = 'model/rf_model.pkl'
     CONVLSTM_PATH: str = 'model/convlstm_model.keras'
     SCALER_PCA_PATH: str = 'model/scaler_pca_pipeline.pkl'
-    TCN_PATH: str = 'model/wriple_v3_TCN.keras'
 
-    THRESHOLD_MODEL_PATH: str = 'model/wriple_v3_Thres_Model.json'
-
-
-class PredictionConfiguration:
-    """Configuration for data preprocessing and prediction"""
     PRED_SIGNAL_WINDOW: int = 120
     FEATURE_XHEIGHT: int = 4
     FEATURE_XWIDTH: int = 5
-    PRED_THRESHOLD: float = 0.93
-    # PRED_THRESHOLD: float = 0.9079
+    PRED_THRESHOLD: float = 0.93    # Alt: 0.9079, 0.805

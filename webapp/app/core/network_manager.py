@@ -30,9 +30,9 @@ class NetworkManager:
         self._tx_timestamps = []
 
         self._logger = setup_logger('NetworkManager')
-        self.init_socket()
+        self._init_socket()
     
-    def find_ip_address(self) -> str:
+    def _find_ip_address(self) -> str:
         """
         Find the current IP address of the machine
 
@@ -56,9 +56,9 @@ class NetworkManager:
             return None
         return None
     
-    def update_broadcast_ip(self):
+    def _update_broadcast_ip(self):
         """Update the broadcast IP based on current IP address"""
-        NetworkConfig.SERVER_IP_ADDR = self.find_ip_address()
+        NetworkConfig.SERVER_IP_ADDR = self._find_ip_address()
         
         if not NetworkConfig.SERVER_IP_ADDR:
             self._logger.error('Could not determine current IP address')
@@ -86,7 +86,7 @@ class NetworkManager:
                 self._wifi_connected = True
                 
                 if not NetworkConfig.AP_BROADCAST_IP:
-                    self.update_broadcast_ip()
+                    self._update_broadcast_ip()
                 return True
             
             self._wifi_connected = False
@@ -116,9 +116,9 @@ class NetworkManager:
                 return esp32_status
             else:
                 if NetworkConfig.TX_ESP32_IP:
-                    self.transmit_reconnection_packet()
+                    self._transmit_reconnection_packet()
                 
-                threading.Thread(target=self.transmit_ip_broadcast_packet, daemon=True).start()
+                threading.Thread(target=self._transmit_ip_broadcast_packet, daemon=True).start()
                 data, addr = self._socket.recvfrom(2)
 
                 if addr[0] != NetworkConfig.TX_ESP32_IP:
@@ -134,7 +134,7 @@ class NetworkManager:
     
     # Receiver
 
-    def init_socket(self) -> bool:
+    def _init_socket(self) -> bool:
         """
         Setup UDP socket for transmitting packets
 
@@ -199,7 +199,7 @@ class NetworkManager:
     
     # Transmitter
 
-    def transmit_csi_generating_packet(self):
+    def _transmit_csi_generating_packet(self):
         """Send a UDP packet to generate CSI data"""
         # Removed the error handling to reduce overhead
         while self._transmitting:
@@ -209,7 +209,7 @@ class NetworkManager:
             self._tx_packet_count += 1
             time.sleep(NetworkConfig.TX_INTERVAL)
     
-    def transmit_stop_csi_packet(self):
+    def _transmit_stop_csi_packet(self):
         """Send a single UDP packet to signal ESP32 to stop CSI request"""
         try:
             self._socket.sendto(NetworkConfig.TX_STOP_REQ_PAYLOAD,
@@ -217,7 +217,7 @@ class NetworkManager:
         except Exception as e:
             self._logger.error(f'Error sending stop packet: {e}')
     
-    def transmit_reconnection_packet(self):
+    def _transmit_reconnection_packet(self):
         """Send a single UDP packet to signal ESP32 to start CSI request"""
         try:
             self._socket.sendto(NetworkConfig.TX_RECONNECT_PAYLOAD,
@@ -225,7 +225,7 @@ class NetworkManager:
         except Exception as e:
             self._logger.error(f'Error sending start packet: {e}')
     
-    def transmit_ip_broadcast_packet(self):
+    def _transmit_ip_broadcast_packet(self):
         """Send a single UDP packet to request ESP32 IP address"""
         tx_counter = 0
         while tx_counter < 5:
@@ -237,10 +237,10 @@ class NetworkManager:
             except Exception as e:
                 self._logger.error(f'Error sending IP request packet: {e}')
     
-    def start_csi_transmission(self):
+    def _start_csi_transmission(self):
         """Start continuous packet transmission at specified intervals"""
         self._transmitting = True
-        threading.Thread(target=self.transmit_csi_generating_packet, daemon=True).start()
+        threading.Thread(target=self._transmit_csi_generating_packet, daemon=True).start()
         self._logger.info('Transmitting...')
     
     def stop_transmitting(self):
@@ -250,16 +250,11 @@ class NetworkManager:
             self._tx_packet_count = 0
             self._tx_timestamps.clear()
             self._logger.info('Transmission stopped')
-            self.transmit_stop_csi_packet()
+            self._transmit_stop_csi_packet()
 
     @property
     def packet_loss(self) -> int:
-        """
-        Calculate packet loss rate based on transmitted and received packets
-        
-        Returns:
-            float: Packet loss rate as a percentage
-        """
+        """Calculate packet loss percentage based on transmitted and received packets"""
         if self._tx_packet_count == 0:
             return 0.0
         
@@ -268,8 +263,10 @@ class NetworkManager:
 
     @property
     def is_receiving(self) -> bool:
+        """Check if currently receiving packets"""
         return self._receiving
 
     @property
     def packet_count(self) -> int:
+        """Get the number of received packets"""
         return self._rx_packet_count

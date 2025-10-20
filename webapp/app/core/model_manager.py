@@ -1,12 +1,10 @@
 """Model Manager Module"""
 
 import joblib
-import json
 import numpy as np
-
 from keras.models import load_model
 
-from app.config.settings import ModelConfiguration, PredictionConfiguration
+from app.config.settings import ModelConfig
 from app.utils.logger import setup_logger
 
 
@@ -17,56 +15,41 @@ class ModelManager:
     """
     
     def __init__(self):
-        self._mode = 4
+        self._model = 2
         self._model_loaded = False
 
         self._presence_model = None
         self._scaler_pca_pipeline = None
 
-        self.thresholds = None
-        self._xheight = PredictionConfiguration.FEATURE_XHEIGHT
-        self._xwidth = PredictionConfiguration.FEATURE_XWIDTH
-        self._model_threshold = PredictionConfiguration.PRED_THRESHOLD
+        self._xheight = ModelConfig.FEATURE_XHEIGHT
+        self._xwidth = ModelConfig.FEATURE_XWIDTH
+        self._model_threshold = ModelConfig.PRED_THRESHOLD
 
         self._logger = setup_logger('ModelManager')
-        self.load_model(self._mode)
+        self._load_model()
     
-    def load_model(self, mode: int):
-        """
-        Load all required ML models
-
-        Args:
-            mode: Indicate the model to be used
-        """
+    def _load_model(self):
+        """Load all required models"""
         try:
-            if mode == 1:
-                self._presence_model = joblib.load(ModelConfiguration.LOGREG_PATH)
-            elif mode == 2:
-                self._presence_model = joblib.load(ModelConfiguration.RANDFOR_PATH)
-            elif mode == 3:
-                self._presence_model = joblib.load(ModelConfiguration.ADABOOST_PATH)
-            elif mode == 4:
-                self._presence_model = load_model(ModelConfiguration.CONVLSTM_PATH)
-                self._scaler_pca_pipeline = joblib.load(ModelConfiguration.SCALER_PCA_PATH)
-            # elif mode == 5:
-            #     self._presence_model = load_model(ModelConfiguration.TCN_PATH)
+            if self._model == 1:
+                self._presence_model = joblib.load(ModelConfig.RANDOM_FOROREST_PATH)
+            elif self._model == 2:
+                self._presence_model = load_model(ModelConfig.CONVLSTM_PATH)
+                self._scaler_pca_pipeline = joblib.load(ModelConfig.SCALER_PCA_PATH)
             else:
                 raise Exception
 
-            with open(ModelConfiguration.THRESHOLD_MODEL_PATH, 'r') as file:
-                    self.thresholds = json.load(file)
-            
             self._model_loaded = True
             self._logger.info('Models loaded successfully')
         except Exception as e:
             self._logger.error(f'Error loading models: {e}')
     
-    def predict_classical(self, X: list) -> int:
+    def _predict_classical(self, X: list) -> int:
         """
         Detect human presence using classical ML models
 
         Args:
-            data: List of RSSI mean, RSSI std, 163 amplitude values and amplitude sum difference
+            X: List of RSSI mean, RSSI std, 163 amplitude values and amplitude sum difference
 
         Returns:
             str: Presence prediction
@@ -81,19 +64,19 @@ class ModelManager:
             self._logger.error(f'Error in Logistic Regression prediction: {e}')
             return 'No'
     
-    def predict_convlstm(self, X: list) -> str:
+    def _predict_convlstm(self, X: list) -> str:
         """
         Detect human presence using ConvLSTM model
 
         Args:
-            data: List of RSSI mean, RSSI std, 163 amplitude values and amplitude sum difference
+            X: List of RSSI mean, RSSI std, 163 amplitude values and amplitude sum difference
 
         Returns:
             str: Presence prediction
         """
         try:
-            X = np.asarray(X).reshape(1, -1)            # shape (1, 166)
-            X_trans = self._scaler_pca_pipeline.transform(X) # shape (1, 20)
+            X = np.asarray(X).reshape(1, -1)                    # shape (1, 166)
+            X_trans = self._scaler_pca_pipeline.transform(X)    # shape (1, 20)
             X_seq = X_trans.reshape(1, 1, self._xheight, self._xwidth, 1)
             y_proba = self._presence_model.predict(X_seq, verbose=0).ravel()[0]
             label = 'Yes' if y_proba > self._model_threshold else 'No'
@@ -103,7 +86,7 @@ class ModelManager:
             self._logger.error(f'Error in ConvLSTM prediction: {e}')
             return 'No'
 
-    def predict(self, data: list) -> int:
+    def predict(self, data: list) -> str:
         """
         Make presence prediction using the selected model
 
@@ -111,20 +94,14 @@ class ModelManager:
             data: Input data for prediction
         
         Returns:
-            int: Presence prediction (1 for presence, 0 for absence)
+            str: Presence prediction
         """
-        if self._mode in [1, 2, 3]:
-            return self.predict_classical(data)
-        elif self._mode == 4:
-            return self.predict_convlstm(data)
-
+        if self._model == 1:
+            return self._predict_classical(data)
+        elif self._model == 2:
+            return self._predict_convlstm(data)
 
     @property
     def model_loaded(self) -> bool:
-        """
-        Check if the model is loaded
-        
-        Returns:
-            bool: True if model is loaded, False otherwise
-        """
+        """Check if the model is loaded"""
         return self._model_loaded

@@ -4,7 +4,7 @@ import json
 
 import numpy as np
 
-from app.config.settings import RecordingConfiguration, RdmProcessorConfiguration
+from app.config.settings import RecordConfig, RdmConfig
 
 
 class RDMProcessor:
@@ -12,14 +12,14 @@ class RDMProcessor:
 
     def __init__(self):
         self._rdm_queue = []
-        self._queue_max_packets = RecordingConfiguration.RDM_QUEUE_LIMIT
-        self._gates_threshold  = np.array(RdmProcessorConfiguration.GATES_DISTANCE_THRESHOLDS)
+        self._queue_max_packets = RecordConfig.RDM_QUEUE_LIMIT
+        self._gates_threshold  = np.array(RdmConfig.GATES_DISTANCE_THRESHOLDS)
         self._rdm_thresholds = None
-        self._heatmap_max_scaler = RdmProcessorConfiguration.HEATMAP_MAX_SCALER
+        self._heatmap_max_scaler = RdmConfig.HEATMAP_MAX_SCALER
 
-        self._gate_distance = RdmProcessorConfiguration.GATE_DISTANCE
-        self._absence_tolerance = RdmProcessorConfiguration.ABSENCE_TOLERANCE
-        self._alpha = RdmProcessorConfiguration.SMOOTHING_ALPHA
+        self._gate_distance = RdmConfig.GATE_DISTANCE
+        self._absence_tolerance = RdmConfig.ABSENCE_TOLERANCE
+        self._alpha = RdmConfig.SMOOTHING_ALPHA
 
         self._last_distance = None
         self._target_distance = 0.0
@@ -31,7 +31,7 @@ class RDMProcessor:
     def _load_threshold(self):
         """Load RDM thresholds from JSON file"""
         try:
-            with open(RdmProcessorConfiguration.RDM_THRESHOLDS_PATH, 'r') as file:
+            with open(RdmConfig.RDM_THRESHOLDS_PATH, 'r') as file:
                     self._rdm_thresholds = json.load(file)
         except Exception as e:
             print(f'Error loading RDM thresholds: {e}')

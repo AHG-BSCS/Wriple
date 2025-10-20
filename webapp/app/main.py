@@ -1,16 +1,17 @@
 import threading
-from flask import Flask
-import numpy as np
 
-from app.config.settings import RecordingConfiguration, PredictionConfiguration
+import numpy as np
+from flask import Flask
+
+from app.api.routes import create_api_routes
+from app.config.settings import RecordConfig, ModelConfig
 from app.core.csi_processor import CSIProcessor
-from app.core.rdm_processor import RDMProcessor
 from app.core.file_manager import FileManager
 from app.core.model_manager import ModelManager
 from app.core.network_manager import NetworkManager
-from app.utils.packet_parser import PacketParser
-from app.api.routes import create_api_routes
+from app.core.rdm_processor import RDMProcessor
 from app.utils.logger import setup_logger
+from app.utils.packet_parser import PacketParser
 
 
 class HumanDetectionSystem:
@@ -33,10 +34,10 @@ class HumanDetectionSystem:
 
         # Initialize parameters and data storage
         self.rssi = []
-        self.csi_queue_limit = RecordingConfiguration.CSI_QUEUE_LIMIT
-        self.rdm_queue_limit = RecordingConfiguration.RDM_QUEUE_LIMIT
-        self.pred_signal_window = PredictionConfiguration.PRED_SIGNAL_WINDOW
-        self.record_parameters = RecordingConfiguration.RECORD_PARAMETERS
+        self.csi_queue_limit = RecordConfig.CSI_QUEUE_LIMIT
+        self.rdm_queue_limit = RecordConfig.RDM_QUEUE_LIMIT
+        self.pred_signal_window = ModelConfig.PRED_SIGNAL_WINDOW
+        self.record_parameters = RecordConfig.RECORD_PARAMETERS
         self.logger = setup_logger('HumanDetectionSystem')
 
     def record_data_packet(self, parsed_data, tx_timestamp):
@@ -91,7 +92,7 @@ class HumanDetectionSystem:
             args=(self.parse_received_data, self.is_recording),
             daemon=True
         ).start()
-        self.network_manager.start_csi_transmission()
+        self.network_manager._start_csi_transmission()
     
     def stop_operations(self):
         """Stop all recording/monitoring operations"""

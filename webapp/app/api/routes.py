@@ -1,6 +1,7 @@
 """Route handlers for the Human Presence Detection System"""
 
 from flask import jsonify, request, render_template
+
 from .validators import validate_recording_parameters
 
 
