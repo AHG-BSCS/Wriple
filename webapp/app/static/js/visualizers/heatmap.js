@@ -95,9 +95,10 @@ export class HeatmapVisualizer {
 
   async fetchAndDrawMmwave() {
     try {
-      const { latestDoppler } = await API.getRdmData();
+      // const { filteredRdm } = await API.getRdmData();
+      const data = await API.getRdmData();
       this.heat.clear();
-      this.heat.data(latestDoppler).draw();
+      this.heat.data(data.filteredRdm).draw();
     } catch (err) {
       console.warn('Heatmap fetch failed', err);
     }

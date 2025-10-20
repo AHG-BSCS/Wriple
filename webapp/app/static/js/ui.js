@@ -104,6 +104,22 @@ export const UI = {
     model: false
   },
 
+  updateWifiSignal(wave1, wave2, wave3, dot) {
+    const statusBarIcon = this.headerNodes;
+
+    if (wave1) statusBarIcon.apWave1.style.stroke = UI_COLORS.statusBarActiveColorRgb;
+    else statusBarIcon.apWave1.style.stroke = UI_COLORS.statusBarInactiveColorRgb;
+
+    if (wave2) statusBarIcon.apWave2.style.stroke = UI_COLORS.statusBarActiveColorRgb;
+    else statusBarIcon.apWave2.style.stroke = UI_COLORS.statusBarInactiveColorRgb;
+
+    if (wave3) statusBarIcon.apWave3.style.stroke = UI_COLORS.statusBarActiveColorRgb;
+    else statusBarIcon.apWave3.style.stroke = UI_COLORS.statusBarInactiveColorRgb;
+
+    if (dot) statusBarIcon.apDot.style.fill = UI_COLORS.statusBarActiveColorRgb;
+    else statusBarIcon.apDot.style.fill = UI_COLORS.statusBarInactiveColorRgb;
+  },
+
   updateStatusBar(status) {
     const statusBarIcon = this.headerNodes;
     const statusBarStates = this.statusBarStates;
@@ -115,9 +131,6 @@ export const UI = {
       statusBarStates.ld2420 = status.ld2420;
       statusBarStates.model = status.model;
 
-      if (status.ap) statusBarIcon.apStatus.style.fill = UI_COLORS.statusBarActiveColor;
-      else statusBarIcon.apStatus.style.fill = UI_COLORS.statusBarInactiveColor;
-      
       statusBarIcon.flaskStatus.style.fill = UI_COLORS.statusBarActiveColor;
 
       if (status.esp32) statusBarIcon.esp32Status.style.fill = UI_COLORS.statusBarActiveColor;
@@ -130,32 +143,16 @@ export const UI = {
       else statusBarIcon.modelStatus.style.fill = UI_COLORS.statusBarInactiveColor;
       const rssi = status.rssi;
 
-      if (rssi !== 0){
-        if (rssi > -60){
-          statusBarIcon.apWave1.style.stroke = UI_COLORS.statusBarActiveColorRgb;
-          statusBarIcon.apWave2.style.stroke = UI_COLORS.statusBarActiveColorRgb;
-          statusBarIcon.apWave3.style.stroke = UI_COLORS.statusBarActiveColorRgb;
-          statusBarIcon.apDot.style.fill = UI_COLORS.statusBarActiveColorRgb;
-        }
-        else if (rssi > -70){
-          statusBarIcon.apWave1.style.stroke = UI_COLORS.statusBarActiveColorRgb;
-          statusBarIcon.apWave2.style.stroke = UI_COLORS.statusBarActiveColorRgb;
-          statusBarIcon.apWave3.style.stroke = UI_COLORS.statusBarInactiveColorRgb;
-          statusBarIcon.apDot.style.fill = UI_COLORS.statusBarActiveColorRgb;
-        }
-        else if (rssi > -80){
-          statusBarIcon.apWave1.style.stroke = UI_COLORS.statusBarActiveColorRgb;
-          statusBarIcon.apWave2.style.stroke = UI_COLORS.statusBarInactiveColorRgb;
-          statusBarIcon.apWave3.style.stroke = UI_COLORS.statusBarInactiveColorRgb;
-          statusBarIcon.apDot.style.fill = UI_COLORS.statusBarActiveColorRgb;
-        }
-        else {
-          statusBarIcon.apWave1.style.stroke = UI_COLORS.statusBarInactiveColorRgb;
-          statusBarIcon.apWave2.style.stroke = UI_COLORS.statusBarInactiveColorRgb;
-          statusBarIcon.apWave3.style.stroke = UI_COLORS.statusBarInactiveColorRgb;
-          statusBarIcon.apDot.style.fill = UI_COLORS.statusBarActiveColorRgb;
-        }
+      if (status.ap && rssi !== 0) {
+        if (rssi > -60) this.updateWifiSignal(true, true, true, true);
+        else if (rssi > -70) this.updateWifiSignal(true, true, false, true);
+        else if (rssi > -80) this.updateWifiSignal(true, false, false, true);
+        else this.updateWifiSignal(false, false, false, true);
       }
+      else if (status.ap)
+        this.updateWifiSignal(true, true, true, true);
+      else
+        this.updateWifiSignal(false, false, false, false);
       
     } else {
       statusBarStates.ap = false;
@@ -169,10 +166,7 @@ export const UI = {
       statusBarIcon.ld2420Status.style.fill = UI_COLORS.statusBarInactiveColor;
       statusBarIcon.modelStatus.style.fill = UI_COLORS.statusBarInactiveColor;
 
-      statusBarIcon.apWave1.style.stroke = UI_COLORS.statusBarInactiveColorRgb;
-      statusBarIcon.apWave2.style.stroke = UI_COLORS.statusBarInactiveColorRgb;
-      statusBarIcon.apWave3.style.stroke = UI_COLORS.statusBarInactiveColorRgb;
-      statusBarIcon.apDot.style.fill = UI_COLORS.statusBarInactiveColorRgb;
+      this.updateWifiSignal(false, false, false, false);
     }
   },
 

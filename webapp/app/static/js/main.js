@@ -107,10 +107,11 @@ async function startRecording(recordModeBtn) {
 function stopMonitoring() {
   clearInterval(monitorInterval);
   clearInterval(predictionInterval);
-  API.stopCapturing();
   UI.setButtonDefault(UI.floatingButtonNodes.monitorModeBtn);
   stopVisualizers();
   UI.setPresenceTexts();
+  // Delay the stopCapturing to ensure all visualizers have stopped fetching data
+  setTimeout(() => API.stopCapturing(), 100);
 }
 
 async function startMonitoring(monitorModeBtn) {
@@ -347,6 +348,7 @@ function init() {
   wireSelections();
 
   setInterval(() => updateStatusBar(), MAIN_DELAYS.delaySystemIconStatus);
+  updateStatusBar();
   UI.list_csv_files();
   UI.sidebarNodes.monitorTabBtn.click(); // Set default tab to monitor
 }
