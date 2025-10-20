@@ -1,7 +1,5 @@
 """Model Manager Module"""
 
-import os
-
 import joblib
 import json
 import numpy as np
@@ -29,21 +27,11 @@ class ModelManager:
         self._xheight = PredictionConfiguration.FEATURE_XHEIGHT
         self._xwidth = PredictionConfiguration.FEATURE_XWIDTH
         self._model_threshold = PredictionConfiguration.PRED_THRESHOLD
-        self.mmWave_thresholds = None
 
         self._logger = setup_logger('ModelManager')
-
-        self.load_threshold()
-        self.load_models(self._mode)
+        self.load_model(self._mode)
     
-    def load_threshold(self):
-        try:
-            with open(ModelConfiguration.THRESHOLD_MMWAVE_VIZ_PATH, 'r') as file:
-                    self.mmWave_thresholds = json.load(file)
-        except Exception as e:
-            self._logger.error(f'Error loading mmWave thresholds: {e}')
-    
-    def load_models(self, mode: int):
+    def load_model(self, mode: int):
         """
         Load all required ML models
 

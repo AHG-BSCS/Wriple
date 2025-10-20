@@ -1,5 +1,11 @@
+"""Range-Doppler Map Processor Module"""
+
+import json
+
 import numpy as np
-from app.config.settings import RecordingConfiguration, VisualizerConfiguration
+
+from app.config.settings import RecordingConfiguration, RdmProcessorConfiguration
+
 
 class RDMProcessor:
     """Handles RDM data processing and distance estimation"""
@@ -7,16 +13,28 @@ class RDMProcessor:
     def __init__(self):
         self._rdm_queue = []
         self._queue_max_packets = RecordingConfiguration.RDM_QUEUE_LIMIT
-        self._gates_threshold  = np.array(VisualizerConfiguration.RDM_GATES_THRESHOLD)
+        self._gates_threshold  = np.array(RdmProcessorConfiguration.GATES_DISTANCE_THRESHOLDS)
+        self._rdm_thresholds = None
+        self._heatmap_max_scaler = RdmProcessorConfiguration.HEATMAP_MAX_SCALER
 
-        self._gate_distance = VisualizerConfiguration.RDM_GATE_DISTANCE
-        self._absence_tolerance = VisualizerConfiguration.RDM_ABSENCE_TOLERANCE
-        self._alpha = VisualizerConfiguration.RDM_SMOOTHING_ALPHA
+        self._gate_distance = RdmProcessorConfiguration.GATE_DISTANCE
+        self._absence_tolerance = RdmProcessorConfiguration.ABSENCE_TOLERANCE
+        self._alpha = RdmProcessorConfiguration.SMOOTHING_ALPHA
 
         self._last_distance = None
         self._target_distance = 0.0
         self._absence_counter = 0
         self._prev_distance = []
+
+        self._load_threshold()
+    
+    def _load_threshold(self):
+        """Load RDM thresholds from JSON file"""
+        try:
+            with open(RdmProcessorConfiguration.RDM_THRESHOLDS_PATH, 'r') as file:
+                    self._rdm_thresholds = json.load(file)
+        except Exception as e:
+            print(f'Error loading RDM thresholds: {e}')
 
     def _find_contiguous_clusters(self, indices):
         """
@@ -43,7 +61,7 @@ class RDMProcessor:
         clusters.append((start, end))
         return clusters
 
-    def estimate_distance(self, gate_energies):
+    def estimate_distance(self):
         """
         Estimate distance based on range gate energies.
 
@@ -53,7 +71,7 @@ class RDMProcessor:
         Returns:
             float: Smoothed distance estimate in meters.
         """
-        energies = np.array(gate_energies)
+        energies = np.array(self._rdm_queue[-1][9])
         if len(energies) == 0:
             return 0.0
 
@@ -105,3 +123,41 @@ class RDMProcessor:
         
         # print(f'ACTIVE GATES: {active_gates}')
         return round(self._target_distance, 1)
+
+    def get_filtered_data(self):
+        """
+        Apply filtering to the RDM data queue to remove noise.
+
+        Returns:
+            list: Filtered RDM data suitable for visualization.
+        """
+        if len(self._rdm_queue) == 0:
+            return None
+
+        raw = self._rdm_queue[-1]
+        filtered_data = []
+        
+        # Apply Thresholds
+        for doppler_idx, row in enumerate(raw):
+            for gate_idx, value in enumerate(row):
+                threshold = self._rdm_thresholds[doppler_idx][gate_idx]
+                if value <= threshold:
+                    value = 0.0
+                else:
+                    value = value / self._heatmap_max_scaler
+                filtered_data.append([doppler_idx, gate_idx, value])
+
+        return filtered_data
+
+    def queue_rdm(self, rdm_data):
+        """
+        Queue new RDM data packet.
+
+        Args:
+            rdm_data: New RDM data packet shaped (20, 16).
+        """
+        self._rdm_queue.append(rdm_data)
+
+        # Remove oldest RDM data if it exceeds the limits
+        while len(self._rdm_queue) > self._queue_max_packets:
+            self._rdm_queue.pop(0)

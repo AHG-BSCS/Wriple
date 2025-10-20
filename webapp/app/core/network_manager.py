@@ -252,12 +252,13 @@ class NetworkManager:
             self._logger.info('Transmission stopped')
             self.transmit_stop_csi_packet()
 
-    def get_packet_loss(self) -> int:
+    @property
+    def packet_loss(self) -> int:
         """
         Calculate packet loss rate based on transmitted and received packets
         
         Returns:
-            float: Packet loss rate as a percentage (rounded to two decimal places)
+            float: Packet loss rate as a percentage
         """
         if self._tx_packet_count == 0:
             return 0.0

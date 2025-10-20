@@ -171,12 +171,13 @@ class CSIProcessor:
         """
         return self.preprocess_amplitudes(self._amplitude_queue[-self._pred_signal_window:])
     
-    def get_amplitude_variance(self) -> float:
+    @property
+    def amplitude_variance(self) -> float:
         """
         Get the variance of the amplitude data in the queue
 
         Returns:
-            float: Variance of the amplitude data, or None if not enough data
+            float: Variance of the amplitude data, or 0.0 if not enough data
         """
         if len(self._amplitude_queue) < self._heat_signal_window:
             return 0.0

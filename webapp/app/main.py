@@ -1,7 +1,6 @@
 import threading
 from flask import Flask
 import numpy as np
-import time
 
 from app.config.settings import RecordingConfiguration, PredictionConfiguration
 from app.core.csi_processor import CSIProcessor
@@ -34,14 +33,12 @@ class HumanDetectionSystem:
 
         # Initialize parameters and data storage
         self.rssi = []
-        self.rdm_data = []
-        self.prev_inference = 0
         self.csi_queue_limit = RecordingConfiguration.CSI_QUEUE_LIMIT
         self.rdm_queue_limit = RecordingConfiguration.RDM_QUEUE_LIMIT
         self.pred_signal_window = PredictionConfiguration.PRED_SIGNAL_WINDOW
         self.record_parameters = RecordingConfiguration.RECORD_PARAMETERS
         self.logger = setup_logger('HumanDetectionSystem')
-    
+
     def record_data_packet(self, parsed_data, tx_timestamp):
         """
         Record data packet to CSV file
@@ -69,16 +66,12 @@ class HumanDetectionSystem:
         if self.is_monitoring:
             self.csi_processor.queue_csi(parsed_data[6])
 
-            # Remove oldest rdm data if it exceeds the limits
-            while len(self.rdm_data) > self.rdm_queue_limit:
-                self.rdm_data.pop(0)
-
             if parsed_data[0]: # If ld24020 data is valid
-                self.rdm_data.append(parsed_data[7:])
+                self.rdm_processor.queue_rdm(parsed_data[7:])
 
+            self.rssi.append(parsed_data[2])
             while len(self.rssi) > self.csi_queue_limit:
                 self.rssi.pop(0)
-            self.rssi.append(parsed_data[2])
         
         # Record data to csv file if recording
         if self.is_recording:
@@ -165,8 +158,8 @@ class HumanDetectionSystem:
         if self.rssi:
             return {
                 'presence': self.predict_presence(),
-                'packetLoss': self.network_manager.get_packet_loss(),
-                'ampVariance': self.csi_processor.get_amplitude_variance()
+                'packetLoss': self.network_manager.packet_loss,
+                'ampVariance': self.csi_processor.amplitude_variance
             }
         else:
             return {
@@ -183,7 +176,7 @@ class HumanDetectionSystem:
             dict: Dictionary with radar data and presence prediction
         """
         return {
-            'distance': self.rdm_processor.estimate_distance(self.rdm_data[-1][9]),
+            'distance': self.rdm_processor.estimate_distance(),
         }
     
     def set_recording_parameters(self, params: dict):

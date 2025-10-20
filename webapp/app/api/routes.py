@@ -72,26 +72,12 @@ def create_api_routes(app, detection_system):
     
     @app.route('/get_rdm_data', methods=['GET'])
     def get_rdm_data():
-        raw = detection_system.rdm_data[-1]
-        heatmap = []
-        max = 10000
-        
-        # Apply Thresholds
-        thresholds = detection_system.model_manager.mmWave_thresholds
-        for doppler_idx, row in enumerate(raw):
-            for gate_idx, value in enumerate(row):
-                threshold = thresholds[doppler_idx][gate_idx]
-                if value <= threshold:
-                    value = 0.0
-                else:
-                    value = value / max
-                heatmap.append([doppler_idx, gate_idx, value])
-        
-        return jsonify({'latestDoppler': heatmap}), 200
+        filtered_rdm = detection_system.rdm_processor.get_filtered_data()
+        return jsonify({'filteredRdm': filtered_rdm}), 200
     
     @app.route('/get_signal_var', methods=['GET'])
     def get_signal_var():
-        ampVariance = detection_system.csi_processor.get_amplitude_variance()
+        ampVariance = detection_system.csi_processor.amplitude_variance
         return jsonify({'ampVariance': ampVariance}), 200
     
     # CSV File Management Routes

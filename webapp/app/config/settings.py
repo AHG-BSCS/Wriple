@@ -89,16 +89,22 @@ class VisualizerConfiguration:
     FS:int = 1
     ORDER:int = 1
 
-    RDM_GATE_DISTANCE: float = 0.7  # meters
-    RDM_ABSENCE_TOLERANCE: int = 6  # Number of consecutive 0m before reset
-    RDM_SMOOTHING_ALPHA: float = 0.5 # 0.5 => Average of current and last non-zero
-    RDM_GATES_THRESHOLD: list = [16000,5000,500,250,150,120,100,80,80,80,70,70,70,70,70,70]
+
+class RdmProcessorConfiguration:
+    """Configuration for RDM data processing and visualization"""
+    HEATMAP_MAX_SCALER: int = 10000
+    GATE_DISTANCE: float = 0.7      # Meters
+    ABSENCE_TOLERANCE: int = 6      # Number of consecutive 0m before reset
+    SMOOTHING_ALPHA: float = 0.5    # 0.5 => Average of current and last non-zero
+
+    GATES_DISTANCE_THRESHOLDS: list = [16000,5000,500,250,150,120,100,80,80,80,70,70,70,70,70,70]
+    RDM_THRESHOLDS_PATH: str = 'model/rdm_thresholds.json'
 
     # 20 * doppler with 16 gates
-    MMWAVE_DATA: list = [[0] * 16, [0] * 16, [0] * 16, [0] * 16,
-                        [0] * 16, [0] * 16, [0] * 16, [0] * 16,
-                        [0] * 16, [0] * 16, [0] * 16, [0] * 16,
-                        [0] * 16, [0] * 16, [0] * 16, [0] * 16]
+    RDM_PLACEHOLDER_DATA: list = [[0] * 16, [0] * 16, [0] * 16, [0] * 16,
+                                  [0] * 16, [0] * 16, [0] * 16, [0] * 16,
+                                  [0] * 16, [0] * 16, [0] * 16, [0] * 16,
+                                  [0] * 16, [0] * 16, [0] * 16, [0] * 16]
 
 
 class ModelConfiguration:
@@ -112,7 +118,6 @@ class ModelConfiguration:
     TCN_PATH: str = 'model/wriple_v3_TCN.keras'
 
     THRESHOLD_MODEL_PATH: str = 'model/wriple_v3_Thres_Model.json'
-    THRESHOLD_MMWAVE_VIZ_PATH: str = 'model/wriple_v3_Thres_Visual.json'
 
 
 class PredictionConfiguration:
