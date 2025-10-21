@@ -18,7 +18,7 @@ extern struct sockaddr_in server_addr;
 extern socklen_t server_addr_len;
 
 static SemaphoreHandle_t mutex = xSemaphoreCreateMutex();
-static bool is_led_high = false;
+static bool is_led_high = true;
 static int total_packet_count = 0;
 
 void blink_led() {
@@ -75,14 +75,14 @@ void _wifi_csi_callback(void *ctx, wifi_csi_info_t *data) {
         is_led_high = false;
         total_packet_count = 0;
         gpio_set_level(LED_PIN, is_led_high);
-        // ESP_LOGI(CSI_TAG, "Stop signal received");
     }
     // Update server port address
     else if (data[0].rx_ctrl.sig_len == 91) {
         is_led_high = true;
         total_packet_count = 0;
         gpio_set_level(LED_PIN, is_led_high);
-        discover_server_address();
+        // Restart the ESP32 to update server address
+        esp_restart();
     }
 }
 
@@ -101,6 +101,8 @@ void csi_init() {
     ESP_ERROR_CHECK(esp_wifi_set_csi_config(&csi_config));
     ESP_ERROR_CHECK(esp_wifi_set_csi_rx_cb(&_wifi_csi_callback, NULL));
     ESP_ERROR_CHECK(esp_wifi_set_csi(1));
+
+    gpio_set_level(LED_PIN, is_led_high);
 }
 
 #endif

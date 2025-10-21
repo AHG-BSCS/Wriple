@@ -12,8 +12,11 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
         esp_wifi_connect();
         ESP_LOGI(STATION_TAG, "Station Mode Active");
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-        ESP_LOGI(STATION_TAG, "Reconnecting to the AP");
-        esp_wifi_connect();
+        // ESP_LOGI(STATION_TAG, "Reconnecting to the AP");
+        // esp_wifi_connect();
+        esp_restart();
+    } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_CONNECTED) {
+        ESP_LOGI(STATION_TAG, "Connected to the AP");
     }
 }
 

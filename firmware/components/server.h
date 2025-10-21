@@ -47,6 +47,7 @@ void discover_server_address() {
 
     while (1) {
         // Get the address of the connected server
+        ESP_LOGI(SERVER_TAG, "Listening for server broadcast...");
         int len = recvfrom(server_sock, rx_buffer, sizeof(rx_buffer)-1, 0,
                            (struct sockaddr *)&server_addr, &server_addr_len);
 
