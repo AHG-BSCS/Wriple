@@ -58,7 +58,7 @@ class FileManager:
                 # Read first data row for metadata
                 first_row = next(reader, None)
                 metadata = {key: first_row[key] for key in headers if key in first_row}
-                metadata = self.convert_metadata_to_category(metadata)
+                metadata = self._metadata_to_category(metadata)
 
                 # Count the number of samples
                 row_count = sum(1 for _ in reader) + 1 if first_row else 0
@@ -86,7 +86,7 @@ class FileManager:
         else:
             return 'Missing'
     
-    def convert_metadata_to_category(self, metadata: dict) -> dict:
+    def _metadata_to_category(self, metadata: dict) -> dict:
         """Convert metadata string values to numerical categories"""
         category_map = {
             # 'Presence': {'No': '0', 'Yes': '1'},

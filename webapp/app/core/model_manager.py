@@ -58,7 +58,7 @@ class ModelManager:
             X2 = np.asarray(X).reshape(1, -1)
             y_proba = self._presence_model.predict_proba(X2)[0]
             label = 'Yes' if y_proba > self._model_threshold else 'No'
-            print(f'PRED PROBA: {y_proba}')
+            self._logger.info(f'PRED PROBA: {y_proba}')
             return label
         except Exception as e:
             self._logger.error(f'Error in Logistic Regression prediction: {e}')
@@ -80,7 +80,7 @@ class ModelManager:
             X_seq = X_trans.reshape(1, 1, self._xheight, self._xwidth, 1)
             y_proba = self._presence_model.predict(X_seq, verbose=0).ravel()[0]
             label = 'Yes' if y_proba > self._model_threshold else 'No'
-            print(f'PRED PROBA: {y_proba}')
+            self._logger.info(f'PRED PROBA: {y_proba}')
             return label
         except Exception as e:
             self._logger.error(f'Error in ConvLSTM prediction: {e}')

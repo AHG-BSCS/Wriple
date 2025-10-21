@@ -108,4 +108,4 @@ class ModelConfig:
     PRED_SIGNAL_WINDOW: int = 120
     FEATURE_XHEIGHT: int = 4
     FEATURE_XWIDTH: int = 5
-    PRED_THRESHOLD: float = 0.93    # Alt: 0.9079, 0.805
+    PRED_THRESHOLD: float = 0.91    # Alt: 0.9079, 0.805
