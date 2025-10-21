@@ -2,21 +2,21 @@
 
 class NetworkConfig:
     """Configuration for network settings"""
-    AP_SSID: str = None
-    AP_PASSWORD: str = None
+    AP_SSID: str = 'WRIPLE'
+    AP_PASSWORD: str = 'WRIPLE_ESP32'
     AP_BROADCAST_IP: str = None
     SERVER_IP_ADDR: str = None
 
     TX_ESP32_IP: str = None             # IP address assigned by AP to ESP32
-    TX_PORT: int = None
+    TX_PORT: int = 5001
     RX_PORT: int = 5001
     TX_CSI_REQ_PAYLOAD = b'Wriple'      # Frame length of 88
     TX_STOP_REQ_PAYLOAD = b'Stop'       # Frame length of 86
     TX_RECONNECT_PAYLOAD = b'Reconnect' # Frame length of 91
     TX_IP_BROADCAST_PAYLOAD = b'Broadcast'
-    TX_INTERVAL: float = None   # Adjusted to be approximately 30 packets per second
+    TX_INTERVAL: float = 0.016          # Adjusted to be approximately 30 packets per second
     TX_CONNECT_INTERVAL: float = 0.05   # Interval between IP request packets
-    RECORD_PACKET_LIMIT: int = None     # 5 seconds of data per recording
+    RECORD_PACKET_LIMIT: int = 250      # 5 seconds of data per recording
     RX_SOCKET_TIMEOUT: float = 0.25     # Timeout used to stop listening
     TX_SOCKET_TIMEOUT: float = 0.1      # Timeout used to stop listening
     RX_BUFFER_SIZE: int = 4096          # Adjusted based on ESP32 CSI and sensor data size

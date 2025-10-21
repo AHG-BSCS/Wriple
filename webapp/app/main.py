@@ -105,6 +105,7 @@ class HumanDetectionSystem:
         self.network_manager.stop_listening()
         self.csi_processor.clear_queues()
         self.file_manager.close()
+        self._rssi = []
     
     def predict_presence(self) -> int:
         """
@@ -167,7 +168,7 @@ class HumanDetectionSystem:
         else:
             return {
                 'presence': '?',
-                'packetLoss': -1,
+                'packetLoss': self.network_manager.packet_loss,
                 'ampVariance': 0.0
             }
     

@@ -89,6 +89,9 @@ class NetworkManager:
                     self._update_broadcast_ip()
                 return True
             
+            # Reset the IPs if disconnected due to potential change of network
+            NetworkConfig.TX_ESP32_IP = None
+            NetworkConfig.AP_BROADCAST_IP = None
             self._wifi_connected = False
             return False
         except Exception as e:
@@ -109,15 +112,20 @@ class NetworkManager:
                     capture_output=True, text=True
                 )
                 esp32_status = 'TTL=' in output.stdout
-                # Set to None to reset with ESP32 on reboot
+                # Reset ESP32 IP if unreachable due to potential IP change
                 if not esp32_status:
                     NetworkConfig.TX_ESP32_IP = None
                     self._logger.info('ESP32 IP is unreachable')
                 return esp32_status
+            elif not self._wifi_connected:
+                return False
             else:
+                # If got disconnected to AP while ESP32 is online
+                # This will cause the ESP32 to restarts
                 if NetworkConfig.TX_ESP32_IP:
                     self._transmit_reconnection_packet()
-                
+
+                # Attempt to discover ESP32 IP via broadcast
                 threading.Thread(target=self._transmit_ip_broadcast_packet, daemon=True).start()
                 data, addr = self._socket.recvfrom(2)
 
