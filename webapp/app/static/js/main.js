@@ -76,6 +76,11 @@ function stopVisualizers() {
 
 async function updatePresenceDisplay() {
   const data = await API.getPresenceStatus();
+  if (data.packetLoss === 100) {
+    stopMonitoring();
+    alert('Something wrong!. Please restart ESP32 if keep persisting or change the AP.');
+    return;
+  }
   UI.setPresenceTexts(data);
   if (detectionChart.visible) {
     if (data.presence === 'Yes') detectionChart.push(1);
