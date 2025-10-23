@@ -1,0 +1,35 @@
+{
+  "name": "wriple",
+  "version": "1.0.0",
+  "description": "A human presence detection system using Wi-Fi CSI and mmWave RDM",
+  "main": "main.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "start": "electron .",
+    "dev:python": "python run.py"
+  },
+  "keywords": [],
+  "author": "AHG-Jhondale",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^38.4.0"
+  },
+  "build": {
+    "appId": "com.ahg.wriple",
+    "productName": "Wriple",
+    "directories": {
+      "buildResources": "app/static"
+    },
+    "win": {
+      "icon": "app/static/images/icon.ico"
+    },
+    "linux": {
+      "icon": "app/static/images/icon.png"
+    },
+    "mac": {
+      "icon": "app/static/images/icon.icns"
+    }
+  }
+}

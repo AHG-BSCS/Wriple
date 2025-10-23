@@ -158,7 +158,7 @@ export const OPTIONS = {
   };
 
 export const MAIN_DELAYS = {
-  delaySystemIconStatus: 2000,
+  delaySystemIconStatus: 1000,
   delayMonitorInterval: 125,
   delayPresenceInterval: 1000,
   delayRecordingAction: 1000

@@ -2,8 +2,8 @@
   "NetworkConfiguration": {
     "ap_ssid": "WRIPLE",
     "ap_password": "WRIPLE_ESP32",
-    "ap_broadcast_ip": "10.59.14.255",
-    "tx_esp32_ip": "10.59.14.183",
+    "ap_broadcast_ip": "10.75.248.255",
+    "tx_esp32_ip": "10.75.248.183",
     "tx_port": 5001,
     "tx_interval": 0.016,
     "record_packet_limit": 250

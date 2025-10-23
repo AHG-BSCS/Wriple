@@ -51,7 +51,7 @@ class RecordConfig:
 
 class FileConfig:
     """Configuration for CSV file and its columns"""
-    SETTING_FILE: str = 'webapp/app/config/settings.json'
+    SETTING_FILE: str = 'app/config/settings.json'
     CSV_DIRECTORY: str = 'data/recorded'
     CSV_FILE_PATTERN: str = r'^WRIPLE_DATA_.*$'
     CSV_FILE_PREFIX: str = 'WRIPLE_DATA_'

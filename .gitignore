@@ -2,11 +2,13 @@
 .vscode
 .venv
 
-__pycache__/
+__pycache__
 *.py[cod]
 
-data/
-firmware/build/
-firmware/sdkconfig.old
-notebook/
-model/
+/package-lock.json
+/node_modules
+
+/data
+/firmware/build
+/firmware/sdkconfig.old
+/notebook

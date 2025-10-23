@@ -1,3 +1,4 @@
+import socket
 import threading
 
 import numpy as np
@@ -202,6 +203,12 @@ class HumanDetectionSystem:
             int(params['setup_spacing']),
         ]
 
+def find_free_port():
+    s = socket.socket()
+    s.bind(('127.0.0.1', 0))
+    addr, port = s.getsockname()
+    s.close()
+    return port
 
 def create_app():
     """Factory function to create Flask app"""
