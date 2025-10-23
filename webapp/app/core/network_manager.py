@@ -65,8 +65,12 @@ class NetworkManager:
             NetworkConfig.AP_BROADCAST_IP = None
             return
         
-        NetworkConfig.AP_BROADCAST_IP = NetworkConfig.SERVER_IP_ADDR[
-                        :NetworkConfig.SERVER_IP_ADDR.rfind('.')] + '.255'
+        broadcast_ip = NetworkConfig.SERVER_IP_ADDR[:NetworkConfig.SERVER_IP_ADDR.rfind('.')] + '.255'
+        
+        if NetworkConfig.AP_BROADCAST_IP != broadcast_ip:
+            NetworkConfig.TX_ESP32_IP = None
+            self._port_established = False
+            NetworkConfig.AP_BROADCAST_IP = broadcast_ip
         
         self._logger.info(f'AP Broadcast IP: {NetworkConfig.AP_BROADCAST_IP}')
 
@@ -83,15 +87,16 @@ class NetworkManager:
                 capture_output=True, text=True
             )
             if NetworkConfig.AP_SSID in output.stdout:
-                self._wifi_connected = True
-                
-                if not NetworkConfig.AP_BROADCAST_IP:
+                # Update broadcast IP if just got connected
+                if not self._wifi_connected:
                     self._update_broadcast_ip()
+                
+                self._wifi_connected = True
                 return True
             
             # Reset the IPs if disconnected due to potential change of network
-            NetworkConfig.TX_ESP32_IP = None
-            NetworkConfig.AP_BROADCAST_IP = None
+            # NetworkConfig.TX_ESP32_IP = None
+            # NetworkConfig.AP_BROADCAST_IP = None
             self._wifi_connected = False
             return False
         except Exception as e:
@@ -131,7 +136,7 @@ class NetworkManager:
 
                 if addr[0] != NetworkConfig.TX_ESP32_IP:
                     NetworkConfig.TX_ESP32_IP = addr[0]
-                    self._logger.info(f'New ESP32 IP: {NetworkConfig.TX_ESP32_IP}')
+                    self._logger.info(f'ESP32 IP: {NetworkConfig.TX_ESP32_IP}')
                     self.file_manager.save_settings()
                 self._port_established = True
                 return True

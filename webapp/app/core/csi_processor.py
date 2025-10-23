@@ -34,14 +34,18 @@ class CSIProcessor:
         self._queue_max_packets = RecordConfig.CSI_QUEUE_LIMIT
         self._logger = setup_logger('CSIProcessor')
     
-    def queue_csi(self, raw_csi_data: list):
+    def queue_csi(self, raw_csi: list):
         """
         Add amplitude and phase data to processing queues
         
         Args:
-            raw_csi_data: Separated and validated Wi-Fi CSI data from ESP32
+            raw_csi: Separated and validated Wi-Fi CSI data from ESP32
         """
-        amplitudes = self._compute_csi(raw_csi_data)
+        # Ensure that the received raw data is from 20Mhz frames
+        if len(raw_csi) != 384:
+            return
+        
+        amplitudes = self._compute_amps_phases(raw_csi)
         amplitudes = np.array(amplitudes)[self._amps_subcarriers]
 
         while len(self._amplitude_queue) > self._queue_max_packets:
@@ -49,12 +53,12 @@ class CSIProcessor:
         
         self._amplitude_queue.append(amplitudes)
     
-    def _compute_csi(self, csi_data: list) -> tuple[list, list]:
+    def _compute_amps_phases(self, raw_csi: list) -> tuple[list, list]:
         """
         Compute amplitude and phase from raw CSI I/Q data
         
         Args:
-            csi_data: List of I/Q values
+            raw_csi: List of I/Q values
             
         Returns:
             tuple: (Amplitudes, Phases)
@@ -62,13 +66,13 @@ class CSIProcessor:
         amplitudes = []
         # phases = []
 
-        if len(csi_data) % 2 != 0:
+        if len(raw_csi) % 2 != 0:
             self._logger.error('CSI data length must be even (I/Q pairs).')
             return amplitudes
         
-        for i in range(0, len(csi_data), 2):
-            I = csi_data[i]
-            Q = csi_data[i + 1]
+        for i in range(0, len(raw_csi), 2):
+            I = raw_csi[i]
+            Q = raw_csi[i + 1]
             amplitudes.append(math.sqrt(I**2 + Q**2))
             # phases.append(math.atan2(Q, I))
         
