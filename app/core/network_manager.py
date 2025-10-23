@@ -1,12 +1,13 @@
 """Network Communication Module"""
 
+import platform
 import socket
-import subprocess
 import threading
 import time
 
 from app.config.settings import NetworkConfig
 from app.utils.logger import setup_logger
+from app.utils.system_command import check_ap_connection, ping_esp32
 
 
 class NetworkManager:
@@ -18,6 +19,7 @@ class NetworkManager:
     def __init__(self, file_manager):
         from app.core.file_manager import FileManager
         self.file_manager: FileManager = file_manager
+        self._system = platform.system()
         
         self._receiving = False
         self._transmitting = False
@@ -32,33 +34,9 @@ class NetworkManager:
         self._logger = setup_logger('NetworkManager')
         self._init_socket()
     
-    def _find_ip_address(self) -> str:
-        """
-        Find the current IP address of the machine
-
-        Returns:
-            str: Current IP address or None if not found
-        """
-        try:
-            ip_addr = socket.gethostbyname(socket.gethostname())
-            # Fallback to ipconfig parsing if localhost is returned
-            if ip_addr.startswith("127."):
-                output = subprocess.run(['ipconfig'], capture_output=True, text=True)
-                for line in output.stdout.splitlines():
-                    if 'IPv4 Address' in line:
-                        import re
-                        m = re.search(r'IPv4 Address[^\:]*:\s*([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)', line)
-                        if m: return m.group(1)
-                        else: return None
-            else:
-                return ip_addr
-        except Exception:
-            return None
-        return None
-    
     def _update_broadcast_ip(self):
         """Update the broadcast IP based on current IP address"""
-        NetworkConfig.SERVER_IP_ADDR = self._find_ip_address()
+        NetworkConfig.SERVER_IP_ADDR = socket.gethostbyname(socket.gethostname())
         
         if not NetworkConfig.SERVER_IP_ADDR:
             self._logger.error('Could not determine current IP address')
@@ -82,11 +60,8 @@ class NetworkManager:
             bool: True if connected, False otherwise
         """
         try:
-            output = subprocess.run(
-                ['netsh', 'wlan', 'show', 'interfaces'], 
-                capture_output=True, text=True
-            )
-            if NetworkConfig.AP_SSID in output.stdout:
+            connected = check_ap_connection(NetworkConfig.AP_SSID, self._system)
+            if connected:
                 # Update broadcast IP if just got connected
                 if not self._wifi_connected:
                     self._update_broadcast_ip()
@@ -94,9 +69,6 @@ class NetworkManager:
                 self._wifi_connected = True
                 return True
             
-            # Reset the IPs if disconnected due to potential change of network
-            # NetworkConfig.TX_ESP32_IP = None
-            # NetworkConfig.AP_BROADCAST_IP = None
             self._wifi_connected = False
             return False
         except Exception as e:
@@ -112,11 +84,7 @@ class NetworkManager:
         """
         try:
             if self._wifi_connected and NetworkConfig.TX_ESP32_IP and self._port_established:
-                output = subprocess.run(
-                    ['ping', '-n', '1', NetworkConfig.TX_ESP32_IP],
-                    capture_output=True, text=True
-                )
-                esp32_status = 'TTL=' in output.stdout
+                esp32_status = ping_esp32
                 # Reset ESP32 IP if unreachable due to potential IP change
                 if not esp32_status:
                     NetworkConfig.TX_ESP32_IP = None
@@ -176,12 +144,10 @@ class NetworkManager:
         
         while self._receiving:
             try:
-                data, addr = self._socket.recvfrom(NetworkConfig.RX_BUFFER_SIZE)
-                # data, addr = self._rx_socket.recvfrom(NetworkConfig.RX_BUFFER_SIZE)
-                # Monitor Packet Count for automatic stopping during recording
+                data, _ = self._socket.recvfrom(NetworkConfig.RX_BUFFER_SIZE)
                 self._rx_packet_count += 1
                 
-                # Process data in separate thread
+                # Process received data in separate thread
                 threading.Thread(
                     target=parse_received_data, 
                     args=(data, self._tx_timestamps.pop(0)), 
