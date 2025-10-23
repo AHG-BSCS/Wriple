@@ -147,12 +147,11 @@ async function startMonitoring(monitorModeBtn) {
 }
 
 async function updateStatusBar() {
-  let status = null;
   try {
-    status = await API.getSystemStatus();
+    const status = await API.getSystemStatus();
     const monitorModeBtn = UI.floatingButtonNodes.monitorModeBtn;
 
-    if (!status.esp32) {
+    if (!status.ap || !status.esp32) {
       if (UI.isMonitoring()) stopMonitoring();
       if (!monitorModeBtn.disabled) UI.disableButton(monitorModeBtn);
     }
@@ -161,7 +160,7 @@ async function updateStatusBar() {
     }
     UI.updateStatusBar(status);
   } catch {
-    UI.updateStatusBar(status);
+    UI.updateStatusBar(false);
     console.error('Server is down');
   }
 }
