@@ -1,11 +1,12 @@
 [project]
 name = "WRIPLE"
-version = "0.4.0"
-description = "Human presence detection system using WLAN sensing"
+version = "1.0.0"
+description = "A human presence detection system using Wi-Fi CSI and mmWave RDM"
 requires-python = ">=3.13.7"
 
 dependencies = [
     "flask-cors==6.0.1",
+    "waitress==3.0.2",
     "numpy==2.3.2",
     "pandas==2.3.2",
     "scipy==1.16.1",

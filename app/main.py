@@ -206,7 +206,7 @@ class HumanDetectionSystem:
 def find_free_port():
     s = socket.socket()
     s.bind(('127.0.0.1', 0))
-    addr, port = s.getsockname()
+    _, port = s.getsockname()
     s.close()
     return port
 
