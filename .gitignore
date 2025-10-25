@@ -5,10 +5,8 @@
 __pycache__
 *.py[cod]
 
-/package-lock.json
-/node_modules
+/build
+/dist
 
 /data
-/firmware/build
-/firmware/sdkconfig.old
 /notebook

@@ -6,7 +6,6 @@ let pyProc = null;
 let mainWindow = null;
 
 function getPythonExecutable() {
-  // during dev use 'python' or 'python3'; when packaged, you'll replace this
   if (process.platform === 'win32') return 'python';
   return 'python3';
 }
@@ -55,11 +54,10 @@ function createWindow(url) {
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
-      // preload: path.join(__dirname, 'preload.js')
     }
   });
 
-  // Load the web UI served by Flask
+  // Load the Web UI served by Flask
   mainWindow.loadURL(url);
 
   mainWindow.on('closed', () => {

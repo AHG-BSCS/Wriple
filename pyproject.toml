@@ -13,4 +13,6 @@ dependencies = [
     "joblib==1.5.2",
     "tensorflow-cpu>=2.20.0",
     "scikit-learn>=1.7.2",
+    "pywebview>=6.1",
+    "pyinstaller>=6.16.0",
 ]

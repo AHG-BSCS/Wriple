@@ -10,12 +10,10 @@
         "model/**",
         "notebook/**",
         "app/static/**",
-        "node_modules/**"
     ],
     "files.exclude": {
         "**/__pycache__": true,
         ".devcontainer": true,
         ".venv": true,
-        "node_modules/**": true,
     }
 }
