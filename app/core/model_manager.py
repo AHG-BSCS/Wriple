@@ -3,6 +3,9 @@
 import joblib
 import numpy as np
 from keras.models import load_model
+from sklearn.decomposition import PCA
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
 from app.config.settings import ModelConfig
 from app.utils.logger import setup_logger

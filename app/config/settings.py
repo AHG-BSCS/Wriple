@@ -1,5 +1,7 @@
 """Configuration settings for the Human Presence Detection System"""
 
+import os
+
 class NetworkConfig:
     """Configuration for network settings"""
     AP_SSID: str = 'WRIPLE'
@@ -9,7 +11,6 @@ class NetworkConfig:
 
     TX_ESP32_IP: str = None             # IP address assigned by AP to ESP32
     TX_PORT: int = 5001
-    RX_PORT: int = 5001
     TX_CSI_REQ_PAYLOAD = b'Wriple'      # Frame length of 88
     TX_STOP_REQ_PAYLOAD = b'Stop'       # Frame length of 86
     TX_RECONNECT_PAYLOAD = b'Reconnect' # Frame length of 91
@@ -51,8 +52,8 @@ class RecordConfig:
 
 class FileConfig:
     """Configuration for CSV file and its columns"""
-    SETTING_FILE: str = 'app/config/settings.json'
-    CSV_DIRECTORY: str = 'data/recorded'
+    SETTING_FILE: str = os.path.join('app', 'settings', 'settings.json')
+    CSV_DIRECTORY: str = os.path.join('app', 'data', 'record')
     CSV_FILE_PATTERN: str = r'^WRIPLE_DATA_.*$'
     CSV_FILE_PREFIX: str = 'WRIPLE_DATA_'
     CSV_COLUMNS: list = [
@@ -90,7 +91,7 @@ class RdmConfig:
     SMOOTHING_ALPHA: float = 0.5    # 0.5 => Average of current and last non-zero
 
     GATES_DISTANCE_THRESHOLDS: list = [16000,5000,500,250,150,120,100,80,80,80,70,70,70,70,70,70]
-    RDM_THRESHOLDS_PATH: str = 'model/rdm_thresholds.json'
+    RDM_THRESHOLDS_PATH: str = os.path.join('app', 'model', 'rdm_thresholds.json')
 
     # 20 * doppler with 16 gates
     RDM_PLACEHOLDER_DATA: list = [[0] * 16, [0] * 16, [0] * 16, [0] * 16,
@@ -101,9 +102,9 @@ class RdmConfig:
 
 class ModelConfig:
     """Configuration for machine learning models directories and paths"""
-    RANDOM_FOROREST_PATH: str = 'model/rf_model.pkl'
-    CONVLSTM_PATH: str = 'model/convlstm_model.keras'
-    SCALER_PCA_PATH: str = 'model/scaler_pca_pipeline.pkl'
+    RANDOM_FOREST_PATH: str = os.path.join('app', 'model', 'rf_model.pkl')
+    CONVLSTM_PATH: str = os.path.join('app', 'model', 'convlstm_model.keras')
+    SCALER_PCA_PATH: str = os.path.join('app', 'model', 'scaler_pca_pipeline.pkl')
 
     PRED_SIGNAL_WINDOW: int = 120
     FEATURE_XHEIGHT: int = 4
