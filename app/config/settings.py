@@ -1,5 +1,6 @@
 """Configuration settings for the Human Presence Detection System"""
 
+from pathlib import Path
 import os
 
 class NetworkConfig:
@@ -52,8 +53,10 @@ class RecordConfig:
 
 class FileConfig:
     """Configuration for CSV file and its columns"""
-    SETTING_FILE: str = os.path.join('app', 'settings', 'settings.json')
-    CSV_DIRECTORY: str = os.path.join('app', 'data', 'record')
+    _BASE_DIR: Path = Path(__file__).resolve().parent.parent
+
+    SETTING_FILE: str = os.path.join(_BASE_DIR, 'settings', 'settings.json')
+    CSV_DIRECTORY: str = os.path.join(_BASE_DIR, 'data', 'record')
     CSV_FILE_PATTERN: str = r'^WRIPLE_DATA_.*$'
     CSV_FILE_PREFIX: str = 'WRIPLE_DATA_'
     CSV_COLUMNS: list = [
@@ -85,13 +88,15 @@ class CsiConfig:
 
 class RdmConfig:
     """Configuration for RDM data processing and visualization"""
+    _BASE_DIR: Path = Path(__file__).resolve().parent.parent
+
     HEATMAP_MAX_SCALER: int = 10000
     GATE_DISTANCE: float = 0.7      # Meters
     ABSENCE_TOLERANCE: int = 6      # Number of consecutive 0m before reset
     SMOOTHING_ALPHA: float = 0.5    # 0.5 => Average of current and last non-zero
 
     GATES_DISTANCE_THRESHOLDS: list = [16000,5000,500,250,150,120,100,80,80,80,70,70,70,70,70,70]
-    RDM_THRESHOLDS_PATH: str = os.path.join('app', 'model', 'rdm_thresholds.json')
+    RDM_THRESHOLDS_PATH: str = os.path.join(_BASE_DIR, 'model', 'rdm_thresholds.json')
 
     # 20 * doppler with 16 gates
     RDM_PLACEHOLDER_DATA: list = [[0] * 16, [0] * 16, [0] * 16, [0] * 16,
@@ -102,9 +107,11 @@ class RdmConfig:
 
 class ModelConfig:
     """Configuration for machine learning models directories and paths"""
-    RANDOM_FOREST_PATH: str = os.path.join('app', 'model', 'rf_model.pkl')
-    CONVLSTM_PATH: str = os.path.join('app', 'model', 'convlstm_model.keras')
-    SCALER_PCA_PATH: str = os.path.join('app', 'model', 'scaler_pca_pipeline.pkl')
+    _BASE_DIR: Path = Path(__file__).resolve().parent.parent
+
+    RANDOM_FOREST_PATH: str = os.path.join(_BASE_DIR, 'model', 'rf_model.pkl')
+    CONVLSTM_PATH: str = os.path.join(_BASE_DIR, 'model', 'convlstm_model.keras')
+    SCALER_PCA_PATH: str = os.path.join(_BASE_DIR, 'model', 'scaler_pca_pipeline.pkl')
 
     PRED_SIGNAL_WINDOW: int = 120
     FEATURE_XHEIGHT: int = 4

@@ -1,5 +1,6 @@
-import socket
+import os
 import threading
+from pathlib import Path
 
 import numpy as np
 from flask import Flask
@@ -14,7 +15,7 @@ from app.core.rdm_processor import RDMProcessor
 from app.utils.packet_parser import parse_csi_data
 
 
-class HumanDetectionSystem:
+class WripleSystem:
     """Main class that coordinates all components"""
     
     def __init__(self):
@@ -203,17 +204,20 @@ class HumanDetectionSystem:
             int(params['setup_spacing']),
         ]
 
-def find_free_port():
-    s = socket.socket()
-    s.bind(('127.0.0.1', 0))
-    _, port = s.getsockname()
-    s.close()
-    return port
+def init_app_backend(app):
+    """Initialize the Human Detection System backend"""
+    wriple_system = WripleSystem()
+    create_api_routes(app, wriple_system)
+    return wriple_system
 
 def create_app():
     """Factory function to create Flask app"""
-    app = Flask(__name__)
-    # Initialize the detection system
-    detection_system = HumanDetectionSystem()
-    create_api_routes(app, detection_system)
+    base_dir: Path = Path(__file__).resolve().parent.parent
+    app = Flask(
+        __name__,
+        static_folder=str(os.path.join(base_dir, 'app', 'static')),
+        template_folder=str(os.path.join(base_dir, 'app', 'templates'))
+    )
+
+    init_app_backend(app)
     return app
