@@ -211,7 +211,7 @@ def init_app_backend(app):
     return wriple_system
 
 def create_app():
-    """Factory function to create Flask app"""
+    """Create and configure the Flask application"""
     base_dir: Path = Path(__file__).resolve().parent.parent
     app = Flask(
         __name__,

@@ -8,7 +8,7 @@ import webview
 from app.main import create_app
 
 
-def _wait_server(host: str, port: int, timeout: float) -> None:
+def _wait_server(timeout = 10.0):
     """Poll until the Waitress server starts accepting connections."""
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
@@ -23,7 +23,7 @@ def _wait_server(host: str, port: int, timeout: float) -> None:
 
 def _setup_window():
     """Set up and run the webview window with the Flask app backend."""
-    _wait_server(host, port, 10.0)
+    _wait_server()
     window = webview.create_window(
         'WRIPLE',
         f'http://{host}:{port}',
@@ -39,7 +39,8 @@ def _setup_window():
     window.events.closed += _shutdown_server
     webview.start()
 
-def find_port(host):
+def _find_port(host):
+    """Find an available port on the host machine."""
     s = socket.socket()
     s.bind((host, 0))
     _, port = s.getsockname()
@@ -49,7 +50,8 @@ def find_port(host):
 if __name__ == '__main__':
     app = create_app()
     host = '127.0.0.1'
-    port = find_port(host)
+    port = _find_port(host)
+    print(f'APP: http://{host}:{port}')
 
     server = create_server(app, host=host, port=port)
     server_thread = threading.Thread(target=server.run, daemon=True)

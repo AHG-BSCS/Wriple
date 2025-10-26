@@ -1,11 +1,9 @@
 """Model Manager Module"""
 
+import threading
+
 import joblib
 import numpy as np
-from keras.models import load_model
-from sklearn.decomposition import PCA
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
 
 from app.config.settings import ModelConfig
 from app.utils.logger import setup_logger
@@ -29,10 +27,14 @@ class ModelManager:
         self._model_threshold = ModelConfig.PRED_THRESHOLD
 
         self._logger = setup_logger('ModelManager')
-        self._load_model()
+        threading.Thread(target=self._load_model, daemon=True).start()
     
     def _load_model(self):
         """Load all required models"""
+        # Peform imports loading here for faster startup time
+        # Explicitly import something from sklearn to allow PyInstaller to include sklearn
+        from keras.models import load_model
+        from sklearn.pipeline import Pipeline
         try:
             if self._model == 1:
                 self._presence_model = joblib.load(ModelConfig.RANDOM_FOROREST_PATH)
