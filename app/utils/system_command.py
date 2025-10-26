@@ -8,6 +8,8 @@ import shutil
 def _run_cmd(cmd):
     """Run a command and return the output"""
     try:
+        if os.name == 'nt':
+            return subprocess.run(cmd, capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW).stdout
         return subprocess.run(cmd, capture_output=True, text=True).stdout
     except Exception as e:
         return None
@@ -87,10 +89,10 @@ def ping_esp32(esp32_ip, system):
     """
     if system == 'Windows':
         output = _run_cmd(['ping', '-n', '1', esp32_ip])
-        return 'TTL=' in output.stdout
+        return 'TTL=' in output
     if system in ('Linux', 'Darwin'):
         if shutil.which('ping'):
             output = _run_cmd(['ping', '-c', '1', esp32_ip])
-            return '1 received' in output.stdout or '1 packets received' in output.stdout
+            return '1 received' in output or '1 packets received' in output
         return False
     return False

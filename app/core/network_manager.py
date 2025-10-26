@@ -84,7 +84,7 @@ class NetworkManager:
         """
         try:
             if self._wifi_connected and NetworkConfig.TX_ESP32_IP and self._port_established:
-                esp32_status = ping_esp32
+                esp32_status = ping_esp32(NetworkConfig.TX_ESP32_IP, self._system)
                 # Reset ESP32 IP if unreachable due to potential IP change
                 if not esp32_status:
                     NetworkConfig.TX_ESP32_IP = None
