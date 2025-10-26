@@ -49,6 +49,10 @@
     vertical-align: middle;
 }
 
+input[type="range"].vertical {
+  -webkit-appearance: slider-vertical;
+}
+
 #visualizer-title {
   background-color: var(--primary-color);
   color: #FFFFFF;
@@ -110,6 +114,7 @@
   white-space: nowrap;
   transition: opacity .3s ease;
   pointer-events: none;
+  z-index: 999;
 }
 
 #status-bar-wrapper:hover #status-bar-tooltip {

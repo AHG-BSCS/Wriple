@@ -9,7 +9,7 @@
     <script src="../static/js/vendors/tailwind.js"></script>
     <script src="../static/js/vendors/simpleheat.js"></script>
     <script src="../static/js/vendors/chart.js"></script>
-    <link rel="icon" type="image/x-icon" href="../static/images/wriple-icon.png">
+    <link rel="icon" type="image/x-icon" href="../static/images/icon.png">
 </head>
 <body class="flex h-screen text-gray-800">
     <!-- Primary Color = gray-800 -->
@@ -26,13 +26,7 @@
             <!-- Wriple Icon -->
             <div class="flex items-center gap-2">
                 <div class="flex items-center gap-2 mb-1">
-                    <svg width="32" height="32" viewBox="0 0 128 128" class="sidebar-collapse">
-                        <g transform="translate(0 ,128) scale(0.05,-0.05)" fill="#1F2937">
-                            <path d="M1485 2321 c-720 -194 -1324 -810 -1457 -1485 -52 -265 -20 -302 104 -122 308 451 634 650 1068 654 463 3 623 -173 688 -758 40 -354 58 -388 175 -314 207 131 430 640 482 1096 82 728 -362 1117 -1060 929z"/>
-                        <g fill="#78350F">
-                            <path d="M960 955 c-289 -154 -290 -576 -2 -728 302 -160 661 90 611 425 -42 276 -361 435 -609 303z"/>
-                        </g>
-                    </svg>
+                    <img src="../static/images/icon_transparent.png" class="w-8 h-8 sidebar-collapse"/>
                     <span class="text-2xl font-bold sidebar-collapse">WRIPLE</span>
                 </div>
                 <button id="collapse-btn" class="cursor-pointer hover:bg-gray-300 rounded">
@@ -128,12 +122,6 @@
             <!-- Right Header -->
             <div class="flex items-center gap-4">
                 <!-- Access Point -->
-                <!-- <div id="status-bar-wrapper" class="hover:scale-110 transition">
-                    <svg id="ap-status" width="32" height="32" fill="limegreen" viewBox="0 0 256 256">
-                        <path d="M144,204a16,16,0,1,1-16-16A16,16,0,0,1,144,204ZM239.61,83.91a176,176,0,0,0-223.22,0,12,12,0,1,0,15.23,18.55,152,152,0,0,1,192.76,0,12,12,0,1,0,15.23-18.55Zm-32.16,35.73a128,128,0,0,0-158.9,0,12,12,0,0,0,14.9,18.81,104,104,0,0,1,129.1,0,12,12,0,0,0,14.9-18.81ZM175.07,155.3a80.05,80.05,0,0,0-94.14,0,12,12,0,0,0,14.14,19.4,56,56,0,0,1,65.86,0,12,12,0,1,0,14.14-19.4Z"></path>
-                    </svg>
-                    <span id="status-bar-tooltip">Wi-Fi</span>
-                </div> -->
                 <div id="status-bar-wrapper" class="hover:scale-110 transition">
                 <!-- Wi‑Fi (Multi-part) -->
                     <svg id="ap-status" width="32" height="32" viewBox="0 0 256 256">
@@ -198,7 +186,7 @@
                         <canvas id="amplitude-heatmap" class="w-full h-56 mb-7 mt-2 border-2"></canvas>
                         <div class="flex flex-col mx-2 items-center">
                             <span id="amplitude-max-value" class="font-semibold text-gray-800 pointer-events-none">10</span>
-                            <input id="amplitude-max-slider" type="range" min="10" max="60" step="5" value="10" class="w-4 h-52 bg-slate-400 rounded-lg appearance-none"/>
+                            <input id="amplitude-max-slider" type="range" min="10" max="60" step="5" value="10" orient="vertical" class="w-4 h-52 bg-slate-400 rounded-lg appearance-none"/>
                         </div>
                     </div>
                     <span id="heatmap-x-axis-label">Time (15s)</span>
@@ -213,7 +201,7 @@
                         <canvas id="doppler-heatmap" class="w-full h-56 mb-7 mt-2 border-2"></canvas>
                         <div class="flex flex-col mx-2 items-center">
                             <span id="doppler-max-value" class="font-semibold text-gray-800 pointer-events-none">1</span>
-                            <input id="doppler-max-slider" type="range" min="1" max="35" step="2" value="1" class="w-4 h-52 bg-slate-400 rounded-lg appearance-none"/>
+                            <input id="doppler-max-slider" type="range" min="1" max="35" step="2" value="1" orient="vertical" class="w-4 h-52 bg-slate-400 rounded-lg appearance-none"/>
                         </div>
                     </div>
                     <span id="heatmap-x-axis-label">Doppler (1-20)</span>
