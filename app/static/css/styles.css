@@ -45,11 +45,11 @@ input[type="range"].vertical {
   height: 210px;
 }
 
-/* input[type="range"].vertical::-webkit-slider-runnable-track {
+input[type="range"].vertical::-webkit-slider-runnable-track {
   background-color: var(--background-color);
   border-radius: 8px;
   width: 16px;
-} */
+}
 
 #visualizer-title {
   background-color: var(--primary-color);
