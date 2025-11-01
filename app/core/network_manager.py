@@ -182,11 +182,17 @@ class NetworkManager:
         """Send a UDP packet to generate CSI data"""
         # Removed the error handling to reduce overhead
         while self._transmitting:
-            self._socket.sendto(NetworkConfig.TX_CSI_REQ_PAYLOAD,
+            try:
+                self._socket.sendto(NetworkConfig.TX_CSI_REQ_PAYLOAD,
                                 (NetworkConfig.TX_ESP32_IP, NetworkConfig.TX_PORT))
-            self._tx_timestamps.append(time.time())
-            self._tx_packet_count += 1
-            time.sleep(NetworkConfig.TX_INTERVAL)
+                self._tx_timestamps.append(time.time())
+                self._tx_packet_count += 1
+                time.sleep(NetworkConfig.TX_INTERVAL)
+            except:
+                self._logger.error('Error sending stop packet')
+                self.stop_transmitting()
+                self.stop_listening()
+                return
     
     def _transmit_stop_csi_packet(self):
         """Send a single UDP packet to signal ESP32 to stop CSI request"""

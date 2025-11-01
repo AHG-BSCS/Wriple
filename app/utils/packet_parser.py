@@ -28,6 +28,11 @@ def parse_csi_data(raw_data: bytes, ld2420_miss_count) -> list:
 
     # Parse CSI
     raw_csi = [int(x) for x in sections[1].strip().split(' ')]
+    raw_csi_length = len(raw_csi)
+    # Ensure that the received raw data is from 802.11a/g and has LLTF, HT-LTF
+    if raw_csi_length not in [256, 384]:
+        print(f'PACKET PARSER: Invalid CSI length: {raw_csi_length}')
+        raw_csi = None
 
     # Parse LD2420
     if not sections[2].startswith('!'):
