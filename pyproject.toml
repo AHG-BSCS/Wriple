@@ -1,18 +1,21 @@
 [project]
-name = "WRIPLE"
+name = "Wriple"
 version = "1.0.0"
 description = "A human presence detection system using Wi-Fi CSI and mmWave RDM"
-requires-python = ">=3.13.7"
+requires-python = "==3.11.13"
 
 dependencies = [
-    "flask-cors==6.0.1",
-    "waitress==3.0.2",
-    "numpy==2.3.2",
-    "pandas==2.3.2",
-    "scipy==1.16.1",
-    "joblib==1.5.2",
-    "tensorflow-cpu>=2.20.0",
-    "scikit-learn>=1.7.2",
-    "pywebview>=6.1",
+    "flask-cors>=6.0.1",
+    "joblib>=1.5.2",
+    "numpy>=2.3.4",
     "pyinstaller>=6.16.0",
+    "pyqt5>=5.15.11; platform_system == 'Linux'",
+    "pyqtwebengine>=5.15.7; platform_system == 'Linux'",
+    "qtpy>=2.4.3; platform_system == 'Linux'",
+    "pywebview>=6.1",
+    "scikit-learn>=1.7.2",
+    "scipy>=1.16.3",
+    "tensorflow-cpu>=2.20.0",
+    "tensorflow-cpu==2.16.2; platform_system == 'Darwin'",
+    "waitress>=3.0.2",
 ]

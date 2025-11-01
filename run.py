@@ -27,7 +27,7 @@ def _setup_window():
     window = webview.create_window(
         'WRIPLE',
         f'http://{host}:{port}',
-        width=1366, height=768,
+        width=1366, height=775,
         min_size=(300, 200),
         zoomable=True
     )
