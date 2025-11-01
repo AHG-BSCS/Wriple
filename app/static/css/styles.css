@@ -37,21 +37,19 @@
   pointer-events: none;
 }
 
-#amplitude-max-slider {
-    writing-mode: vertical-lr;
-    direction: rtl;
-    vertical-align: middle;
-}
-
-#doppler-max-slider {
-    writing-mode: vertical-lr;
-    direction: rtl;
-    vertical-align: middle;
-}
-
 input[type="range"].vertical {
+  appearance: slider-vertical;
   -webkit-appearance: slider-vertical;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  height: 210px;
 }
+
+/* input[type="range"].vertical::-webkit-slider-runnable-track {
+  background-color: var(--background-color);
+  border-radius: 8px;
+  width: 16px;
+} */
 
 #visualizer-title {
   background-color: var(--primary-color);
