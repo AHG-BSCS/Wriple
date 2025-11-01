@@ -70,7 +70,8 @@ class WripleSystem:
         self._ld2420_miss_count = parsed_data[1]
 
         if self._monitoring:
-            self.csi_processor.queue_csi(parsed_data[7])
+            if parsed_data[7]:
+                self.csi_processor.queue_csi(parsed_data[7])
 
             if parsed_data[0]: # If ld24020 data is valid
                 self.rdm_processor.queue_rdm(parsed_data[8:])

@@ -16,7 +16,7 @@ class CSIProcessor:
         self._amplitude_queue = []
         self._phase_queue = []
         self._amps_variance = 0
-        self._prev_amps_sum = None
+        # self._prev_amps_sum = None
 
         parts = [np.arange(sl[0], sl[1]) for sl in CsiConfig.HEAT_SUBCARRIER_SLICES]
         self._heat_subcarrier_slices = np.concatenate(parts)
@@ -41,10 +41,6 @@ class CSIProcessor:
         Args:
             raw_csi: Separated and validated Wi-Fi CSI data from ESP32
         """
-        # Ensure that the received raw data is from 20Mhz frames
-        if len(raw_csi) != 384:
-            return
-        
         amplitudes = self._compute_amps_phases(raw_csi)
         amplitudes = np.array(amplitudes)[self._amps_subcarriers]
 
@@ -65,10 +61,6 @@ class CSIProcessor:
         """
         amplitudes = []
         # phases = []
-
-        if len(raw_csi) % 2 != 0:
-            self._logger.error('CSI data length must be even (I/Q pairs).')
-            return amplitudes
         
         for i in range(0, len(raw_csi), 2):
             I = raw_csi[i]
@@ -179,14 +171,14 @@ class CSIProcessor:
         amp_arr = mean_per_sub + shrink_factors[:, None] * (amp_data - mean_per_sub)
 
         amplitudes_mean = np.mean(amp_arr, axis=0)
-        amplitudes_sum = np.sum(amplitudes_mean[:52])
+        # amplitudes_sum = np.sum(amplitudes_mean[:52])
 
-        if self._prev_amps_sum is None:
-            self._prev_amps_sum = amplitudes_sum
-        amplitudes_diff = np.abs(amplitudes_sum - self._prev_amps_sum)
+        # if self._prev_amps_sum is None:
+        #     self._prev_amps_sum = amplitudes_sum
+        # amplitudes_diff = np.abs(amplitudes_sum - self._prev_amps_sum)
         # amplitudes_diff = np.abs(np.diff(amplitudes_sum, prepend=self._prev_amps_sum))
-        self._prev_amps_sum = amplitudes_sum
-        return amplitudes_mean.tolist() + [float(amplitudes_diff)]
+        # self._prev_amps_sum = amplitudes_sum
+        return amplitudes_mean.tolist()
     
     def get_amplitude_window(self) -> list:
         """

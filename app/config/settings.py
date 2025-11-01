@@ -21,7 +21,7 @@ class NetworkConfig:
     RECORD_PACKET_LIMIT: int = 250      # 5 seconds of data per recording
     RX_SOCKET_TIMEOUT: float = 0.25     # Timeout used to stop listening
     TX_SOCKET_TIMEOUT: float = 0.1      # Timeout used to stop listening
-    RX_BUFFER_SIZE: int = 4096          # Adjusted based on ESP32 CSI and sensor data size
+    RX_BUFFER_SIZE: int = 5120          # Adjusted based on ESP32 CSI and sensor data size
 
     def to_dict(self) -> dict:
         return {
@@ -75,7 +75,7 @@ class FileConfig:
 class CsiConfig:
     """Configuration for data visualizers"""
     HEAT_SUBCARRIER_SLICES: list = [[30, 70]]
-    AMPS_SUBCARRIER: list = [(2, 27), (38, 64), (65, 93), (100, 128), (129, 157), (164, 192)]
+    AMPS_SUBCARRIER: list = [(2, 27), (38, 64), (65, 93), (100, 128)]
 
     HEAT_SIGNAL_WINDOW: int = 60
     HEAT_PENALTY_FACTOR: int = 1
@@ -116,4 +116,4 @@ class ModelConfig:
     PRED_SIGNAL_WINDOW: int = 120
     FEATURE_XHEIGHT: int = 4
     FEATURE_XWIDTH: int = 5
-    PRED_THRESHOLD: float = 0.9079    # Alt: 0.9079, 0.805
+    PRED_THRESHOLD: float = 0.9079
