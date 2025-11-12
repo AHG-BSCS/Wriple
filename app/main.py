@@ -21,11 +21,11 @@ class WripleSystem:
     def __init__(self):
         # Initialize core components
         self.file_manager = FileManager()
-        self.file_manager.load_settings()
+        # self.file_manager.load_settings()
         self.csi_processor = CSIProcessor()
         self.rdm_processor = RDMProcessor()
         self.model_manager = ModelManager()
-        self.network_manager = NetworkManager(self.file_manager)
+        self.network_manager = NetworkManager()
         
         # Application state and counter
         self._recording = False

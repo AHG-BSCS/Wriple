@@ -22,7 +22,7 @@ class FileManager:
             self._logger = setup_logger('FileManager')
             
             # Ensure directory exists
-            os.makedirs(FileConfig.CSV_DIRECTORY, exist_ok=True)
+            # os.makedirs(FileConfig.CSV_DIRECTORY, exist_ok=True)
     
     def list_csv_files(self) -> list:
         """

@@ -16,9 +16,9 @@ class NetworkManager:
     Handles UDP packet transmission, reception, and connection management
     """
     
-    def __init__(self, file_manager):
-        from app.core.file_manager import FileManager
-        self.file_manager: FileManager = file_manager
+    def __init__(self):
+        # from app.core.file_manager import FileManager
+        # self.file_manager: FileManager = file_manager
         self._system = platform.system()
         
         self._receiving = False
@@ -112,7 +112,7 @@ class NetworkManager:
                 if addr[0] != NetworkConfig.TX_ESP32_IP:
                     NetworkConfig.TX_ESP32_IP = addr[0]
                     self._logger.info(f'ESP32 IP: {NetworkConfig.TX_ESP32_IP}')
-                    self.file_manager.save_settings()
+                    # self.file_manager.save_settings()
                 self._port_established = True
                 return True
                 
