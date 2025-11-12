@@ -196,7 +196,7 @@ export const UI = {
   
   setPresenceTexts(text = {}) {
     const n = this.headerNodes;
-    n.presenceStatus.textContent = text?.presence || '?';
+    n.presenceStatus.textContent = text?.presence || 'Off';
     n.packetLoss.textContent = text?.packetLoss || '0%';
     n.signalVar.textContent = text?.ampVariance || '0.0';
   },

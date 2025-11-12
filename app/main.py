@@ -106,6 +106,7 @@ class WripleSystem:
 
         self.network_manager.stop_transmitting()
         self.network_manager.stop_listening()
+        self.model_manager.reset_threshold()
         self.csi_processor.clear_queues()
         self.file_manager.close()
         self._rssi = []
@@ -126,7 +127,7 @@ class WripleSystem:
             X = [float(rssi_mean), float(rssi_std)] + amps_window
             return self.model_manager.predict(X)
         else:
-            return 'No'
+            return '...'
     
     def get_system_status(self) -> dict:
         """
@@ -139,7 +140,7 @@ class WripleSystem:
         if ap_status:
             if self.network_manager.check_esp32():
                 self._esp32_status = True
-                self._ld2420_status = self._ld2420_miss_count < 30
+                self._ld2420_status = self._ld2420_miss_count < 35
             else:
                 self._esp32_status = False
                 self._ld2420_status = False

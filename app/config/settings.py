@@ -116,4 +116,4 @@ class ModelConfig:
     PRED_SIGNAL_WINDOW: int = 120
     FEATURE_XHEIGHT: int = 4
     FEATURE_XWIDTH: int = 5
-    PRED_THRESHOLD: float = 0.9079
+    THRESHOLD_CALIBRATE_COUNT: int = 15

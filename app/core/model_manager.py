@@ -24,7 +24,9 @@ class ModelManager:
 
         self._xheight = ModelConfig.FEATURE_XHEIGHT
         self._xwidth = ModelConfig.FEATURE_XWIDTH
-        self._model_threshold = ModelConfig.PRED_THRESHOLD
+
+        self._model_threshold = 0.0
+        self._threshold_calibrate_count = ModelConfig.THRESHOLD_CALIBRATE_COUNT
 
         self._logger = setup_logger('ModelManager')
         threading.Thread(target=self._load_model, daemon=True).start()
@@ -49,6 +51,26 @@ class ModelManager:
         except Exception as e:
             self._logger.error(f'Error loading models: {e}')
     
+    def calibrate_threshold(self, proba: float):
+        """
+        Calibrate the prediction threshold
+
+        Args:
+            proba: New probability threshold
+        
+        Returns:
+            bool: Calibration status
+        """
+        if self._threshold_calibrate_count > 0:
+            if proba > self._model_threshold:
+                self._model_threshold = proba
+                self._logger.info(f'THRESHOLD: {self._model_threshold}')
+
+            self._threshold_calibrate_count -= 1
+            return True
+        else:
+            return False
+
     def _predict_classical(self, X: list) -> int:
         """
         Detect human presence using classical ML models
@@ -62,6 +84,11 @@ class ModelManager:
         try:
             X2 = np.asarray(X).reshape(1, -1)
             y_proba = self._presence_model.predict_proba(X2)[0]
+
+            calibrating = self.calibrate_threshold(y_proba)
+            if calibrating:
+                return 'Calibrating'
+            
             label = 'Yes' if y_proba > self._model_threshold else 'No'
             self._logger.info(f'PRED PROBA: {y_proba}')
             return label
@@ -84,6 +111,11 @@ class ModelManager:
             X_trans = self._scaler_pca_pipeline.transform(X)    # shape (1, 20)
             X_seq = X_trans.reshape(1, 1, self._xheight, self._xwidth, 1)
             y_proba = self._presence_model.predict(X_seq, verbose=0).ravel()[0]
+            
+            calibrating = self.calibrate_threshold(y_proba)
+            if calibrating:
+                return '...'
+
             label = 'Yes' if y_proba > self._model_threshold else 'No'
             self._logger.info(f'PRED PROBA: {y_proba}')
             return label
@@ -105,6 +137,10 @@ class ModelManager:
             return self._predict_classical(data)
         elif self._model == 2:
             return self._predict_convlstm(data)
+    
+    def reset_threshold(self):
+        self._model_threshold = 0.0
+        self._threshold_calibrate_count = ModelConfig.THRESHOLD_CALIBRATE_COUNT
 
     @property
     def model_loaded(self) -> bool:
