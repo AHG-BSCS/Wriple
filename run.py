@@ -8,9 +8,9 @@ import webview
 from app.main import create_app
 
 
-def _wait_server(timeout = 10.0):
+def _wait_server():
     """Poll until the Waitress server starts accepting connections."""
-    deadline = time.monotonic() + timeout
+    deadline = time.monotonic() + 10.0
     while time.monotonic() < deadline:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.settimeout(0.5)
@@ -19,7 +19,7 @@ def _wait_server(timeout = 10.0):
                 return
             except OSError:
                 time.sleep(0.1)
-    raise RuntimeError(f"Server at {host}:{port} did not start within {timeout} seconds")
+    raise RuntimeError(f"Server at {host}:{port} did not start in time")
 
 def _setup_window():
     """Set up and run the webview window with the Flask app backend."""
@@ -29,6 +29,7 @@ def _setup_window():
         f'http://{host}:{port}',
         width=1366, height=775,
         min_size=(300, 200),
+        maximized=True,
         zoomable=True
     )
 

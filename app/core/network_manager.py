@@ -7,7 +7,7 @@ import time
 
 from app.config.settings import NetworkConfig
 from app.utils.logger import setup_logger
-from app.utils.system_command import check_ap_connection, ping_esp32
+from app.utils.system_command import check_ap_connection, get_local_ip, ping_esp32
 
 
 class NetworkManager:
@@ -35,11 +35,18 @@ class NetworkManager:
         self._init_socket()
     
     def _update_broadcast_ip(self):
-        """Update the broadcast IP based on current IP address"""
-        NetworkConfig.SERVER_IP_ADDR = socket.gethostbyname(socket.gethostname())
+        """Update the broadcast IP based on local IP address"""
+        if self._system == 'Windows' or self._system == 'Linux':
+            NetworkConfig.SERVER_IP_ADDR = socket.gethostbyname(socket.gethostname())
+        elif self._system == 'Darwin':
+            NetworkConfig.SERVER_IP_ADDR = get_local_ip()
+        else:
+            self._logger.error('Unsupported OS')
+            NetworkConfig.AP_BROADCAST_IP = None
+            return
         
-        if not NetworkConfig.SERVER_IP_ADDR:
-            self._logger.error('Could not determine current IP address')
+        if not NetworkConfig.SERVER_IP_ADDR or NetworkConfig.SERVER_IP_ADDR == '127.0.0.1':
+            self._logger.error('Could not determine local IP address')
             NetworkConfig.AP_BROADCAST_IP = None
             return
         
@@ -50,7 +57,7 @@ class NetworkManager:
             self._port_established = False
             NetworkConfig.AP_BROADCAST_IP = broadcast_ip
         
-        self._logger.info(f'AP Broadcast IP: {NetworkConfig.AP_BROADCAST_IP}')
+        self._logger.info(f'Current Broadcast IP: {NetworkConfig.AP_BROADCAST_IP}')
 
     def check_wifi_connection(self) -> bool:
         """
@@ -62,7 +69,7 @@ class NetworkManager:
         try:
             connected = check_ap_connection(NetworkConfig.AP_SSID, self._system)
             if connected:
-                # Update broadcast IP if just got connected
+                # Update broadcast IP only if connected and after reconnection
                 if not self._wifi_connected:
                     self._update_broadcast_ip()
                 
@@ -100,7 +107,7 @@ class NetworkManager:
 
                 # Attempt to discover ESP32 IP via broadcast
                 threading.Thread(target=self._transmit_ip_broadcast_packet, daemon=True).start()
-                data, addr = self._socket.recvfrom(2)
+                _, addr = self._socket.recvfrom(8)
 
                 if addr[0] != NetworkConfig.TX_ESP32_IP:
                     NetworkConfig.TX_ESP32_IP = addr[0]
@@ -110,7 +117,7 @@ class NetworkManager:
                 return True
                 
         except Exception as e:
-            self._logger.error(f'ESP32 is unreachable: {e}')
+            self._logger.error(f'Receiving socket {e}')
             return False
     
     # Receiver

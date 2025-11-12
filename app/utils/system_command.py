@@ -76,6 +76,22 @@ def check_ap_connection(ap_ssid, system):
     return False
 
 @staticmethod
+def get_local_ip():
+    """Get the local IP address on macOS.
+    
+    Returns:
+        str: Local IP address or None if not found
+    """
+    try:
+        output = subprocess.check_output('ifconfig en0', shell=True).decode()
+        for line in output.splitlines():
+            if "inet " in line and "127.0.0.1" not in line:
+                return line.split()[1]
+    except:
+        print(f'SYSTEM COMMAND: Command failed to execute.')
+    return None
+
+@staticmethod
 def ping_esp32(esp32_ip, system):
     """
     Ping a host once.
