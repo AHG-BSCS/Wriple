@@ -7,7 +7,9 @@ requires-python = "==3.11.13"
 dependencies = [
     "flask-cors>=6.0.1",
     "joblib>=1.5.2",
-    "numpy>=2.3.4",
+    "numpy>=2.3.4; platform_system == 'Windows'",
+    "numpy>=2.3.4; platform_system == 'Linux'",
+    "numpy==1.26.4; platform_system == 'Darwin'",
     "pyinstaller>=6.16.0",
     "pyqt5>=5.15.11; platform_system == 'Linux'",
     "pyqtwebengine>=5.15.7; platform_system == 'Linux'",
@@ -15,7 +17,9 @@ dependencies = [
     "pywebview>=6.1",
     "scikit-learn>=1.7.2",
     "scipy>=1.16.3",
-    "tensorflow-cpu>=2.20.0",
+    "tensorflow-cpu>=2.20.0; platform_system == 'Windows'",
+    "tensorflow-cpu>=2.20.0; platform_system == 'Linux'",
     "tensorflow-cpu==2.16.2; platform_system == 'Darwin'",
     "waitress>=3.0.2",
+    "psutil>=7.1.3",
 ]
