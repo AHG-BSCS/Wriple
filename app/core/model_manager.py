@@ -64,7 +64,7 @@ class ModelManager:
         if self._threshold_calibrate_count > 0:
             if proba > self._model_threshold:
                 self._model_threshold = proba
-                self._logger.info(f'THRESHOLD: {self._model_threshold}')
+                self._logger.info(f'New Threshold: {self._model_threshold}')
 
             self._threshold_calibrate_count -= 1
             return True
@@ -90,7 +90,7 @@ class ModelManager:
                 return 'Calibrating'
             
             label = 'Yes' if y_proba > self._model_threshold else 'No'
-            self._logger.info(f'PRED PROBA: {y_proba}')
+            self._logger.info(f'Probability: {y_proba}')
             return label
         except Exception as e:
             self._logger.error(f'Error in Logistic Regression prediction: {e}')

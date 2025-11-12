@@ -116,7 +116,10 @@ function stopMonitoring() {
   stopVisualizers();
   UI.setPresenceTexts();
   // Delay the stopCapturing to ensure all visualizers have stopped fetching data
-  setTimeout(() => API.stopCapturing(), 100);
+  setTimeout(() => {
+    API.stopCapturing();
+    UI.setPresenceTexts();
+  }, 100);
 }
 
 async function startMonitoring(monitorModeBtn) {
@@ -128,6 +131,7 @@ async function startMonitoring(monitorModeBtn) {
       UI.enableButton(monitorModeBtn);
       return;
     }
+    UI.headerNodes.presenceStatus.textContent = '...';
     await API.startMonitoring();
   }
   catch {
@@ -353,7 +357,7 @@ function init() {
 
   setInterval(() => updateStatusBar(), MAIN_DELAYS.delaySystemIconStatus);
   updateStatusBar();
-  UI.list_csv_files();
+  // UI.list_csv_files();
   UI.sidebarNodes.monitorTabBtn.click(); // Set default tab to monitor
 }
 
