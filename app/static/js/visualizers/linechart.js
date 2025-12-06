@@ -61,7 +61,7 @@ export class LineChart {
       }]
       },
       options: {
-      responsive: true,
+      responsive: false,
       animation: true,
       scales: {
         x: {

@@ -114,7 +114,7 @@ class ModelManager:
             
             calibrating = self.calibrate_threshold(y_proba)
             if calibrating:
-                return '...'
+                return 'Calibrating'
 
             label = 'Yes' if y_proba > self._model_threshold else 'No'
             self._logger.info(f'PRED PROBA: {y_proba}')
@@ -139,6 +139,7 @@ class ModelManager:
             return self._predict_convlstm(data)
     
     def reset_threshold(self):
+        """Reset the model threshold calibration"""
         self._model_threshold = 0.0
         self._threshold_calibrate_count = ModelConfig.THRESHOLD_CALIBRATE_COUNT
 

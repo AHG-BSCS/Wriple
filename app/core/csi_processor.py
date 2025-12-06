@@ -197,7 +197,12 @@ class CSIProcessor:
     
     @property
     def amplitude_variance(self) -> float:
-        """Get the variance of the amplitude data in the queue"""
+        """
+        Get the variance of the amplitude data in the queue
+
+        Returns:
+            float: Amplitude variance
+        """
         if len(self._amplitude_queue) < self._heat_signal_window:
             return 0.0
         

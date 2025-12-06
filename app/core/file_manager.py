@@ -40,6 +40,15 @@ class FileManager:
             return []
     
     def read_csv_file_meta(self, filename: str) -> dict:
+        """
+        Read metadata from a selected CSV file
+
+        Args:
+            filename: Name of the CSV file to read
+        
+        Returns:
+            dict: Metadata dictionary or None if file not found/error
+        """
         self._selected_csv_file = os.path.join(FileConfig.CSV_DIRECTORY, filename)
         
         self._logger.info(f'{filename} was selected')
@@ -77,7 +86,16 @@ class FileManager:
         else:
             return None
 
-    def _compute_sampling_rate(self, timestamps):
+    def _compute_sampling_rate(self, timestamps) -> float:
+        """
+        Compute sampling rate from transmit timestamps
+
+        Args:
+            timestamps: List of transmit timestamps
+        
+        Returns:
+            float: Calculated sampling rate in Hz or 'Missing' if insufficient data
+        """
         if len(timestamps) >= 2:
             time_diffs = [t2 - t1 for t1, t2 in zip(timestamps[:-1], timestamps[1:])]
             avg_time_diff = sum(time_diffs) / len(time_diffs)
@@ -87,7 +105,15 @@ class FileManager:
             return 'Missing'
     
     def _metadata_to_category(self, metadata: dict) -> dict:
-        """Convert metadata string values to numerical categories"""
+        """
+        Convert metadata string values to numerical categories
+
+        Args:
+            metadata: Metadata dictionary with string values
+
+        Returns:
+            dict: Metadata dictionary with categorized values
+        """
         category_map = {
             # 'Presence': {'No': '0', 'Yes': '1'},
             # 'Activity': {'N/A': '0', 'Stand': '1', 'Sit': '2', 'Walking': '3', 'Running': '4'},

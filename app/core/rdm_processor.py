@@ -36,7 +36,7 @@ class RDMProcessor:
         except Exception as e:
             print(f'Error loading RDM thresholds: {e}')
 
-    def _find_contiguous_clusters(self, indices):
+    def _find_contiguous_clusters(self, indices) -> list:
         """
         Find contiguous clusters in a list of indices.
 
@@ -61,13 +61,10 @@ class RDMProcessor:
         clusters.append((start, end))
         return clusters
 
-    def estimate_distance(self):
+    def estimate_distance(self) -> float:
         """
         Estimate distance based on range gate energies.
 
-        Args:
-            gate_energies: List or array of gate energy values.
-        
         Returns:
             float: Smoothed distance estimate in meters.
         """
@@ -124,7 +121,7 @@ class RDMProcessor:
         # print(f'ACTIVE GATES: {active_gates}')
         return round(self._target_distance, 1)
 
-    def get_filtered_data(self):
+    def get_filtered_data(self) -> list:
         """
         Apply filtering to the RDM data queue to remove noise.
 

@@ -21,6 +21,7 @@ class WripleSystem:
     def __init__(self):
         # Initialize core components
         self.file_manager = FileManager()
+        # Temporary loading of settings due to permission issues in macOS
         # self.file_manager.load_settings()
         self.csi_processor = CSIProcessor()
         self.rdm_processor = RDMProcessor()
@@ -40,7 +41,7 @@ class WripleSystem:
         self._pred_signal_window = ModelConfig.PRED_SIGNAL_WINDOW
         self._record_parameters = RecordConfig.RECORD_PARAMETERS
 
-    def record_data_packet(self, parsed_data, tx_timestamp):
+    def _record_data_packet(self, parsed_data, tx_timestamp):
         """
         Record data packet to CSV file
 
@@ -49,7 +50,6 @@ class WripleSystem:
             tx_timestamp: Timestamp of the transmitted packet
         """
 
-        # row = [tx_timestamp] + self.record_parameters + parsed_data
         row = self._record_parameters + [tx_timestamp] + parsed_data
         self.file_manager.write_data(row)
 
@@ -73,7 +73,7 @@ class WripleSystem:
             if parsed_data[7]:
                 self.csi_processor.queue_csi(parsed_data[7])
 
-            if parsed_data[0]: # If ld24020 data is valid
+            if parsed_data[0]: # If LD24020 data is valid
                 self.rdm_processor.queue_rdm(parsed_data[8:])
 
             self._rssi.append(parsed_data[3])
@@ -82,7 +82,7 @@ class WripleSystem:
         
         # Record data to csv file if recording
         if self._recording:
-            self.record_data_packet(parsed_data[2:], tx_timestamp)
+            self._record_data_packet(parsed_data[2:], tx_timestamp)
     
     def start_capturing(self, is_recording: bool):
         """Start recording Wi-Fi CSI data into CSV file"""
@@ -111,7 +111,7 @@ class WripleSystem:
         self.file_manager.close()
         self._rssi = []
     
-    def predict_presence(self) -> int:
+    def _predict_presence(self) -> int:
         """
         Make presence prediction using ML model
         
@@ -127,7 +127,7 @@ class WripleSystem:
             X = [float(rssi_mean), float(rssi_std)] + amps_window
             return self.model_manager.predict(X)
         else:
-            return '...'
+            return 'Calibrating'
     
     def get_system_status(self) -> dict:
         """
@@ -154,6 +154,12 @@ class WripleSystem:
         }
     
     def get_monitor_status(self) -> dict:
+        """
+        Get monitoring information
+
+        Returns:
+            dict: Dictionary with monitoring status and metrics
+        """
         mode_status = (0 if self._recording and self.network_manager.is_receiving else 
                        1 if self._monitoring else -1)
         return {
@@ -163,15 +169,21 @@ class WripleSystem:
         }
     
     def get_presence_status(self) -> dict:
+        """
+        Get presence detection information
+
+        Returns:
+            dict: Dictionary with presence prediction and related metrics
+        """
         if self._rssi:
             return {
-                'presence': self.predict_presence(),
+                'presence': self._predict_presence(),
                 'packetLoss': self.network_manager.packet_loss,
                 'ampVariance': self.csi_processor.amplitude_variance
             }
         else:
             return {
-                'presence': '?',
+                'presence': 'No Data',
                 'packetLoss': self.network_manager.packet_loss,
                 'ampVariance': 0.0
             }
