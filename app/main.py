@@ -31,12 +31,15 @@ class WripleSystem:
         # Application state and counter
         self._recording = False
         self._monitoring = False
+        self._noisy = True
+        self._restart = False
         self._ld2420_status = False
         self._ld2420_miss_count = -1
         self._esp32_status = False
 
         # Initialize parameters and data storage
         self._rssi = []
+        self._amp_variance = []
         self._csi_queue_limit = RecordConfig.CSI_QUEUE_LIMIT
         self._pred_signal_window = ModelConfig.PRED_SIGNAL_WINDOW
         self._record_parameters = RecordConfig.RECORD_PARAMETERS
@@ -103,31 +106,16 @@ class WripleSystem:
         """Stop all recording/monitoring operations"""
         self._recording = False
         self._monitoring = False
+        self._noisy = True
+        self._restart = False
 
         self.network_manager.stop_transmitting()
         self.network_manager.stop_listening()
         self.model_manager.reset_threshold()
         self.csi_processor.clear_queues()
         self.file_manager.close()
-        self._rssi = []
-    
-    def _predict_presence(self) -> int:
-        """
-        Make presence prediction using ML model
-        
-        Returns:
-            int: Presence prediction (1 for presence, 0 for absence)
-        """
-        if len(self._rssi) > self._pred_signal_window and self.model_manager.model_loaded:
-            rssi_window = self._rssi[-120:]
-            rssi_std = np.std(rssi_window)
-            rssi_mean = np.mean(rssi_window)
-            amps_window = self.csi_processor.get_amplitude_window()
-
-            X = [float(rssi_mean), float(rssi_std)] + amps_window
-            return self.model_manager.predict(X)
-        else:
-            return 'Calibrating'
+        self._rssi.clear()
+        self._amp_variance.clear()
     
     def get_system_status(self) -> dict:
         """
@@ -168,6 +156,24 @@ class WripleSystem:
             'rssi': self._rssi[-1] if self._rssi else 0
         }
     
+    def _predict_presence(self) -> int:
+        """
+        Make presence prediction using ML model
+        
+        Returns:
+            int: Presence prediction (1 for presence, 0 for absence)
+        """
+        if len(self._rssi) > self._pred_signal_window and self.model_manager.model_loaded:
+            rssi_window = self._rssi[-120:]
+            rssi_std = np.std(rssi_window)
+            rssi_mean = np.mean(rssi_window)
+            amps_window = self.csi_processor.get_amplitude_window()
+
+            X = [float(rssi_mean), float(rssi_std)] + amps_window
+            return self.model_manager.predict(X)
+        else:
+            return 'Calibrating'
+    
     def get_presence_status(self) -> dict:
         """
         Get presence detection information
@@ -175,18 +181,34 @@ class WripleSystem:
         Returns:
             dict: Dictionary with presence prediction and related metrics
         """
-        if self._rssi:
-            return {
-                'presence': self._predict_presence(),
-                'packetLoss': self.network_manager.packet_loss,
-                'ampVariance': self.csi_processor.amplitude_variance
-            }
-        else:
-            return {
-                'presence': 'No Data',
-                'packetLoss': self.network_manager.packet_loss,
-                'ampVariance': 0.0
-            }
+        if self._noisy:
+            self._amp_variance.append(self.csi_processor.amplitude_variance)
+            noisy = np.mean(self._amp_variance[-15:]) > 3.0
+            print(f'Noise: {np.mean(self._amp_variance[-15:])}')
+            
+            if noisy:
+                self._restart = True
+                return {
+                    'presence': 'Noisy',
+                    'packetLoss': self.network_manager.packet_loss,
+                    'ampVariance': self._amp_variance[-1]
+                }
+            
+            if len(self._amp_variance) >= 15 and not noisy and not self._restart:
+                self._noisy = False
+            elif len(self._amp_variance) >= 15 and not noisy and self._restart:
+                # Prompt user to restart monitoring
+                return {
+                    'presence': 'Restart',
+                    'packetLoss': self.network_manager.packet_loss,
+                    'ampVariance': self._amp_variance[-1]
+                }
+        
+        return {
+            'presence': self._predict_presence(),
+            'packetLoss': self.network_manager.packet_loss,
+            'ampVariance': self.csi_processor.amplitude_variance
+        }
     
     def get_radar_status(self) -> dict:
         """

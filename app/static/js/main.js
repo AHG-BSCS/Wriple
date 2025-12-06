@@ -131,7 +131,7 @@ async function startMonitoring(monitorModeBtn) {
       UI.enableButton(monitorModeBtn);
       return;
     }
-    UI.headerNodes.presenceStatus.textContent = '...';
+    UI.headerNodes.presenceStatus.textContent = 'Calibrating';
     await API.startMonitoring();
   }
   catch {
