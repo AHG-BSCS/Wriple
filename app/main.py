@@ -41,6 +41,7 @@ class WripleSystem:
         self._rssi = []
         self._amp_variance = []
         self._csi_queue_limit = RecordConfig.CSI_QUEUE_LIMIT
+        self._calibrate_count = ModelConfig.THRESHOLD_CALIBRATE_COUNT
         self._pred_signal_window = ModelConfig.PRED_SIGNAL_WINDOW
         self._record_parameters = RecordConfig.RECORD_PARAMETERS
 
@@ -164,7 +165,7 @@ class WripleSystem:
             int: Presence prediction (1 for presence, 0 for absence)
         """
         if len(self._rssi) > self._pred_signal_window and self.model_manager.model_loaded:
-            rssi_window = self._rssi[-120:]
+            rssi_window = self._rssi[-self._pred_signal_window:]
             rssi_std = np.std(rssi_window)
             rssi_mean = np.mean(rssi_window)
             amps_window = self.csi_processor.get_amplitude_window()
@@ -183,20 +184,21 @@ class WripleSystem:
         """
         if self._noisy:
             self._amp_variance.append(self.csi_processor.amplitude_variance)
-            noisy = np.mean(self._amp_variance[-15:]) > 3.0
-            print(f'Noise: {np.mean(self._amp_variance[-15:])}')
+            # Signal noise greater than 3.0 is unreliable
+            noisy = np.mean(self._amp_variance[-self._calibrate_count:]) > 3.0
             
             if noisy:
                 self._restart = True
+                self.model_manager.reset_threshold()
                 return {
                     'presence': 'Noisy',
                     'packetLoss': self.network_manager.packet_loss,
                     'ampVariance': self._amp_variance[-1]
                 }
             
-            if len(self._amp_variance) >= 15 and not noisy and not self._restart:
+            if len(self._amp_variance) >= self._calibrate_count and not self._restart:
                 self._noisy = False
-            elif len(self._amp_variance) >= 15 and not noisy and self._restart:
+            elif len(self._amp_variance) >= self._calibrate_count and self._restart:
                 # Prompt user to restart monitoring
                 return {
                     'presence': 'Restart',

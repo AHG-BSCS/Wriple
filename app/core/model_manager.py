@@ -51,7 +51,7 @@ class ModelManager:
         except Exception as e:
             self._logger.error(f'Error loading models: {e}')
     
-    def calibrate_threshold(self, proba: float):
+    def _calibrate_threshold(self, proba: float):
         """
         Calibrate the prediction threshold
 
@@ -61,7 +61,7 @@ class ModelManager:
         Returns:
             bool: Calibration status
         """
-        if self._threshold_calibrate_count > 0:
+        if self._threshold_calibrate_count > 1:
             if proba > self._model_threshold:
                 self._model_threshold = proba
                 self._logger.info(f'New Threshold: {self._model_threshold}')
@@ -85,9 +85,10 @@ class ModelManager:
             X2 = np.asarray(X).reshape(1, -1)
             y_proba = self._presence_model.predict_proba(X2)[0]
 
-            calibrating = self.calibrate_threshold(y_proba)
+            calibrating = self._calibrate_threshold(y_proba)
             if calibrating:
-                return 'Calibrating'
+                # Display the time until detection starts
+                return self._threshold_calibrate_count
             
             label = 'Yes' if y_proba > self._model_threshold else 'No'
             self._logger.info(f'Probability: {y_proba}')
@@ -112,9 +113,10 @@ class ModelManager:
             X_seq = X_trans.reshape(1, 1, self._xheight, self._xwidth, 1)
             y_proba = self._presence_model.predict(X_seq, verbose=0).ravel()[0]
             
-            calibrating = self.calibrate_threshold(y_proba)
+            calibrating = self._calibrate_threshold(y_proba)
             if calibrating:
-                return 'Calibrating'
+                # Display the time until detection starts
+                return self._threshold_calibrate_count
 
             label = 'Yes' if y_proba > self._model_threshold else 'No'
             self._logger.info(f'PRED PROBA: {y_proba}')
