@@ -32,6 +32,7 @@ export const UI = {
   },
 
   headerNodes: {
+    presenceLabel: $(SELECTORS.presenceLabel),
     presenceStatus: $(SELECTORS.presenceStatus),
     signalVar: $(SELECTORS.signalVar),
     packetCount: $(SELECTORS.packetCount),
@@ -196,8 +197,16 @@ export const UI = {
   
   setPresenceTexts(text = {}) {
     const n = this.headerNodes;
+    if (text.presence === "Yes" || text.presence === "No")
+      n.presenceLabel.textContent = 'PRESENCE:';
+    else
+      n.presenceLabel.textContent = 'CALIBRATING:';
+
+    if (!text?.presence)
+      n.presenceLabel.textContent = 'PRESENCE:';
+
     n.presenceStatus.textContent = text?.presence || 'Off';
-    n.packetLoss.textContent = text?.packetLoss || '0%';
+    n.packetLoss.textContent = `${text?.packetLoss}%` || '0%';
     n.signalVar.textContent = text?.ampVariance || '0.0';
   },
 

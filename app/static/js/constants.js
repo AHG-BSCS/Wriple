@@ -23,6 +23,7 @@ export const SELECTORS = {
   infoBtn: '#info-tab-btn',
   darkModeSwitch: '#dark-mode-switch',
 
+  presenceLabel: '#presence-label',
   presenceStatus: '#presence-status',
   signalVar: '#signal-var',
   packetCount: '#packets-count',
