@@ -205,8 +205,12 @@ export const UI = {
     if (!text?.presence)
       n.presenceLabel.textContent = 'PRESENCE:';
 
+    if (text?.packetLoss)
+      n.packetLoss.textContent = `${text?.packetLoss}%`;
+    else
+      n.packetLoss.textContent = '0%';
+
     n.presenceStatus.textContent = text?.presence || 'Off';
-    n.packetLoss.textContent = `${text?.packetLoss}%` || '0%';
     n.signalVar.textContent = text?.ampVariance || '0.0';
   },
 
