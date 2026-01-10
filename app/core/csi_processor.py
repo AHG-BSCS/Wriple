@@ -101,9 +101,9 @@ class CSIProcessor:
             np.ndarray: Difference array
         """
         mean_per_subcarrier = np.mean(latest_window[:, self._heat_subcarrier_slices], axis=0)
-        diff = latest_window[-1, self._heat_subcarrier_slices] - mean_per_subcarrier
+        diff = np.abs(latest_window[-1, self._heat_subcarrier_slices] - mean_per_subcarrier)
         # Store highest absolute diff
-        self._amps_variance = diff.var()
+        self._amps_variance = diff.sum()
         return diff
 
     def _apply_diff_threshold(self, diff: np.ndarray) -> list:

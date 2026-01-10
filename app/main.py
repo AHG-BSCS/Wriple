@@ -173,7 +173,7 @@ class WripleSystem:
             X = [float(rssi_mean), float(rssi_std)] + amps_window
             return self.model_manager.predict(X)
         else:
-            return 'Calibrating'
+            return 'Starting'
     
     def get_presence_status(self) -> dict:
         """
@@ -184,8 +184,8 @@ class WripleSystem:
         """
         if self._noisy:
             self._amp_variance.append(self.csi_processor.amplitude_variance)
-            # Signal noise greater than 3.0 is unreliable
-            noisy = np.mean(self._amp_variance[-self._calibrate_count:]) > 3.0
+            # Signal noise greater than 100.0 is unreliable
+            noisy = np.mean(self._amp_variance[-self._calibrate_count:]) > 50.0
             
             if noisy:
                 self._restart = True
