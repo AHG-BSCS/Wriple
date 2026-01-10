@@ -25,7 +25,8 @@ class ModelManager:
         self._xheight = ModelConfig.FEATURE_XHEIGHT
         self._xwidth = ModelConfig.FEATURE_XWIDTH
 
-        self._model_threshold = 0.0
+        self._model_low_threshold = 100.0
+        self._model_high_threshold = 0.0
         self._threshold_calibrate_count = ModelConfig.THRESHOLD_CALIBRATE_COUNT
 
         self._logger = setup_logger('ModelManager')
@@ -62,9 +63,12 @@ class ModelManager:
             bool: Calibration status
         """
         if self._threshold_calibrate_count > 1:
-            if proba > self._model_threshold:
-                self._model_threshold = proba
-                self._logger.info(f'New Threshold: {self._model_threshold}')
+            if proba < self._model_low_threshold:
+                self._model_low_threshold = proba - 0.005
+                self._logger.info(f'New Low Threshold: {self._model_low_threshold}')
+            elif proba > self._model_high_threshold:
+                self._model_high_threshold = proba + 0.005
+                self._logger.info(f'New High Threshold: {self._model_high_threshold}')
 
             self._threshold_calibrate_count -= 1
             return True
@@ -90,7 +94,7 @@ class ModelManager:
                 # Display the time until detection starts
                 return self._threshold_calibrate_count
             
-            label = 'Yes' if y_proba > self._model_threshold else 'No'
+            label = 'Yes' if y_proba < self._model_low_threshold or y_proba > self._model_high_threshold else 'No'
             self._logger.info(f'Probability: {y_proba}')
             return label
         except Exception as e:
@@ -118,7 +122,7 @@ class ModelManager:
                 # Display the time until detection starts
                 return self._threshold_calibrate_count
 
-            label = 'Yes' if y_proba > self._model_threshold else 'No'
+            label = 'Yes' if y_proba < self._model_low_threshold or y_proba > self._model_high_threshold else 'No'
             self._logger.info(f'PRED PROBA: {y_proba}')
             return label
         except Exception as e:
@@ -142,7 +146,8 @@ class ModelManager:
     
     def reset_threshold(self):
         """Reset the model threshold calibration"""
-        self._model_threshold = 0.0
+        self._model_low_threshold = 100.0
+        self._model_high_threshold = 0.0
         self._threshold_calibrate_count = ModelConfig.THRESHOLD_CALIBRATE_COUNT
 
     @property
